@@ -154,6 +154,8 @@ public:
     static AudioIODeviceType* createAudioIODeviceType_DirectSound();
     /** Creates an ASIO device type if it's available on this platform, or returns null. */
     static AudioIODeviceType* createAudioIODeviceType_ASIO();
+    /** Creates an ASIO device type if it's available on this platform, or returns null. */
+    static AudioIODeviceType* createAudioIODeviceType_Dante();
     /** Creates an ALSA device type if it's available on this platform, or returns null. */
     static AudioIODeviceType* createAudioIODeviceType_ALSA();
     /** Creates a JACK device type if it's available on this platform, or returns null. */

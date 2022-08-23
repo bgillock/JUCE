@@ -88,6 +88,12 @@ void AudioIODeviceType::callDeviceChangeListeners()
  AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_ASIO()         { return nullptr; }
 #endif
 
+#if JUCE_WINDOWS && JUCE_DANTE
+ AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Dante() { return new ASIOAudioIODeviceType(); }
+#else
+ AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Dante() { return nullptr; }
+#endif
+
 #if (JUCE_LINUX || JUCE_BSD) && JUCE_ALSA
  AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_ALSA()         { return createAudioIODeviceType_ALSA_PCMDevices(); }
 #else

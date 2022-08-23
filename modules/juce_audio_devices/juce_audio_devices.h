@@ -32,7 +32,7 @@
 
   ID:                 juce_audio_devices
   vendor:             juce
-  version:            7.0.2
+  version:            7.0.1
   name:               JUCE audio and MIDI I/O device classes
   description:        Classes to play and record from audio and MIDI I/O devices
   website:            http://www.juce.com/juce
@@ -86,6 +86,18 @@
 */
 #ifndef JUCE_ASIO
  #define JUCE_ASIO 0
+#endif
+
+/** Config: JUCE_DANTE
+    Enables ASIO audio devices (MS Windows only).
+    Turning this on means that you'll need to have the Steinberg ASIO SDK installed
+    on your Windows build machine.
+
+    See the comments in the ASIOAudioIODevice class's header file for more
+    info about this.
+*/
+#ifndef JUCE_DANTE
+#define JUCE_DANTE 1
 #endif
 
 /** Config: JUCE_WASAPI
