@@ -50,55 +50,55 @@
 //
 //  DalAppBase.hpp
 //  DAL example common DAL application code.
-#pragma once
+namespace DAL {
 
-class DalConfig : public Audinate::DAL::InstanceConfig { public: DalConfig(); };
+	class DalConfig : public Audinate::DAL::InstanceConfig { public: DalConfig(); };
 
-//
-// Type for function that implements audio transfer between the app and DAL.
-//
-typedef std::function<void(const Audinate::DAL::AudioProperties & properties,
-	const Audinate::DAL::AudioTransferParameters & params,
-	unsigned int numChannels, unsigned int latencySamples)> DalAppTransferFn;
+	//
+	// Type for function that implements audio transfer between the app and DAL.
+	//
+	typedef std::function<void(const Audinate::DAL::AudioProperties& properties,
+		const Audinate::DAL::AudioTransferParameters& params,
+		unsigned int numChannels, unsigned int latencySamples)> DalAppTransferFn;
 
-class DalAppBase
-{
-public:
-	DalAppBase(const std::string appName, const std::string modelName,
-		const Audinate::DAL::Id64 & modelId) :
-		mAppName(appName), mModelName(modelName), mModelId(modelId),
-		mInstance(), mTransferFn()
-	{}
-	virtual ~DalAppBase() {}
-	std::shared_ptr<Audinate::DAL::DAL> getDal() { return mDal; };
-	bool isSupportedSampleRate(uint32_t sampleRate) const;
-	const Audinate::DAL::InstanceConfig & getConfig() { return mConfig; }
-	void setTransferFn(DalAppTransferFn fn) { mTransferFn = fn; }
+	class DalAppBase
+	{
+	public:
+		DalAppBase(const std::string appName, const std::string modelName,
+			const Audinate::DAL::Id64& modelId) :
+			mAppName(appName), mModelName(modelName), mModelId(modelId),
+			mInstance(), mTransferFn()
+		{}
+		virtual ~DalAppBase() {}
+		std::shared_ptr<Audinate::DAL::DAL> getDal() { return mDal; };
+		bool isSupportedSampleRate(uint32_t sampleRate) const;
+		const Audinate::DAL::InstanceConfig& getConfig() { return mConfig; }
+		void setTransferFn(DalAppTransferFn fn) { mTransferFn = fn; }
 
-	virtual void printUsage(void);
-	virtual int init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor);
-	virtual void run();
-	virtual void stop();
-	virtual bool getAudioProperties(Audinate::DAL::AudioProperties & properties);
-	virtual bool isDeviceActivated();
+		virtual int init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor);
+		virtual void run();
+		virtual void stop();
+		virtual bool getAudioProperties(Audinate::DAL::AudioProperties& properties);
+		virtual bool isDeviceActivated();
 
-protected:
-	virtual void restartDalInstance();
+	protected:
+		virtual void restartDalInstance();
 
-private:
-	const std::string mAppName;
-	const std::string mModelName;
-	const Audinate::DAL::Id64 & mModelId;
+	private:
+		const std::string mAppName;
+		const std::string mModelName;
+		const Audinate::DAL::Id64& mModelId;
 
-	Audinate::DAL::InstanceConfig mConfig;
-	std::shared_ptr<Audinate::DAL::DAL> mDal;
-	std::shared_ptr<Audinate::DAL::Instance> mInstance;
-	DalAppTransferFn mTransferFn;
+		Audinate::DAL::InstanceConfig mConfig;
+		std::shared_ptr<Audinate::DAL::DAL> mDal;
+		std::shared_ptr<Audinate::DAL::Instance> mInstance;
+		DalAppTransferFn mTransferFn;
 
-	void stopDalInstance();
-	void resetDalInstance();
-	void setupAudioTransfer();
-};
+		void stopDalInstance();
+		void resetDalInstance();
+		void setupAudioTransfer();
+	};
+}
 //
 // Copyright © 2021 Audinate Pty Ltd ACN 120 828 006 (Audinate). All rights reserved.
 //

@@ -50,29 +50,29 @@
 //
 //  DalAppBase.cpp
 //  DAL example common DAL application code.
+namespace DAL {
+	static bool g_running = true;
+	static bool g_restart = false;
 
-static bool g_running = true;
-static bool g_restart = false;
+	static std::uint16_t  DAL_EXAMPLE_ARCP_PORT = 30440;
+	static std::uint16_t  DAL_EXAMPLE_ARCP_LOCAL_PORT = 30441;
+	static std::uint16_t  DAL_EXAMPLE_DBCP_PORT = 30455;
+	static std::uint16_t  DAL_EXAMPLE_AUDIO_BASE_PORT = 30336;
+	static std::uint16_t  DAL_EXAMPLE_CONMON_CHANNEL_PORT = 34700;
+	static std::uint16_t  DAL_EXAMPLE_CMCP_PORT = 34800;
+	static std::uint16_t  DAL_EXAMPLE_CONMON_CLIENT_PORT = 34900;
+	static std::uint16_t  DAL_EXAMPLE_WEB_SOCKET_PORT = 0; // Request ephemeral port
 
-static std::uint16_t  DAL_EXAMPLE_ARCP_PORT = 30440;
-static std::uint16_t  DAL_EXAMPLE_ARCP_LOCAL_PORT = 30441;
-static std::uint16_t  DAL_EXAMPLE_DBCP_PORT = 30455;
-static std::uint16_t  DAL_EXAMPLE_AUDIO_BASE_PORT = 30336;
-static std::uint16_t  DAL_EXAMPLE_CONMON_CHANNEL_PORT = 34700;
-static std::uint16_t  DAL_EXAMPLE_CMCP_PORT = 34800;
-static std::uint16_t  DAL_EXAMPLE_CONMON_CLIENT_PORT = 34900;
-static std::uint16_t  DAL_EXAMPLE_WEB_SOCKET_PORT = 0; // Request ephemeral port
-
-// On Windows the Domain Client socket uses a port number, on macOS it uses a UNIX socket path
-// MDNS Client is only required for Windows
+	// On Windows the Domain Client socket uses a port number, on macOS it uses a UNIX socket path
+	// MDNS Client is only required for Windows
 #ifdef _WIN32
-static std::uint16_t DAL_EXAMPLE_DOMAIN_CLIENT_SOCKET_DESCRIPTOR = 34001;
-static std::uint16_t DAL_EXAMPLE_MDNS_CLIENT_PORT = 34002;
+	static std::uint16_t DAL_EXAMPLE_DOMAIN_CLIENT_SOCKET_DESCRIPTOR = 34001;
+	static std::uint16_t DAL_EXAMPLE_MDNS_CLIENT_PORT = 34002;
 #else
-static std::string DAL_EXAMPLE_DOMAIN_CLIENT_SOCKET_DESCRIPTOR "/tmp/DalExamples"
+	static std::string DAL_EXAMPLE_DOMAIN_CLIENT_SOCKET_DESCRIPTOR "/tmp/DalExamples"
 #endif
 
-// Defaut config values.
+		// Defaut config values.
 #define DEFAULT_SAMPLE_RATE 48000
 #define DEFAULT_SAMPLES_PER_PERIOD 128
 #define DEFAULT_PERIODS_PER_BUFFER 64
@@ -84,380 +84,343 @@ static std::string DAL_EXAMPLE_DOMAIN_CLIENT_SOCKET_DESCRIPTOR "/tmp/DalExamples
 #define DEFAULT_PROCESS_PATH "."
 #define DEFAULT_LOG_LEVEL Audinate::DAL::LogLevel::Warning
 
-DalConfig::DalConfig() {
-	setEncoding(DEFAULT_ENCODING);
-	setNumRxChannels(DEFAULT_TX_CHANS);
-	setNumTxChannels(DEFAULT_RX_CHANS);
-	setTimeSource(DEFAULT_TIME_SOURCE);
-	setActivationDirectory(DEFAULT_ACTIVATION_DIRECTORY);
-	setSamplerate(DEFAULT_SAMPLE_RATE);
-	setSamplesPerPeriod(DEFAULT_SAMPLES_PER_PERIOD);
-	setPeriodsPerBuffer(DEFAULT_PERIODS_PER_BUFFER);
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::Arcp, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_ARCP_PORT));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::ArcpLocal, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_ARCP_LOCAL_PORT));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::Dbcp, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_DBCP_PORT));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::AudioBase, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_AUDIO_BASE_PORT));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::ConmonChannels, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_CONMON_CHANNEL_PORT));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::Cmcp, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_CMCP_PORT));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::ConmonClient, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_CONMON_CLIENT_PORT));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::DomainClientProxy, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_DOMAIN_CLIENT_SOCKET_DESCRIPTOR));
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::WebSocket, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_WEB_SOCKET_PORT));
+		DalConfig::DalConfig() {
+		setEncoding(DEFAULT_ENCODING);
+		setNumRxChannels(DEFAULT_TX_CHANS);
+		setNumTxChannels(DEFAULT_RX_CHANS);
+		setTimeSource(DEFAULT_TIME_SOURCE);
+		setActivationDirectory(DEFAULT_ACTIVATION_DIRECTORY);
+		setSamplerate(DEFAULT_SAMPLE_RATE);
+		setSamplesPerPeriod(DEFAULT_SAMPLES_PER_PERIOD);
+		setPeriodsPerBuffer(DEFAULT_PERIODS_PER_BUFFER);
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::Arcp, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_ARCP_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::ArcpLocal, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_ARCP_LOCAL_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::Dbcp, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_DBCP_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::AudioBase, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_AUDIO_BASE_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::ConmonChannels, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_CONMON_CHANNEL_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::Cmcp, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_CMCP_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::ConmonClient, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_CONMON_CLIENT_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::DomainClientProxy, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_DOMAIN_CLIENT_SOCKET_DESCRIPTOR));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::WebSocket, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_WEB_SOCKET_PORT));
 #ifdef _WIN32
-	setProtocolSocketDescriptor(Audinate::DAL::Protocol::MdnsClient, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_MDNS_CLIENT_PORT));
+		setProtocolSocketDescriptor(Audinate::DAL::Protocol::MdnsClient, Audinate::DAL::SocketDescriptor(DAL_EXAMPLE_MDNS_CLIENT_PORT));
 #endif
-	setLogLevel(DEFAULT_LOG_LEVEL);
-	setProcessPath(DEFAULT_PROCESS_PATH);
-	setLoggingPath(DEFAULT_PROCESS_PATH);
-}
+		setLogLevel(DEFAULT_LOG_LEVEL);
+		setProcessPath(DEFAULT_PROCESS_PATH);
+		setLoggingPath(DEFAULT_PROCESS_PATH);
+	}
 
-bool DalAppBase::isSupportedSampleRate(uint32_t sampleRate) const
-{
-	std::vector<uint32_t> supportedSampleRates = { 44100, 48000, 88200, 96000 };
-	auto findResult =
-		std::find
-		(
-			supportedSampleRates.begin(),
-			supportedSampleRates.end(),
-			sampleRate
-		);
-	return (findResult != supportedSampleRates.end());
-}
-
-static void handleEvent(Audinate::DAL::Instance & instance, const Audinate::DAL::InstanceEvent & ev)
-{
-	switch (ev.getType())
+	bool DalAppBase::isSupportedSampleRate(uint32_t sampleRate) const
 	{
-	case Audinate::DAL::InstanceEvent::Type::InstanceStateChanged:
-		std::cout << "Instance state changed, now " << Audinate::DAL::toString(instance.getInstanceState()) << std::endl;
-		break;
-	case Audinate::DAL::InstanceEvent::Type::ComponentStatusChanged:
-		std::cout << "Component " << Audinate::DAL::toString(ev.getComponent()) << " status changed, now " << Audinate::DAL::toString(instance.getComponentStatus(ev.getComponent())) << std::endl;
-		break;
-	case Audinate::DAL::InstanceEvent::Type::DomainInfoChanged:
-		if (instance.getDomainInfo().mIsEnrolled)
+		std::vector<uint32_t> supportedSampleRates = { 44100, 48000, 88200, 96000 };
+		auto findResult =
+			std::find
+			(
+				supportedSampleRates.begin(),
+				supportedSampleRates.end(),
+				sampleRate
+			);
+		return (findResult != supportedSampleRates.end());
+	}
+
+	static void handleEvent(Audinate::DAL::Instance& instance, const Audinate::DAL::InstanceEvent& ev)
+	{
+		switch (ev.getType())
 		{
-			std::cout << "Domain info changed, enrolled in managed domain=" << instance.getDomainInfo().mDomainName << std::endl;
+		case Audinate::DAL::InstanceEvent::Type::InstanceStateChanged:
+			std::cout << "Instance state changed, now " << Audinate::DAL::toString(instance.getInstanceState()) << std::endl;
+			break;
+		case Audinate::DAL::InstanceEvent::Type::ComponentStatusChanged:
+			std::cout << "Component " << Audinate::DAL::toString(ev.getComponent()) << " status changed, now " << Audinate::DAL::toString(instance.getComponentStatus(ev.getComponent())) << std::endl;
+			break;
+		case Audinate::DAL::InstanceEvent::Type::DomainInfoChanged:
+			if (instance.getDomainInfo().mIsEnrolled)
+			{
+				std::cout << "Domain info changed, enrolled in managed domain=" << instance.getDomainInfo().mDomainName << std::endl;
+			}
+			else
+			{
+				std::cout << "Domain info changed, not enrolled" << std::endl;
+			}
+			break;
+		case Audinate::DAL::InstanceEvent::Type::DeviceActivationStatusChanged:
+			//The activation status of the device has changed. The transfer callback
+			//can continue with the current number of channels, but audio will be
+			//available only on activated number of channels.
+			//To re-configure the DAL application with updated channel counts from
+			//DAL::AudioProperties, the DAL instance needs to be restarted.
+			g_restart = true;
+
+			if (instance.isDeviceActivated())
+			{
+				std::cout << "Device activation status changed, activated" << std::endl;
+			}
+			else
+			{
+				std::cout << "Device activation status changed, not activated" << std::endl;
+			}
 		}
-		else
+
+	}
+
+	static void handleMonitoringEvent(const Audinate::DAL::MonitoringEvent& ev)
+	{
+		auto ts = ev.getTimestamp();
+		std::cout << ts.mSeconds << "." << ts.mNanoseconds << ":";
+		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::MaxControlThreadInterval))
 		{
-			std::cout << "Domain info changed, not enrolled" << std::endl;
+			std::cout << " control=" << ev.getMaxControlThreadIntervalUs();
 		}
-		break;
-	case Audinate::DAL::InstanceEvent::Type::DeviceActivationStatusChanged:
-		//The activation status of the device has changed. The transfer callback
-		//can continue with the current number of channels, but audio will be
-		//available only on activated number of channels.
-		//To re-configure the DAL application with updated channel counts from
-		//DAL::AudioProperties, the DAL instance needs to be restarted.
-		g_restart = true;
-
-		if (instance.isDeviceActivated())
+		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::MaxAudioThreadInterval))
 		{
-			std::cout << "Device activation status changed, activated" << std::endl;
+			std::cout << " audio=" << ev.getMaxAudioThreadIntervalUs();
 		}
-		else
+		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::LatePacketCount))
 		{
-			std::cout << "Device activation status changed, not activated" << std::endl;
+			std::cout << " late=" << ev.getLatePacketCount();
 		}
-	}
-
-}
-
-static void handleMonitoringEvent(const Audinate::DAL::MonitoringEvent & ev)
-{
-	auto ts = ev.getTimestamp();
-	std::cout << ts.mSeconds << "." << ts.mNanoseconds << ":";
-	if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::MaxControlThreadInterval))
-	{
-		std::cout << " control=" << ev.getMaxControlThreadIntervalUs();
-	}
-	if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::MaxAudioThreadInterval))
-	{
-		std::cout << " audio=" << ev.getMaxAudioThreadIntervalUs();
-	}
-	if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::LatePacketCount))
-	{
-		std::cout << " late=" << ev.getLatePacketCount();
-	}
-	if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::NonSequentialPacketCount))
-	{
-		std::cout << " nonSeq=" << ev.getNonSequentialPacketCount();
-	}
-	std::cout << std::endl;
-}
-
-static std::string toString(const Audinate::DAL::Id64 & id64)
-{
-	std::stringstream ss;
-	for (size_t i = 0; i < AUDINATE_DAL_ID64_LENGTH; i++)
-	{
-		ss << std::hex << (unsigned int)(id64.mData[i]);
-	}
-	return ss.str();
-}
-
-
-int DalAppBase::init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor)
-{
-	// Create DAL
-	try
-	{
-		mDal = Audinate::DAL::createDAL((char *)access_token);
-	}
-	catch (const Audinate::DAL::DalException & exception)
-	{
-		std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
-		g_running = false;
-		mDal = nullptr;
-		return -1;
-	}
-
-	mConfig = instanceConfig;
-
-	Audinate::DAL::Id64 manufacturerId = mDal->getManufacturerId();
-	std::cout << "ManufacturerId is 0x" << toString(manufacturerId) << std::endl;
-
-	Audinate::DAL::DALVersion dalVersion = Audinate::DAL::getVersion();
-	std::cout << "DAL version is " << unsigned(dalVersion.mMajor) << "." << unsigned(dalVersion.mMinor) << "." << dalVersion.mBugfix << "." << dalVersion.mBuildNumber << std::endl;
-
-
-	// Create DAL instance
-	try
-	{
-		mInstance = Audinate::DAL::createInstance(mDal, mConfig);
-
-		if (!mInstance->isDeviceActivated())
+		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::NonSequentialPacketCount))
 		{
-			std::cout << "DAL device is not activated" << std::endl;
+			std::cout << " nonSeq=" << ev.getNonSequentialPacketCount();
 		}
-		else
+		std::cout << std::endl;
+	}
+
+	static std::string toString(const Audinate::DAL::Id64& id64)
+	{
+		std::stringstream ss;
+		for (size_t i = 0; i < AUDINATE_DAL_ID64_LENGTH; i++)
 		{
-			std::cout << "DAL device is activated" << std::endl;
+			ss << std::hex << (unsigned int)(id64.mData[i]);
 		}
-	}
-	catch (const Audinate::DAL::DalException & exception)
-	{
-		std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
-		g_running = false;
-		mDal = nullptr;
-		return -1;
+		return ss.str();
 	}
 
-	std::shared_ptr<Audinate::DAL::Instance> instance = mInstance;
-	mInstance->setEventFn([instance](const Audinate::DAL::InstanceEvent & ev)->void {
-		handleEvent(*instance, ev);
-	});
 
-	if (monitor)
+	int DalAppBase::init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor)
 	{
-		mInstance->setMonitoringFn(handleMonitoringEvent);
-	}
-
-	setupAudioTransfer();
-
-	return 0;
-}
-
-static void sig_handler(int sig)
-{
-	(void)sig;
-	g_running = false;
-}
-
-static std::vector<Audinate::DAL::Protocol> protocols =
-{
-	Audinate::DAL::Protocol::Arcp,
-	Audinate::DAL::Protocol::ArcpLocal,
-	Audinate::DAL::Protocol::Dbcp,
-	Audinate::DAL::Protocol::Cmcp,
-	Audinate::DAL::Protocol::ConmonChannels,
-	Audinate::DAL::Protocol::ConmonClient,
-	Audinate::DAL::Protocol::DomainClientProxy,
-	Audinate::DAL::Protocol::AudioBase,
-	Audinate::DAL::Protocol::WebSocket
-#ifdef _WIN32
-	, Audinate::DAL::Protocol::MdnsClient
-#endif
-};
-
-void DalAppBase::run()
-{
-	if (!mInstance)
-	{
-		std::cerr << "DAL instance has not been created" << std::endl;
-		return;
-	}
-
-	try
-	{
-		mInstance->start();
-	}
-	catch (const Audinate::DAL::DalException & exception)
-	{
-		std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
-		g_running = false;
-	}
-
-	std::cout << "\nSocket Descriptor validation: ";
-	for (auto iter : protocols)
-	{
-		auto configSd = mConfig.getProtocolSocketDescriptor(iter);
-		auto actualSd = mInstance->getProtocolSocketDescriptor(iter);
-		std::cout << "Protocol" << Audinate::DAL::toString(iter) << " config=" << Audinate::DAL::toString(configSd) << " actual=" << Audinate::DAL::toString(actualSd) << std::endl;
-	}
-
-	signal(SIGINT, sig_handler);
-
-	// Check every 200 ms if we received a signal to terminate
-	while (g_running)
-	{
-#ifdef _WIN32
-		Sleep(200);
-#else
-		usleep(200 * 1000);
-#endif
-		if (g_restart)
+		// Create DAL
+		try
 		{
-			g_restart = false;
-
-			restartDalInstance();
+			mDal = Audinate::DAL::createDAL((char*)access_token);
 		}
-	}
+		catch (const Audinate::DAL::DalException& exception)
+		{
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			g_running = false;
+			mDal = nullptr;
+			return -1;
+		}
 
-	stopDalInstance();
+		mConfig = instanceConfig;
 
-	resetDalInstance();
+		Audinate::DAL::Id64 manufacturerId = mDal->getManufacturerId();
+		std::cout << "ManufacturerId is 0x" << toString(manufacturerId) << std::endl;
 
-	//Release the memory allocated. eg: by protobuf library
-	//WARNING: This should be the last operation on DAL before exiting.
-	//If we try to re-create DAL post this, it might cause memory corruption as protobuf is unloaded.
-	try
-	{
-		Audinate::DAL::shutdown();
-	}
-	catch (Audinate::DAL::DalException & ex)
-	{
-		std::cerr << "Audinate::DAL::shutdown() error: " << ex.getErrorName() << ", " << ex.getErrorDescription() << std::endl;
-	}
-	catch (std::exception & stdex)
-	{
-		std::cerr << "Audinate::DAL::shutdown()  exception: " << stdex.what() << std::endl;
-	}
-}
+		Audinate::DAL::DALVersion dalVersion = Audinate::DAL::getVersion();
+		std::cout << "DAL version is " << unsigned(dalVersion.mMajor) << "." << unsigned(dalVersion.mMinor) << "." << dalVersion.mBugfix << "." << dalVersion.mBuildNumber << std::endl;
 
-void DalAppBase::stop()
-{
-	g_running = false;
-}
 
-bool DalAppBase::getAudioProperties(Audinate::DAL::AudioProperties & properties)
-{
-	std::shared_ptr<Audinate::DAL::Audio> audio = mInstance->getAudio();
-	if (!audio)
-	{
-		return false;
-	}
+		// Create DAL instance
+		try
+		{
+			mInstance = Audinate::DAL::createInstance(mDal, mConfig);
 
-	properties = audio->getProperties();
+			if (!mInstance->isDeviceActivated())
+			{
+				std::cout << "DAL device is not activated" << std::endl;
+			}
+			else
+			{
+				std::cout << "DAL device is activated" << std::endl;
+			}
+		}
+		catch (const Audinate::DAL::DalException& exception)
+		{
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			g_running = false;
+			mDal = nullptr;
+			return -1;
+		}
 
-	return true;
-}
+		std::shared_ptr<Audinate::DAL::Instance> instance = mInstance;
+		mInstance->setEventFn([instance](const Audinate::DAL::InstanceEvent& ev)->void {
+			handleEvent(*instance, ev);
+			});
 
-#define LATENCY_SAMPLES 480
-
-//This function sets up the audio transfer function.
-void DalAppBase::setupAudioTransfer()
-{
-	assert(mInstance);
-
-	if (mInstance->getInstanceState() != Audinate::DAL::InstanceState::Stopped)
-	{
-		std::cerr << "DAL instance should be stopped before updating audio transfer" << std::endl;
-		return;
-	}
-
-	std::shared_ptr<Audinate::DAL::Audio> audio = mInstance->getAudio();
-	assert(audio);
-
-	//This example uses the available channel counts to setup transfer callback if activated.
-	//Note: The minimum of RX and TX channels is used.
-	//If not activated, transfer callback is set to null.
-	if (mInstance->isDeviceActivated())
-	{
-		Audinate::DAL::AudioProperties properties = audio->getProperties();
-
-		unsigned int numChannels = (std::min)
-			((int)properties.mRxActivatedChannelCount, (int)properties.mTxActivatedChannelCount);
-
-		unsigned int latencySamples = LATENCY_SAMPLES;
-		audio->setTransferFn([properties, numChannels, latencySamples, this](const Audinate::DAL::AudioTransferParameters & params)->void {
-			mTransferFn(properties, params, numChannels, latencySamples);
-		});
-	}
-	else
-	{
-		audio->setTransferFn(nullptr);
-	}
-}
-
-bool DalAppBase::isDeviceActivated()
-{
-	return mInstance->isDeviceActivated();
-}
-
-//This function stops the DAL instance, resets the audio transfer
-//with updated properties and starts the DAL instance.
-void DalAppBase::restartDalInstance()
-{
-	assert(mInstance);
-
-	try
-	{
-		mInstance->stop();
+		if (monitor)
+		{
+			mInstance->setMonitoringFn(handleMonitoringEvent);
+		}
 
 		setupAudioTransfer();
 
-		mInstance->start();
+		return 0;
 	}
-	catch (const Audinate::DAL::DalException & exception)
+
+	static void sig_handler(int sig)
 	{
-		std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+		(void)sig;
+		g_running = false;
 	}
-}
 
-//This function stops the DAL instance
-void DalAppBase::stopDalInstance()
-{
-	assert(mInstance);
-
-	try
+	static std::vector<Audinate::DAL::Protocol> protocols =
 	{
-		mInstance->stop();
-	}
-	catch (const Audinate::DAL::DalException & exception)
+		Audinate::DAL::Protocol::Arcp,
+		Audinate::DAL::Protocol::ArcpLocal,
+		Audinate::DAL::Protocol::Dbcp,
+		Audinate::DAL::Protocol::Cmcp,
+		Audinate::DAL::Protocol::ConmonChannels,
+		Audinate::DAL::Protocol::ConmonClient,
+		Audinate::DAL::Protocol::DomainClientProxy,
+		Audinate::DAL::Protocol::AudioBase,
+		Audinate::DAL::Protocol::WebSocket
+	#ifdef _WIN32
+		, Audinate::DAL::Protocol::MdnsClient
+	#endif
+	};
+
+	void DalAppBase::run()
 	{
-		std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
-		return;
+		if (!mInstance)
+		{
+			std::cerr << "DAL instance has not been created" << std::endl;
+			return;
+		}
+
+		try
+		{
+			mInstance->start();
+		}
+		catch (const Audinate::DAL::DalException& exception)
+		{
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			g_running = false;
+		}
+
+		std::cout << "\nSocket Descriptor validation: ";
+		for (auto iter : protocols)
+		{
+			auto configSd = mConfig.getProtocolSocketDescriptor(iter);
+			auto actualSd = mInstance->getProtocolSocketDescriptor(iter);
+			std::cout << "Protocol" << Audinate::DAL::toString(iter) << " config=" << Audinate::DAL::toString(configSd) << " actual=" << Audinate::DAL::toString(actualSd) << std::endl;
+		}
 	}
+
+	void DalAppBase::stop()
+	{
+		g_running = false;
+	}
+
+	bool DalAppBase::getAudioProperties(Audinate::DAL::AudioProperties& properties)
+	{
+		std::shared_ptr<Audinate::DAL::Audio> audio = mInstance->getAudio();
+		if (!audio)
+		{
+			return false;
+		}
+
+		properties = audio->getProperties();
+
+		return true;
+	}
+
+#define LATENCY_SAMPLES 480
+
+	//This function sets up the audio transfer function.
+	void DalAppBase::setupAudioTransfer()
+	{
+		assert(mInstance);
+
+		if (mInstance->getInstanceState() != Audinate::DAL::InstanceState::Stopped)
+		{
+			std::cerr << "DAL instance should be stopped before updating audio transfer" << std::endl;
+			return;
+		}
+
+		std::shared_ptr<Audinate::DAL::Audio> audio = mInstance->getAudio();
+		assert(audio);
+
+		//This example uses the available channel counts to setup transfer callback if activated.
+		//Note: The minimum of RX and TX channels is used.
+		//If not activated, transfer callback is set to null.
+		if (mInstance->isDeviceActivated())
+		{
+			Audinate::DAL::AudioProperties properties = audio->getProperties();
+
+			unsigned int numChannels = (std::min)
+				((int)properties.mRxActivatedChannelCount, (int)properties.mTxActivatedChannelCount);
+
+			unsigned int latencySamples = LATENCY_SAMPLES;
+			audio->setTransferFn([properties, numChannels, latencySamples, this](const Audinate::DAL::AudioTransferParameters& params)->void {
+				mTransferFn(properties, params, numChannels, latencySamples);
+				});
+		}
+		else
+		{
+			audio->setTransferFn(nullptr);
+		}
+	}
+
+	bool DalAppBase::isDeviceActivated()
+	{
+		return mInstance->isDeviceActivated();
+	}
+
+	//This function stops the DAL instance, resets the audio transfer
+	//with updated properties and starts the DAL instance.
+	void DalAppBase::restartDalInstance()
+	{
+		assert(mInstance);
+
+		try
+		{
+			mInstance->stop();
+
+			setupAudioTransfer();
+
+			mInstance->start();
+		}
+		catch (const Audinate::DAL::DalException& exception)
+		{
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+		}
+	}
+
+	//This function stops the DAL instance
+	void DalAppBase::stopDalInstance()
+	{
+		assert(mInstance);
+
+		try
+		{
+			mInstance->stop();
+		}
+		catch (const Audinate::DAL::DalException& exception)
+		{
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			return;
+		}
+	}
+
+	//This function resets the DAL instance
+	void DalAppBase::resetDalInstance()
+	{
+		assert(mInstance);
+
+		std::shared_ptr<Audinate::DAL::Audio> audio = mInstance->getAudio();
+		assert(audio);
+
+		// Lambda handler have shared pointers to audio / instance
+		audio->setTransferFn(nullptr);
+		audio = nullptr;
+
+		mInstance->setMonitoringFn(nullptr);
+		mInstance->setEventFn(nullptr);
+		mInstance = nullptr;
+		mDal = nullptr;
+	}
+	//
+	// Copyright © 2021-2022 Audinate Pty Ltd ACN 120 828 006 (Audinate). All rights reserved.
+	//
 }
-
-//This function resets the DAL instance
-void DalAppBase::resetDalInstance()
-{
-	assert(mInstance);
-
-	std::shared_ptr<Audinate::DAL::Audio> audio = mInstance->getAudio();
-	assert(audio);
-
-	// Lambda handler have shared pointers to audio / instance
-	audio->setTransferFn(nullptr);
-	audio = nullptr;
-
-	mInstance->setMonitoringFn(nullptr);
-	mInstance->setEventFn(nullptr);
-	mInstance = nullptr;
-	mDal = nullptr;
-}
-//
-// Copyright © 2021-2022 Audinate Pty Ltd ACN 120 828 006 (Audinate). All rights reserved.
-//

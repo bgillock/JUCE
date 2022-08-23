@@ -82,7 +82,7 @@
       <SubSystem>Windows</SubSystem>
       <LargeAddressAware>true</LargeAddressAware>
       <AdditionalDependencies>dal.lib;dal_api.lib;libaud-protobuf-lited.lib;sodium.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
-      <ShowProgress>LinkVerbose</ShowProgress>
+      <ShowProgress>NotSet</ShowProgress>
       <AdditionalLibraryDirectories>D:\Audio\Audinate\lib\vs2015-dll\$(Configuration)\$(PlatformTarget);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <Bscmake>
