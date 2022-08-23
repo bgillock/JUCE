@@ -159,9 +159,24 @@
         comes with the SDK. (Only about a handful of the SDK header files are actually
         needed - so to simplify things, you could just copy these into your JUCE directory).
   */
-//#include <asio.h>
+
+#include "audinate/dal/Common.hpp"
+#include "audinate/dal/DAL.hpp"
+#include "audinate/dal/Instance.hpp"
+#include "audinate/dal/Audio.hpp"
+#include <string>
+#include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <assert.h>
+#include <signal.h>
+#include <sstream>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 #include <iasiodrv.h>
-//#include <asiosys.h>
+#include "native/DalAppBase.hpp"
+#include "native/DalAppBase.cpp"
 #include "native/juce_win32_Dante.cpp"
 #endif
 //==============================================================================
