@@ -304,15 +304,15 @@ static ASIOAudioIODevice* currentASIODev[maxNumASIODevices] = {};
 
 extern HWND juce_messageWindowHandle;
 
-class ASIOAudioIODeviceType;
-static void sendASIODeviceChangeToListeners (ASIOAudioIODeviceType*);
+class DanteAudioIODeviceType;
+static void sendASIODeviceChangeToListeners (DanteAudioIODeviceType*);
 
 //==============================================================================
 class ASIOAudioIODevice  : public AudioIODevice,
                            private Timer
 {
 public:
-    ASIOAudioIODevice (ASIOAudioIODeviceType* ownerType, const String& devName,
+    ASIOAudioIODevice (DanteAudioIODeviceType* ownerType, const String& devName,
                        CLSID clsID, int slotNumber)
        : AudioIODevice (devName, "Dante"),
          owner (ownerType),
@@ -729,7 +729,7 @@ public:
 
 private:
     //==============================================================================
-    WeakReference<ASIOAudioIODeviceType> owner;
+    WeakReference<DanteAudioIODeviceType> owner;
     IASIO* asioObject = {};
     ASIOCallbacks callbacks;
 
@@ -1450,10 +1450,10 @@ const unsigned char access_token[] =
 
 
 //==============================================================================
-class ASIOAudioIODeviceType  : public AudioIODeviceType
+class DanteAudioIODeviceType  : public AudioIODeviceType
 {
 public:
-    ASIOAudioIODeviceType() : AudioIODeviceType ("Dante") {}
+    DanteAudioIODeviceType() : AudioIODeviceType ("Dante") {}
 
     //==============================================================================
     void scanForDevices() override
@@ -1567,7 +1567,7 @@ public:
         callDeviceChangeListeners();
     }
 
-    JUCE_DECLARE_WEAK_REFERENCEABLE (ASIOAudioIODeviceType)
+    JUCE_DECLARE_WEAK_REFERENCEABLE (DanteAudioIODeviceType)
 
 private:
 
@@ -1667,10 +1667,10 @@ private:
         }
     }
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (ASIOAudioIODeviceType)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (DanteAudioIODeviceType)
 };
 
-void sendASIODeviceChangeToListeners (ASIOAudioIODeviceType* type)
+void sendASIODeviceChangeToListeners (DanteAudioIODeviceType* type)
 {
     if (type != nullptr)
         type->sendDeviceChangeToListeners();

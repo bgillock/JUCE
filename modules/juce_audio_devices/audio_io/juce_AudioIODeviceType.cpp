@@ -89,7 +89,7 @@ void AudioIODeviceType::callDeviceChangeListeners()
 #endif
 
 #if JUCE_WINDOWS && JUCE_DANTE
- AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Dante() { return new ASIOAudioIODeviceType(); }
+ AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Dante() { return new DanteAudioIODeviceType(); }
 #else
  AudioIODeviceType* AudioIODeviceType::createAudioIODeviceType_Dante() { return nullptr; }
 #endif

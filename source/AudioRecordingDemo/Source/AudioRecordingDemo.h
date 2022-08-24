@@ -234,7 +234,7 @@ public:
     AudioRecordingDemo()
     {
         setOpaque (true);  
-        //audioDeviceManager.addAudioDeviceType(ASIOAudioIODeviceType::createAudioIODeviceType_Dante());
+        //audioDeviceManager.addAudioDeviceType(DanteAudioIODeviceType::createAudioIODeviceType_Dante());
         audioSetupComp.reset(new AudioDeviceSelectorComponent(audioDeviceManager,
             0, 256, 0, 256, true, true, true, false));
         addAndMakeVisible(audioSetupComp.get());
