@@ -30,11 +30,28 @@ DanteAudioIODeviceType::DanteAudioIODeviceType() : AudioIODeviceType("Dante"), m
     mDalAppBase = new DAL::DalAppBase(APP_NAME, APP_MODEL_NAME, APP_MODEL_ID);
     mDalAppBase->init(access_token, mConfig, true);
     mDalAppBase->run();
+
+    // Create ConnectionsAPI
+    Audinate::DAL::ConnectionsConfig config;
+
+    config.setArcpSocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::Arcp));
+    config.setConmonClientSocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::ConmonClient));
+    config.setDomainClientProxySocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::DomainClientProxy));
+#ifdef _WIN32
+    config.setMdnsClientSocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::MdnsClient));
+#endif
+
+    mConnections = Audinate::DAL::createConnections(mDalAppBase->getDal(), config);
+    // Setup a call back for when the Channels are ready
+    mConnections->setAvailableChannelsChangedFn(bind(&DanteAudioIODeviceType::onAvailableChannelsChanged, this, std::placeholders::_1, std::placeholders::_2));
 };
-void DanteAudioIODeviceType::scanForDevices(){};
+void DanteAudioIODeviceType::scanForDevices()
+{
+};
 
 StringArray DanteAudioIODeviceType::getDeviceNames(bool) const 
 {
+    if (!mChannelsReady) return StringArray();
     return mDeviceNames;
 };
 int DanteAudioIODeviceType::getDefaultDeviceIndex(bool) const { return 0; };
@@ -45,7 +62,18 @@ AudioIODevice* DanteAudioIODeviceType::createDevice(const String& outputDeviceNa
 {
     return new DanteAudioIODevice();
 };
-
+void DanteAudioIODeviceType::onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds)
+{
+    for (auto txChannelId : txChannelIds)
+    {
+        auto available = mConnections->getAvailableDestinations(txChannelId);
+    }
+    for (auto rxChannelId : rxChannelIds)
+    {
+        auto available = mConnections->getAvailableSources(rxChannelId);
+    }
+    mChannelsReady = true;
+}
 DanteAudioIODevice::DanteAudioIODevice() : AudioIODevice("DanteAudioDeviceName","DanteAudioDeviceName") {};
 StringArray DanteAudioIODevice::getOutputChannelNames() { return 0; };
 StringArray DanteAudioIODevice::getInputChannelNames() { return 0; };
@@ -78,3 +106,4 @@ bool DanteAudioIODevice::setAudioPreprocessingEnabled(bool shouldBeEnabled) {
 int DanteAudioIODevice::getXRunCount() const noexcept {
     return 0;
 };
+

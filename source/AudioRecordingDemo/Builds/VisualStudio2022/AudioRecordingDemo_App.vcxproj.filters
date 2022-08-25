@@ -2733,9 +2733,6 @@
     <ClCompile Include="..\..\Source\DalAppBase.cpp">
       <Filter>AudioRecordingDemo\Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\juce_win32_Dante.cpp">
-      <Filter>AudioRecordingDemo\Source</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\Source\DanteAudioIODevice.cpp">
       <Filter>AudioRecordingDemo\Source</Filter>
     </ClCompile>
@@ -5415,9 +5412,6 @@
       <Filter>JUCE Library Code</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DalAppBase.hpp">
-      <Filter>AudioRecordingDemo\Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\juce_win32_Dantehide.hpp">
       <Filter>AudioRecordingDemo\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\DanteAudioIODevice.h">

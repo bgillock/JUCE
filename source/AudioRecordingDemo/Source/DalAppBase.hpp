@@ -57,6 +57,7 @@
 #include "audinate/dal/DAL.hpp"
 #include "audinate/dal/Instance.hpp"
 #include "audinate/dal/Audio.hpp"
+#include "audinate/dal/Connections.hpp"
 #include <string>
 #include <algorithm>
 #include <iomanip>

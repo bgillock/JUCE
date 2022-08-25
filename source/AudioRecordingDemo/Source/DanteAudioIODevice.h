@@ -11,9 +11,12 @@ public:
     virtual AudioIODevice* createDevice(const String& outputDeviceName,
         const String& inputDeviceName) override;
 private:
+    bool mChannelsReady = false;
     StringArray mDeviceNames;
     DAL::DalAppBase* mDalAppBase = nullptr;
     DAL::DalConfig mConfig;
+    std::shared_ptr<Audinate::DAL::Connections> mConnections;
+    void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
 };
 class DanteAudioIODevice : public AudioIODevice {
     String open(const BigInteger&, const BigInteger&, double, int) override;

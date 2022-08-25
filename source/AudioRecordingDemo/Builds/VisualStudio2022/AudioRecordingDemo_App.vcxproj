@@ -141,7 +141,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\DalAppBase.cpp" />
-    <ClCompile Include="..\..\Source\juce_win32_Dante.cpp" />
     <ClCompile Include="..\..\Source\Main.cpp" />
     <ClCompile Include="..\..\..\..\modules\juce_audio_basics\buffers\juce_AudioChannelSet.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -3173,9 +3172,6 @@
     <ClInclude Include="..\..\..\..\modules\juce_gui_extra\native\juce_mac_NSViewFrameWatcher.h" />
     <ClInclude Include="..\..\..\..\modules\juce_gui_extra\juce_gui_extra.h" />
     <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h" />
-    <ClInclude Include="..\..\Source\juce_win32_Dantehide.hpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
-    </ClInclude>
     <ClInclude Include="..\..\Source\DanteAudioIODevice.h" />
   </ItemGroup>
   <ItemGroup>
