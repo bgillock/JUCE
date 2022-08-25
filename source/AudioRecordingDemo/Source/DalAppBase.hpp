@@ -50,6 +50,24 @@
 //
 //  DalAppBase.hpp
 //  DAL example common DAL application code.
+
+#include "juce_audio_devices/juce_audio_devices.h"
+#include "juce_audio_devices/audio_io/juce_SampleRateHelpers.cpp"
+#include "audinate/dal/Common.hpp"
+#include "audinate/dal/DAL.hpp"
+#include "audinate/dal/Instance.hpp"
+#include "audinate/dal/Audio.hpp"
+#include <string>
+#include <algorithm>
+#include <iomanip>
+#include <iostream>
+#include <assert.h>
+#include <signal.h>
+#include <sstream>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
 namespace DAL {
 
 	class DalConfig : public Audinate::DAL::InstanceConfig { public: DalConfig(); };

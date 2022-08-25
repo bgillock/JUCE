@@ -50,6 +50,8 @@
 //
 //  DalAppBase.cpp
 //  DAL example common DAL application code.
+#include "DalAppBase.hpp"
+static int testInt = 2;
 namespace DAL {
 	static bool g_running = true;
 	static bool g_restart = false;

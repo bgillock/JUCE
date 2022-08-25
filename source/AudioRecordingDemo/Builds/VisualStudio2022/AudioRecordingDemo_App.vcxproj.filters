@@ -909,9 +909,6 @@
     <ClCompile Include="..\..\..\..\modules\juce_audio_devices\native\juce_win32_ASIO.cpp">
       <Filter>JUCE Modules\juce_audio_devices\native</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\modules\juce_audio_devices\native\juce_win32_Dante.cpp">
-      <Filter>JUCE Modules\juce_audio_devices\native</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\modules\juce_audio_devices\native\juce_win32_DirectSound.cpp">
       <Filter>JUCE Modules\juce_audio_devices\native</Filter>
     </ClCompile>
@@ -2733,8 +2730,14 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_gui_extra.cpp">
       <Filter>JUCE Library Code</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\modules\juce_audio_devices\native\DalAppBase.cpp">
-      <Filter>JUCE Modules\juce_audio_devices\native</Filter>
+    <ClCompile Include="..\..\Source\DalAppBase.cpp">
+      <Filter>AudioRecordingDemo\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\juce_win32_Dante.cpp">
+      <Filter>AudioRecordingDemo\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\DanteAudioIODevice.cpp">
+      <Filter>AudioRecordingDemo\Source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -5411,8 +5414,14 @@
     <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h">
       <Filter>JUCE Library Code</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\..\modules\juce_audio_devices\native\DalAppBase.hpp">
-      <Filter>JUCE Modules\juce_audio_devices\native</Filter>
+    <ClInclude Include="..\..\Source\DalAppBase.hpp">
+      <Filter>AudioRecordingDemo\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\juce_win32_Dantehide.hpp">
+      <Filter>AudioRecordingDemo\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\DanteAudioIODevice.h">
+      <Filter>AudioRecordingDemo\Source</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

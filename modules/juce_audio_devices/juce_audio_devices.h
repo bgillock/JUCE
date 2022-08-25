@@ -97,7 +97,7 @@
     info about this.
 */
 #ifndef JUCE_DANTE
-#define JUCE_DANTE 1
+#define JUCE_DANTE 0
 #endif
 
 /** Config: JUCE_WASAPI
