@@ -61,6 +61,7 @@
 #include <string>
 #include <algorithm>
 #include <iomanip>
+#include <fstream>
 #include <iostream>
 #include <assert.h>
 #include <signal.h>
@@ -89,16 +90,17 @@ namespace DAL {
 			mInstance(), mTransferFn()
 		{}
 		virtual ~DalAppBase() {}
-		std::shared_ptr<Audinate::DAL::DAL> getDal() { return mDal; };
-		bool isSupportedSampleRate(uint32_t sampleRate) const;
-		const Audinate::DAL::InstanceConfig& getConfig() { return mConfig; }
-		void setTransferFn(DalAppTransferFn fn) { mTransferFn = fn; }
-
 		virtual int init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor);
 		virtual void run();
 		virtual void stop();
 		virtual bool getAudioProperties(Audinate::DAL::AudioProperties& properties);
 		virtual bool isDeviceActivated();
+
+		std::shared_ptr<Audinate::DAL::DAL> getDal() { return mDal; };
+		bool isSupportedSampleRate(uint32_t sampleRate) const;
+		const Audinate::DAL::InstanceConfig& getConfig() { return mConfig; }
+		void setTransferFn(DalAppTransferFn fn) { mTransferFn = fn; }
+		std::string toString(const Audinate::DAL::Id64& id64);
 
 	protected:
 		virtual void restartDalInstance();

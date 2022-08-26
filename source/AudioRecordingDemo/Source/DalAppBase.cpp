@@ -51,11 +51,11 @@
 //  DalAppBase.cpp
 //  DAL example common DAL application code.
 #include "DalAppBase.hpp"
-static int testInt = 2;
+
 namespace DAL {
 	static bool g_running = true;
 	static bool g_restart = false;
-
+	static std::ofstream mLog;
 	static std::uint16_t  DAL_EXAMPLE_ARCP_PORT = 30440;
 	static std::uint16_t  DAL_EXAMPLE_ARCP_LOCAL_PORT = 30441;
 	static std::uint16_t  DAL_EXAMPLE_DBCP_PORT = 30455;
@@ -130,19 +130,19 @@ namespace DAL {
 		switch (ev.getType())
 		{
 		case Audinate::DAL::InstanceEvent::Type::InstanceStateChanged:
-			std::cout << "Instance state changed, now " << Audinate::DAL::toString(instance.getInstanceState()) << std::endl;
+			mLog << "Instance state changed, now " << Audinate::DAL::toString(instance.getInstanceState()) << std::endl << std::flush;
 			break;
 		case Audinate::DAL::InstanceEvent::Type::ComponentStatusChanged:
-			std::cout << "Component " << Audinate::DAL::toString(ev.getComponent()) << " status changed, now " << Audinate::DAL::toString(instance.getComponentStatus(ev.getComponent())) << std::endl;
+			mLog << "Component " << Audinate::DAL::toString(ev.getComponent()) << " status changed, now " << Audinate::DAL::toString(instance.getComponentStatus(ev.getComponent())) << std::endl << std::flush;
 			break;
 		case Audinate::DAL::InstanceEvent::Type::DomainInfoChanged:
 			if (instance.getDomainInfo().mIsEnrolled)
 			{
-				std::cout << "Domain info changed, enrolled in managed domain=" << instance.getDomainInfo().mDomainName << std::endl;
+				mLog << "Domain info changed, enrolled in managed domain=" << instance.getDomainInfo().mDomainName << std::endl << std::flush;
 			}
 			else
 			{
-				std::cout << "Domain info changed, not enrolled" << std::endl;
+				mLog << "Domain info changed, not enrolled" << std::endl << std::flush;
 			}
 			break;
 		case Audinate::DAL::InstanceEvent::Type::DeviceActivationStatusChanged:
@@ -155,11 +155,11 @@ namespace DAL {
 
 			if (instance.isDeviceActivated())
 			{
-				std::cout << "Device activation status changed, activated" << std::endl;
+				mLog << "Device activation status changed, activated" << std::endl << std::flush;
 			}
 			else
 			{
-				std::cout << "Device activation status changed, not activated" << std::endl;
+				mLog << "Device activation status changed, not activated" << std::endl << std::flush;
 			}
 		}
 
@@ -168,24 +168,24 @@ namespace DAL {
 	static void handleMonitoringEvent(const Audinate::DAL::MonitoringEvent& ev)
 	{
 		auto ts = ev.getTimestamp();
-		std::cout << ts.mSeconds << "." << ts.mNanoseconds << ":";
+		mLog << ts.mSeconds << "." << ts.mNanoseconds << ":";
 		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::MaxControlThreadInterval))
 		{
-			std::cout << " control=" << ev.getMaxControlThreadIntervalUs();
+			mLog << " control=" << ev.getMaxControlThreadIntervalUs();
 		}
 		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::MaxAudioThreadInterval))
 		{
-			std::cout << " audio=" << ev.getMaxAudioThreadIntervalUs();
+			mLog << " audio=" << ev.getMaxAudioThreadIntervalUs();
 		}
 		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::LatePacketCount))
 		{
-			std::cout << " late=" << ev.getLatePacketCount();
+			mLog << " late=" << ev.getLatePacketCount();
 		}
 		if (ev.hasType(Audinate::DAL::MonitoringEvent::Type::NonSequentialPacketCount))
 		{
-			std::cout << " nonSeq=" << ev.getNonSequentialPacketCount();
+			mLog << " nonSeq=" << ev.getNonSequentialPacketCount();
 		}
-		std::cout << std::endl;
+		mLog << std::endl << std::flush;
 	}
 
 	static std::string toString(const Audinate::DAL::Id64& id64)
@@ -201,6 +201,7 @@ namespace DAL {
 
 	int DalAppBase::init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor)
 	{
+		mLog.open("dal.log", std::ios_base::app);
 		// Create DAL
 		try
 		{
@@ -208,7 +209,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			g_running = false;
 			mDal = nullptr;
 			return -1;
@@ -217,10 +218,10 @@ namespace DAL {
 		mConfig = instanceConfig;
 
 		Audinate::DAL::Id64 manufacturerId = mDal->getManufacturerId();
-		std::cout << "ManufacturerId is 0x" << toString(manufacturerId) << std::endl;
+		mLog << "ManufacturerId is 0x" << DAL::toString(manufacturerId) << std::endl << std::flush;
 
 		Audinate::DAL::DALVersion dalVersion = Audinate::DAL::getVersion();
-		std::cout << "DAL version is " << unsigned(dalVersion.mMajor) << "." << unsigned(dalVersion.mMinor) << "." << dalVersion.mBugfix << "." << dalVersion.mBuildNumber << std::endl;
+		mLog << "DAL version is " << unsigned(dalVersion.mMajor) << "." << unsigned(dalVersion.mMinor) << "." << dalVersion.mBugfix << "." << dalVersion.mBuildNumber << std::endl << std::flush;
 
 
 		// Create DAL instance
@@ -230,16 +231,16 @@ namespace DAL {
 
 			if (!mInstance->isDeviceActivated())
 			{
-				std::cout << "DAL device is not activated" << std::endl;
+				mLog << "DAL device is not activated" << std::endl << std::flush;
 			}
 			else
 			{
-				std::cout << "DAL device is activated" << std::endl;
+				mLog << "DAL device is activated" << std::endl << std::flush;
 			}
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			g_running = false;
 			mDal = nullptr;
 			return -1;
@@ -286,7 +287,7 @@ namespace DAL {
 	{
 		if (!mInstance)
 		{
-			std::cerr << "DAL instance has not been created" << std::endl;
+			std::cerr << "DAL instance has not been created" << std::endl << std::flush;
 			return;
 		}
 
@@ -296,16 +297,16 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			g_running = false;
 		}
 
-		std::cout << "\nSocket Descriptor validation: ";
+		mLog << "\nSocket Descriptor validation: ";
 		for (auto iter : protocols)
 		{
 			auto configSd = mConfig.getProtocolSocketDescriptor(iter);
 			auto actualSd = mInstance->getProtocolSocketDescriptor(iter);
-			std::cout << "Protocol" << Audinate::DAL::toString(iter) << " config=" << Audinate::DAL::toString(configSd) << " actual=" << Audinate::DAL::toString(actualSd) << std::endl;
+			mLog << "Protocol" << Audinate::DAL::toString(iter) << " config=" << Audinate::DAL::toString(configSd) << " actual=" << Audinate::DAL::toString(actualSd) << std::endl << std::flush;
 		}
 	}
 
@@ -336,7 +337,7 @@ namespace DAL {
 
 		if (mInstance->getInstanceState() != Audinate::DAL::InstanceState::Stopped)
 		{
-			std::cerr << "DAL instance should be stopped before updating audio transfer" << std::endl;
+			std::cerr << "DAL instance should be stopped before updating audio transfer" << std::endl << std::flush;
 			return;
 		}
 
@@ -385,7 +386,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 		}
 	}
 
@@ -400,7 +401,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl;
+			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			return;
 		}
 	}
