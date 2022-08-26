@@ -65,3 +65,4 @@ extras/Projucer/JUCECompileEngine.dylib
 /build
 
 CMakeUserPresets.json
+source/AudioRecordingDemo/Builds/VisualStudio2022/dal.log
