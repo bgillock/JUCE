@@ -12,10 +12,8 @@ const unsigned char access_token[] =
 "00000000000000000000000000000000000000000000000000000000000000009d25e76200000000" \
 "9db20e6300000000451bb4cc4f164ffa941324f9d3e6b8540100000000000000";
 
-DanteAudioIODeviceType::DanteAudioIODeviceType() : AudioIODeviceType("Dante"), mDeviceNames() 
+DanteAudioIODeviceType::DanteAudioIODeviceType() : AudioIODeviceType("Dante"), mOutputDeviceNames(), mInputDeviceNames(), mOutputDevices(), mInputDevices()
 {
-    mDeviceNames.clear();
-    mDeviceNames.add("Dante");
     mConfig.setInterfaceIndex(11);
     mConfig.setTimeSource(Audinate::DAL::TimeSource::RxAudio);
     mConfig.setManufacturerName("BitRate27");
@@ -49,36 +47,92 @@ void DanteAudioIODeviceType::scanForDevices()
 {
 };
 
-StringArray DanteAudioIODeviceType::getDeviceNames(bool) const 
+StringArray DanteAudioIODeviceType::getDeviceNames(bool reqInput) const 
 {
     if (!mChannelsReady) return StringArray();
-    return mDeviceNames;
+    return reqInput ? mInputDeviceNames : mOutputDeviceNames;
 };
-int DanteAudioIODeviceType::getDefaultDeviceIndex(bool) const { return 0; };
-int DanteAudioIODeviceType::getIndexOfDevice(AudioIODevice* d, bool) const { return 0; };
+int DanteAudioIODeviceType::getDefaultDeviceIndex(bool) const 
+{ 
+    return 0; 
+};
+int DanteAudioIODeviceType::getIndexOfDevice(AudioIODevice* d, bool) const 
+{ 
+    return 0; 
+};
 bool DanteAudioIODeviceType::hasSeparateInputsAndOutputs() const { return true; };
 AudioIODevice* DanteAudioIODeviceType::createDevice(const String& outputDeviceName,
     const String& inputDeviceName)
 {
-    return new DanteAudioIODevice();
+    return new DanteAudioIODevice(outputDeviceName);
 };
 void DanteAudioIODeviceType::onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds)
 {
+    mOutputDeviceNames.clear();
     for (auto txChannelId : txChannelIds)
     {
         auto available = mConnections->getAvailableDestinations(txChannelId);
+        for (auto x : available.mDevices)
+        {
+            if (mOutputDeviceNames.indexOf(x.mDeviceName) == -1)
+            {
+                mOutputDeviceNames.add(x.mDeviceName);
+                auto newDevice = createDevice(x.mDeviceName, "");
+                mOutputDevices.add(newDevice);
+            }
+            for (auto y : x.mChannelNames)
+            {
+
+            }
+        }
     }
+    mInputDeviceNames.clear();
     for (auto rxChannelId : rxChannelIds)
     {
-        auto available = mConnections->getAvailableSources(rxChannelId);
+        auto available = mConnections->getAvailableDestinations(rxChannelId);
+        for (auto x : available.mDevices)
+        {
+            if (mInputDeviceNames.indexOf(x.mDeviceName) == -1)
+            {
+                mInputDeviceNames.add(x.mDeviceName);
+                mInputDevices.add(createDevice(x.mDeviceName,""));
+            }
+            for (auto y : x.mChannelNames)
+            {
+
+            }
+        }
     }
     mChannelsReady = true;
+    callDeviceChangeListeners();
 }
-DanteAudioIODevice::DanteAudioIODevice() : AudioIODevice("DanteAudioDeviceName","DanteAudioDeviceName") {};
-StringArray DanteAudioIODevice::getOutputChannelNames() { return 0; };
-StringArray DanteAudioIODevice::getInputChannelNames() { return 0; };
-Array<double> DanteAudioIODevice::getAvailableSampleRates() { return 0; };
-Array<int> DanteAudioIODevice::getAvailableBufferSizes() { return 0; };
+
+DanteAudioIODevice::DanteAudioIODevice(const String& deviceName) : AudioIODevice(deviceName,"Dante") {};
+
+StringArray DanteAudioIODevice::getOutputChannelNames()
+{
+    StringArray outChannels;
+
+    if (outputDevice != nullptr)
+        for (int i = 1; i <= outputDevice->actualNumChannels; ++i)
+            outChannels.add("Output channel " + String(i));
+
+    return outChannels;
+}
+
+StringArray DanteAudioIODevice::getInputChannelNames()
+{
+    StringArray inChannels;
+
+    if (inputDevice != nullptr)
+        for (int i = 1; i <= inputDevice->actualNumChannels; ++i)
+            inChannels.add("Input channel " + String(i));
+
+    return inChannels;
+}
+
+Array<double> DanteAudioIODevice::getAvailableSampleRates() { return { 48000.0 }; };
+Array<int> DanteAudioIODevice::getAvailableBufferSizes() { return { 960 }; };
 int DanteAudioIODevice::getDefaultBufferSize() { return 0; };
 String DanteAudioIODevice::open(const BigInteger& inputChannels,
     const BigInteger& outputChannels,
@@ -93,8 +147,8 @@ void DanteAudioIODevice::start(AudioIODeviceCallback* callback) { };
 void DanteAudioIODevice::stop() { };
 bool DanteAudioIODevice::isPlaying() { return 0; };
 String DanteAudioIODevice::getLastError() { return ""; };
-int DanteAudioIODevice::getCurrentBufferSizeSamples() { return 0; };
-double DanteAudioIODevice::getCurrentSampleRate() { return 0; };
+int DanteAudioIODevice::getCurrentBufferSizeSamples() { return 960; };
+double DanteAudioIODevice::getCurrentSampleRate() { return 48000.0; };
 int DanteAudioIODevice::getCurrentBitDepth() { return 0; };
 BigInteger DanteAudioIODevice::getActiveOutputChannels() const { return 0; };
 BigInteger DanteAudioIODevice::getActiveInputChannels() const { return 0; };

@@ -241,7 +241,7 @@ namespace juce {
             // auto deviceType = new DanteAudioIODeviceType();
 
             auto deviceType = std::make_unique<DanteAudioIODeviceType>();
-
+            audioDeviceManager.getAvailableDeviceTypes();
             audioDeviceManager.addAudioDeviceType(std::move(deviceType));
             audioSetupComp.reset(new AudioDeviceSelectorComponent(audioDeviceManager,
                 0, 256, 0, 256, true, true, true, false));

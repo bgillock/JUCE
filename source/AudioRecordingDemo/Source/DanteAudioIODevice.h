@@ -1,24 +1,7 @@
 #include <JuceHeader.h>
 #include "DalAppBase.hpp"
-class DanteAudioIODeviceType : public AudioIODeviceType {
-public:
-    DanteAudioIODeviceType();
-    virtual void scanForDevices() override;
-    virtual StringArray getDeviceNames(bool) const override;
-    virtual int getDefaultDeviceIndex(bool) const override;
-    virtual int getIndexOfDevice(AudioIODevice* d, bool) const override;
-    virtual bool hasSeparateInputsAndOutputs() const override;
-    virtual AudioIODevice* createDevice(const String& outputDeviceName,
-        const String& inputDeviceName) override;
-private:
-    bool mChannelsReady = false;
-    StringArray mDeviceNames;
-    DAL::DalAppBase* mDalAppBase = nullptr;
-    DAL::DalConfig mConfig;
-    std::shared_ptr<Audinate::DAL::Connections> mConnections;
-    void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
-};
 class DanteAudioIODevice : public AudioIODevice {
+
     String open(const BigInteger&, const BigInteger&, double, int) override;
     void close() override;
 
@@ -55,5 +38,33 @@ class DanteAudioIODevice : public AudioIODevice {
     int getXRunCount() const noexcept override;
 
 public:
-    DanteAudioIODevice();
+    DanteAudioIODevice(const String& deviceName);
+private:
+    DanteAudioIODevice* inputDevice = nullptr;
+    DanteAudioIODevice* outputDevice = nullptr;    
+    int actualNumChannels = 0;
+};
+
+class DanteAudioIODeviceType : public AudioIODeviceType {
+public:
+    DanteAudioIODeviceType();
+    virtual void scanForDevices() override;
+    virtual StringArray getDeviceNames(bool) const override;
+    virtual int getDefaultDeviceIndex(bool) const override;
+    virtual int getIndexOfDevice(AudioIODevice* d, bool) const override;
+    virtual bool hasSeparateInputsAndOutputs() const override;
+    virtual AudioIODevice* createDevice(const String& outputDeviceName,
+        const String& inputDeviceName) override;
+
+private:
+    bool mChannelsReady = false;
+    DAL::DalAppBase* mDalAppBase = nullptr;
+    DAL::DalConfig mConfig;
+    std::shared_ptr<Audinate::DAL::Connections> mConnections;
+    OwnedArray<AudioIODevice> mOutputDevices;
+    OwnedArray<AudioIODevice> mInputDevices;    
+    StringArray mOutputDeviceNames;
+    StringArray mInputDeviceNames;
+
+    void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
 };

@@ -201,7 +201,8 @@ namespace DAL {
 
 	int DalAppBase::init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor)
 	{
-		mLog.open("dal.log", std::ios_base::app);
+
+		mLog.open("dal.log");
 		// Create DAL
 		try
 		{
