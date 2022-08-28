@@ -229,7 +229,7 @@ namespace juce {
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RecordingThumbnail)
     };
-
+ 
     //==============================================================================
     class AudioRecordingDemo : public Component
     {
@@ -240,22 +240,26 @@ namespace juce {
 
             // auto deviceType = new DanteAudioIODeviceType();
 
-            auto deviceType = std::make_unique<DanteAudioIODeviceType>();
-            audioDeviceManager.getAvailableDeviceTypes();
-            audioDeviceManager.addAudioDeviceType(std::move(deviceType));
-            audioSetupComp.reset(new AudioDeviceSelectorComponent(audioDeviceManager,
-                0, 256, 0, 256, true, true, true, false));
-            addAndMakeVisible(audioSetupComp.get());
 
-            addAndMakeVisible(liveAudioScroller);
+            audioDeviceManager.getAvailableDeviceTypes();
+           // audioDeviceManager.addAudioDeviceType(std::move(deviceType));
+            auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
+                0, 256, 0, 256, true, true, true, false);
+            //audioSetupComp.reset(audioDeviceSelectorComponent);            
+            deviceType = std::make_unique<DanteAudioIODeviceType>(std::shared_ptr<Component>(this));
+            //audioDeviceManager.addChangeListener(audioSetupComp->);
+            //addAndMakeVisible(audioSetupComp.get());
+
+            //addAndMakeVisible(liveAudioScroller);
 
             addAndMakeVisible(explanationLabel);
             explanationLabel.setFont(Font(15.0f, Font::plain));
             explanationLabel.setJustificationType(Justification::topLeft);
             explanationLabel.setEditable(false, false, false);
-            explanationLabel.setColour(TextEditor::textColourId, Colours::black);
-            explanationLabel.setColour(TextEditor::backgroundColourId, Colour(0x00000000));
+            explanationLabel.setColour(TextEditor::textColourId, Colours::white);
+            //explanationLabel.setColour(TextEditor::backgroundColourId, Colour(0x00000000));
 
+            /*
             addAndMakeVisible(recordButton);
             recordButton.setColour(TextButton::buttonColourId, Colour(0xffff5c5c));
             recordButton.setColour(TextButton::textColourOnId, Colours::black);
@@ -269,7 +273,7 @@ namespace juce {
             };
 
             addAndMakeVisible(recordingThumbnail);
-
+            */
 #ifndef JUCE_DEMO_RUNNER
             RuntimePermissions::request(RuntimePermissions::recordAudio,
                 [this](bool granted)
@@ -279,16 +283,16 @@ namespace juce {
                 });
 #endif
 
-            audioDeviceManager.addAudioCallback(&liveAudioScroller);
-            audioDeviceManager.addAudioCallback(&recorder);
+            //audioDeviceManager.addAudioCallback(&liveAudioScroller);
+            //audioDeviceManager.addAudioCallback(&recorder);
 
             setSize(500, 500);
         }
 
         ~AudioRecordingDemo() override
         {
-            audioDeviceManager.removeAudioCallback(&recorder);
-            audioDeviceManager.removeAudioCallback(&liveAudioScroller);
+            //audioDeviceManager.removeAudioCallback(&recorder);
+            //audioDeviceManager.removeAudioCallback(&liveAudioScroller);
         }
 
         void paint(Graphics& g) override
@@ -299,11 +303,45 @@ namespace juce {
         void resized() override
         {
             auto area = getLocalBounds();
-            audioSetupComp->setBounds(area.removeFromTop(proportionOfHeight(0.65f)));
-            liveAudioScroller.setBounds(area.removeFromTop(80).reduced(8));
-            recordingThumbnail.setBounds(area.removeFromTop(80).reduced(8));
-            recordButton.setBounds(area.removeFromTop(36).removeFromLeft(140).reduced(8));
-            explanationLabel.setBounds(area.reduced(8));
+
+                //audioSetupComp->setBounds(area.removeFromTop(proportionOfHeight(0.65f)));
+                //liveAudioScroller.setBounds(area.removeFromTop(80).reduced(8));
+                //recordingThumbnail.setBounds(area.removeFromTop(80).reduced(8));
+                //recordButton.setBounds(area.removeFromTop(36).removeFromLeft(140).reduced(8));
+            explanationLabel.setBounds(Rectangle<int>(10, 10, 400, 30));
+            if (outputDeviceDropDown != nullptr)
+            {
+                outputDeviceDropDown->setBounds(Rectangle<int>(100, 30, 300, 40));
+            }
+
+            if (inputDeviceDropDown != nullptr)
+            {
+                //inputLevelMeter->setBounds(row.removeFromRight(testButton != nullptr ? testButton->getWidth() : row.getWidth() / 6));
+                inputDeviceDropDown->setBounds(Rectangle<int>(100, 50, 300, 60));
+            }
+        }
+
+        void handleCommandMessage(int commandId) override
+        {
+            switch (commandId) {
+                case 0: {
+                    explanationLabel.setText("Initialized DAL...",NotificationType::sendNotification);
+                    break;
+                }
+                case 1: {
+                    explanationLabel.setText("Created connections...", NotificationType::sendNotification);
+                    break;
+                }
+                case 2: {
+                    explanationLabel.setText("Dante Channels available!", NotificationType::sendNotification);
+                    // What devices can we see now?
+                    //StringArray inputDevices = deviceType->getDeviceNames(true);
+                    updateInputsComboBox();
+                    updateOutputsComboBox();
+                    resized();
+                    break;
+                }
+            };
         }
 
     private:
@@ -313,21 +351,62 @@ namespace juce {
 #else
         AudioDeviceManager& audioDeviceManager{ getSharedAudioDeviceManager(1, 0) };
 #endif
-        std::unique_ptr<AudioDeviceSelectorComponent> audioSetupComp;
-        LiveScrollingAudioDisplay liveAudioScroller;
-        RecordingThumbnail recordingThumbnail;
-        AudioRecorder recorder{ recordingThumbnail.getAudioThumbnail() };
-
-        Label explanationLabel{ {}, "This page demonstrates how to record a wave file from the live audio input..\n\n"
-                                     #if (JUCE_ANDROID || JUCE_IOS)
-                                      "After you are done with your recording you can share with other apps."
-                                     #else
-                                      "Pressing record will start recording a file in your \"Documents\" folder."
-                                     #endif
+        //std::unique_ptr<AudioDeviceSelectorComponent> audioSetupComp;
+        //LiveScrollingAudioDisplay liveAudioScroller;
+        //RecordingThumbnail recordingThumbnail;
+        //AudioRecorder recorder{ recordingThumbnail.getAudioThumbnail() };
+        std::unique_ptr<DanteAudioIODeviceType> deviceType;
+        Label explanationLabel{ {}, "Initializing Dante...\n"
         };
-        TextButton recordButton{ "Record" };
-        File lastRecording;
+        //TextButton recordButton{ "Record" };
+        //File lastRecording;
+        std::unique_ptr<ComboBox> outputDeviceDropDown, inputDeviceDropDown;
+        std::unique_ptr<Label> outputDeviceLabel, inputDeviceLabel;
 
+        void addNamesToDeviceBox(ComboBox& combo, bool isInputs)
+        {
+            const StringArray devs(deviceType->getDeviceNames(isInputs));
+
+            combo.clear(dontSendNotification);
+
+            for (int i = 0; i < devs.size(); ++i)
+                combo.addItem(devs[i], i + 1);
+
+            combo.setSelectedId(0, dontSendNotification);
+        }
+        void updateOutputsComboBox()
+        {
+            if (outputDeviceDropDown == nullptr)
+            {
+                outputDeviceDropDown.reset(new ComboBox());
+                outputDeviceDropDown->onChange = [this] {  };
+
+                addAndMakeVisible(outputDeviceDropDown.get());
+
+                outputDeviceLabel.reset(new Label({}, TRANS("Output:")));
+                outputDeviceLabel->attachToComponent(outputDeviceDropDown.get(), true);
+            }
+
+            addNamesToDeviceBox(*outputDeviceDropDown, false);
+        }
+
+        void updateInputsComboBox()
+        {
+            if (inputDeviceDropDown == nullptr)
+            {
+                inputDeviceDropDown.reset(new ComboBox());
+                inputDeviceDropDown->onChange = [this] {  };
+                addAndMakeVisible(inputDeviceDropDown.get());
+
+                inputDeviceLabel.reset(new Label({}, TRANS("Input:")));
+                inputDeviceLabel->attachToComponent(inputDeviceDropDown.get(), true);
+
+                //inputLevelMeter.reset(new SimpleDeviceManagerInputLevelMeter(*setup.manager));
+                //addAndMakeVisible(inputLevelMeter.get());
+            }
+
+            addNamesToDeviceBox(*inputDeviceDropDown, true);
+        }
         void startRecording()
         {
             if (!RuntimePermissions::isGranted(RuntimePermissions::writeExternalStorage))
@@ -349,17 +428,17 @@ namespace juce {
             auto parentDir = File::getSpecialLocation(File::userDocumentsDirectory);
 #endif
 
-            lastRecording = parentDir.getNonexistentChildFile("JUCE Demo Audio Recording", ".wav");
+            //lastRecording = parentDir.getNonexistentChildFile("JUCE Demo Audio Recording", ".wav");
 
-            recorder.startRecording(lastRecording);
+            //recorder.startRecording(lastRecording);
 
-            recordButton.setButtonText("Stop");
-            recordingThumbnail.setDisplayFullThumbnail(false);
+            //recordButton.setButtonText("Stop");
+            //recordingThumbnail.setDisplayFullThumbnail(false);
         }
 
         void stopRecording()
         {
-            recorder.stop();
+            //recorder.stop();
 
 #if JUCE_CONTENT_SHARING
             SafePointer<AudioRecordingDemo> safeThis(this);
@@ -380,9 +459,9 @@ namespace juce {
                 });
 #endif
 
-            lastRecording = File();
-            recordButton.setButtonText("Record");
-            recordingThumbnail.setDisplayFullThumbnail(true);
+            //lastRecording = File();
+            //recordButton.setButtonText("Record");
+            //recordingThumbnail.setDisplayFullThumbnail(true);
         }
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(AudioRecordingDemo)

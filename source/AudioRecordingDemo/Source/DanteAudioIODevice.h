@@ -47,15 +47,15 @@ private:
 
 class DanteAudioIODeviceType : public AudioIODeviceType {
 public:
-    DanteAudioIODeviceType();
+    DanteAudioIODeviceType(std::shared_ptr<Component>);
     virtual void scanForDevices() override;
     virtual StringArray getDeviceNames(bool) const override;
     virtual int getDefaultDeviceIndex(bool) const override;
     virtual int getIndexOfDevice(AudioIODevice* d, bool) const override;
     virtual bool hasSeparateInputsAndOutputs() const override;
     virtual AudioIODevice* createDevice(const String& outputDeviceName,
-        const String& inputDeviceName) override;
-
+        const String& inputDeviceName) override;        
+    
 private:
     bool mChannelsReady = false;
     DAL::DalAppBase* mDalAppBase = nullptr;
@@ -65,6 +65,7 @@ private:
     OwnedArray<AudioIODevice> mInputDevices;    
     StringArray mOutputDeviceNames;
     StringArray mInputDeviceNames;
-
+    std::shared_ptr<Component> mComponent;
+    int test;
     void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
 };
