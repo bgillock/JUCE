@@ -4,8 +4,8 @@ DAL device is activated
 Instance state changed, now Starting
 Instance state changed, now Running
 
-Socket Descriptor validation: ProtocolArcp config=30440 actual=30440
-691726.707011900: control=0 audio=1207 late=0 nonSeq=0
+Socket Descriptor validation: 701534.792730800: control=0 audio=1159 late=0 nonSeq=0
+ProtocolArcp config=30440 actual=30440
 ProtocolArcpLocal config=30441 actual=30441
 ProtocolDbcp config=30455 actual=30455
 ProtocolCmcp config=34800 actual=34800
@@ -13,63 +13,95 @@ ProtocolConmonChannels config=34700 actual=34700
 ProtocolConmonClient config=34900 actual=34900
 ProtocolDomainClientProxy config=34001 actual=34001
 ProtocolAudioBase config=30336 actual=30336
-ProtocolWebSocket config=0 actual=54498
+ProtocolWebSocket config=0 actual=51965
 ProtocolMdnsClient config=34002 actual=34002
-691739.173983600: control=0 audio=4945 late=0 nonSeq=0
-691740.6030300: control=12466835 audio=1391 late=0 nonSeq=0
-691741.9099800: control=23976 audio=1030 late=0 nonSeq=0
+701547.33213500: control=0 audio=21235 late=0 nonSeq=0
+701548.12784300: control=12240596 audio=1053 late=0 nonSeq=0
+701549.12463600: control=23517 audio=1526 late=0 nonSeq=0
 Component ConmonServer status changed, now Running
 Component Mdns status changed, now Running
-691742.11542600: control=24196 audio=1284 late=0 nonSeq=0
+701550.11712000: control=23582 audio=1429 late=0 nonSeq=0
 Component Apec status changed, now Running
-691743.5080600: control=23617 audio=1128 late=0 nonSeq=0
-691744.17498200: control=23993 audio=1090 late=0 nonSeq=0
-691745.3517100: control=41981 audio=1034 late=0 nonSeq=0
-691746.12981600: control=340506 audio=1285 late=0 nonSeq=0
-691747.10532600: control=24040 audio=985 late=0 nonSeq=0
-691748.15537000: control=24101 audio=889 late=0 nonSeq=0
-691749.15510000: control=23944 audio=1299 late=0 nonSeq=0
-691750.6999600: control=23756 audio=902 late=0 nonSeq=0
-691751.7540100: control=23677 audio=1041 late=0 nonSeq=0
-691752.16507300: control=23776 audio=1063 late=0 nonSeq=0
-691753.16534100: control=24157 audio=895 late=0 nonSeq=0
-691754.16677200: control=23994 audio=878 late=0 nonSeq=0
-691755.10068400: control=23888 audio=842 late=0 nonSeq=0
-691756.17525300: control=23885 audio=1103 late=0 nonSeq=0
-691757.9549400: control=23519 audio=1167 late=0 nonSeq=0
-691758.15031500: control=23966 audio=1041 late=0 nonSeq=0
-691759.6513600: control=23996 audio=1186 late=0 nonSeq=0
-691760.3036500: control=23532 audio=1210 late=0 nonSeq=0
-691761.19055000: control=23965 audio=1009 late=0 nonSeq=0
-691762.11037200: control=24028 audio=844 late=0 nonSeq=0
-691763.15993200: control=24235 audio=1107 late=0 nonSeq=0
-691764.486500: control=24050 audio=885 late=0 nonSeq=0
-691765.15571100: control=23955 audio=1021 late=0 nonSeq=0
-691766.642500: control=24035 audio=898 late=0 nonSeq=0
-691767.4095800: control=23114 audio=1020 late=0 nonSeq=0
-691768.5526500: control=23836 audio=960 late=0 nonSeq=0
-691769.4532200: control=23711 audio=1000 late=0 nonSeq=0
-691770.5528400: control=21074 audio=949 late=0 nonSeq=0
-691771.2553100: control=23462 audio=1235 late=0 nonSeq=0
-691772.14574200: control=23424 audio=927 late=0 nonSeq=0
-691773.18995600: control=21521 audio=859 late=0 nonSeq=0
-691774.1538800: control=24090 audio=961 late=0 nonSeq=0
-691775.5553900: control=23249 audio=1031 late=0 nonSeq=0
-691776.11538200: control=23980 audio=1053 late=0 nonSeq=0
-691777.12056000: control=24012 audio=1038 late=0 nonSeq=0
-691778.11597300: control=23675 audio=929 late=0 nonSeq=0
-691779.17541600: control=24129 audio=814 late=0 nonSeq=0
-691780.16052100: control=24131 audio=880 late=0 nonSeq=0
-691781.17556500: control=23429 audio=841 late=0 nonSeq=0
-691782.16482600: control=24081 audio=1013 late=0 nonSeq=0
-691783.11520400: control=24015 audio=931 late=0 nonSeq=0
-691784.4563200: control=23716 audio=846 late=0 nonSeq=0
-691785.8009300: control=23958 audio=2709 late=0 nonSeq=0
-691786.16498400: control=23896 audio=816 late=0 nonSeq=0
-691787.15543800: control=23455 audio=1151 late=0 nonSeq=0
-691788.12125800: control=23985 audio=797 late=0 nonSeq=0
-691789.16019100: control=23624 audio=945 late=0 nonSeq=0
-691790.8585500: control=23816 audio=995 late=0 nonSeq=0
-691791.2029300: control=24128 audio=1019 late=0 nonSeq=0
-691792.3041200: control=23704 audio=1260 late=0 nonSeq=0
-691793.4953400: control=23647 audio=1079 late=0 nonSeq=0
+701551.790500: control=23822 audio=1748 late=0 nonSeq=0
+701552.1695600: control=23685 audio=1298 late=0 nonSeq=0
+701553.7734400: control=42147 audio=1246 late=0 nonSeq=0
+701554.1206900: control=342078 audio=1316 late=0 nonSeq=0
+701555.13226500: control=24043 audio=1427 late=0 nonSeq=0
+701556.3725400: control=20825 audio=1971 late=0 nonSeq=0
+701557.10760800: control=26831 audio=1320 late=0 nonSeq=0
+701558.16252500: control=24015 audio=1737 late=0 nonSeq=0
+701559.16269300: control=23661 audio=973 late=0 nonSeq=0
+701560.19762700: control=23546 audio=1305 late=0 nonSeq=0
+701561.20099200: control=23544 audio=1060 late=0 nonSeq=0
+701562.8260600: control=23622 audio=1390 late=0 nonSeq=0
+701563.3220400: control=23643 audio=1145 late=0 nonSeq=0
+701564.7747100: control=26278 audio=1039 late=0 nonSeq=0
+701565.1264700: control=24523 audio=1205 late=0 nonSeq=0
+701566.12708500: control=21125 audio=1301 late=0 nonSeq=0
+701567.8213600: control=21303 audio=1256 late=0 nonSeq=0
+701568.14749100: control=23892 audio=1306 late=0 nonSeq=0
+701569.5193000: control=23716 audio=1244 late=0 nonSeq=0
+701572.420745600: control=23325 audio=2896736 late=0 nonSeq=0
+701573.6758000: control=2917475 audio=916 late=0 nonSeq=0
+701574.18211000: control=23666 audio=1018 late=0 nonSeq=0
+701575.3199400: control=23487 audio=1260 late=0 nonSeq=0
+701576.5807000: control=23632 audio=1055 late=0 nonSeq=0
+701577.7805600: control=23909 audio=1086 late=0 nonSeq=0
+701578.20197100: control=25118 audio=1336 late=0 nonSeq=0
+701579.17759900: control=24002 audio=1393 late=0 nonSeq=0
+701580.14704200: control=25096 audio=1173 late=0 nonSeq=0
+701581.20236900: control=23948 audio=1192 late=0 nonSeq=0
+701582.18763300: control=20754 audio=803 late=0 nonSeq=0
+701583.1391300: control=24011 audio=1372 late=0 nonSeq=0
+701584.6311200: control=24262 audio=1015 late=0 nonSeq=0
+701585.1737800: control=24207 audio=1138 late=0 nonSeq=0
+701586.9244700: control=23764 audio=859 late=0 nonSeq=0
+701587.7744800: control=23836 audio=1261 late=0 nonSeq=0
+701588.18733700: control=23907 audio=709 late=0 nonSeq=0
+701589.3809500: control=23904 audio=1410 late=0 nonSeq=0
+701590.12759200: control=24057 audio=932 late=0 nonSeq=0
+701591.14757000: control=23575 audio=1209 late=0 nonSeq=0
+701592.7298100: control=24544 audio=1598 late=0 nonSeq=0
+701593.19801000: control=23849 audio=1066 late=0 nonSeq=0
+701594.19784400: control=24075 audio=1035 late=0 nonSeq=0
+701595.17718300: control=23958 audio=1188 late=0 nonSeq=0
+701596.8745500: control=23972 audio=1214 late=0 nonSeq=0
+701597.6778500: control=24104 audio=1033 late=0 nonSeq=0
+701598.12785000: control=24170 audio=734 late=0 nonSeq=0
+701599.14269500: control=23882 audio=828 late=0 nonSeq=0
+701600.19740500: control=24189 audio=872 late=0 nonSeq=0
+701601.3239000: control=20895 audio=908 late=0 nonSeq=0
+701602.3297000: control=24686 audio=1344 late=0 nonSeq=0
+701603.3764300: control=23850 audio=1004 late=0 nonSeq=0
+701604.17765800: control=23558 audio=1365 late=0 nonSeq=0
+701605.18756900: control=24005 audio=874 late=0 nonSeq=0
+701606.17228300: control=24106 audio=1159 late=0 nonSeq=0
+701607.11803000: control=23822 audio=1159 late=0 nonSeq=0
+701608.11826000: control=23921 audio=1059 late=0 nonSeq=0
+701609.12256800: control=24688 audio=946 late=0 nonSeq=0
+701610.2314000: control=23562 audio=787 late=0 nonSeq=0
+701611.6282500: control=24101 audio=1172 late=0 nonSeq=0
+701612.16248700: control=24027 audio=1097 late=0 nonSeq=0
+701613.13760200: control=24015 audio=942 late=0 nonSeq=0
+701614.4734100: control=23620 audio=1013 late=0 nonSeq=0
+701615.13253900: control=24049 audio=1336 late=0 nonSeq=0
+701616.7789200: control=24011 audio=1048 late=0 nonSeq=0
+701617.10281500: control=20736 audio=1040 late=0 nonSeq=0
+701618.5303400: control=27944 audio=813 late=0 nonSeq=0
+701619.16279500: control=23997 audio=1041 late=0 nonSeq=0
+701620.12244900: control=24356 audio=927 late=0 nonSeq=0
+701621.18259700: control=23496 audio=1146 late=0 nonSeq=0
+701622.8285800: control=23871 audio=875 late=0 nonSeq=0
+701623.3794500: control=23441 audio=2970 late=0 nonSeq=0
+701624.9290200: control=20821 audio=892 late=0 nonSeq=0
+701625.19770000: control=21436 audio=950 late=0 nonSeq=0
+701626.15744400: control=24008 audio=966 late=0 nonSeq=0
+701627.19265000: control=23973 audio=969 late=0 nonSeq=0
+701628.10286700: control=23526 audio=867 late=0 nonSeq=0
+701629.3300500: control=23816 audio=1088 late=0 nonSeq=0
+701630.6262200: control=23689 audio=1336 late=0 nonSeq=0
+701631.10275300: control=24186 audio=1041 late=0 nonSeq=0
+701632.19303600: control=21658 audio=872 late=0 nonSeq=0
+701633.8753300: control=23728 audio=854 late=0 nonSeq=0
+701634.20773800: control=24158 audio=1368 late=0 nonSeq=0
+701635.4752000: control=20767 audio=936 late=0 nonSeq=0

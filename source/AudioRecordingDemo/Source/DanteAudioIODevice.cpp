@@ -48,11 +48,22 @@ DanteAudioIODeviceType::DanteAudioIODeviceType(std::shared_ptr<Component> compon
 };
 void DanteAudioIODeviceType::scanForDevices()
 {
+    mInputDeviceNames.clear();
+
+    String rName = APP_NAME;
+    rName.append(" Receiver",20);
+    mInputDeviceNames.add(rName);
+
+    mOutputDeviceNames.clear();
+    String tName = APP_NAME;
+    tName.append(" Transmitter", 20);
+    mOutputDeviceNames.add(tName);
+    hasScanned = true;
 };
 
 StringArray DanteAudioIODeviceType::getDeviceNames(bool reqInput) const 
 {
-    if (!mChannelsReady) return StringArray();
+    if (!hasScanned) return StringArray();
     return reqInput ? mInputDeviceNames : mOutputDeviceNames;
 };
 int DanteAudioIODeviceType::getDefaultDeviceIndex(bool) const 
@@ -64,13 +75,32 @@ int DanteAudioIODeviceType::getIndexOfDevice(AudioIODevice* d, bool) const
     return 0; 
 };
 bool DanteAudioIODeviceType::hasSeparateInputsAndOutputs() const { return true; };
+
 AudioIODevice* DanteAudioIODeviceType::createDevice(const String& outputDeviceName,
     const String& inputDeviceName)
 {
-    return new DanteAudioIODevice(outputDeviceName);
+    if (!hasScanned) return nullptr; // need to call scanForDevices() before doing this
+
+    std::unique_ptr<DanteAudioIODevice> device;
+
+    auto outputIndex = mOutputDeviceNames.indexOf(outputDeviceName);
+    auto inputIndex = mInputDeviceNames.indexOf(inputDeviceName);
+
+    if (outputIndex >= 0 || inputIndex >= 0)
+    {
+        device.reset(new DanteAudioIODevice(outputDeviceName.isNotEmpty() ? outputDeviceName
+            : inputDeviceName));
+
+       // if (!device->initialise())
+       //     device = nullptr;
+    }
+
+    return device.release();
+    
 };
 void DanteAudioIODeviceType::onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds)
 {
+    /*
     mOutputDeviceNames.clear();
     for (auto txChannelId : txChannelIds)
     {
@@ -106,7 +136,9 @@ void DanteAudioIODeviceType::onAvailableChannelsChanged(std::vector<unsigned int
             }
         }
     }
+  
     mChannelsReady = true;
+    */
     mComponent->postCommandMessage(2);
 }
 

@@ -66,6 +66,6 @@ private:
     StringArray mOutputDeviceNames;
     StringArray mInputDeviceNames;
     std::shared_ptr<Component> mComponent;
-    int test;
+    bool hasScanned = false;
     void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
 };

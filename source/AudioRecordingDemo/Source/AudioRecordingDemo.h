@@ -304,10 +304,8 @@ namespace juce {
 
 
             audioDeviceManager.getAvailableDeviceTypes();
-           // audioDeviceManager.addAudioDeviceType(std::move(deviceType));
-           // auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
-           //     0, 256, 0, 256, true, true, true, false);
-            //audioSetupComp.reset(audioDeviceSelectorComponent);            
+           // 
+       
             deviceType = std::make_unique<DanteAudioIODeviceType>(std::shared_ptr<Component>(this));
             //audioDeviceManager.addChangeListener(audioSetupComp->);
             //addAndMakeVisible(audioSetupComp.get());
@@ -366,10 +364,13 @@ namespace juce {
         {
             auto area = getLocalBounds();
 
-                //audioSetupComp->setBounds(area.removeFromTop(proportionOfHeight(0.65f)));
+            if (audioSetupComp != nullptr) 
+                audioSetupComp->setBounds(area.removeFromTop(60));
+
                 //liveAudioScroller.setBounds(area.removeFromTop(80).reduced(8));
                 //recordingThumbnail.setBounds(area.removeFromTop(80).reduced(8));
                 //recordButton.setBounds(area.removeFromTop(36).removeFromLeft(140).reduced(8));
+            explanationLabel.setText("",NotificationType::dontSendNotification);
             explanationLabel.setBounds(Rectangle<int>(10, 10, 400, 30));
             if (outputDeviceDropDown != nullptr)
             {
@@ -398,8 +399,13 @@ namespace juce {
                     explanationLabel.setText("Dante Channels available!", NotificationType::sendNotification);
                     // What devices can we see now?
                     //StringArray inputDevices = deviceType->getDeviceNames(true);
-                    updateInputsComboBox();
-                    updateOutputsComboBox();
+                    audioDeviceManager.addAudioDeviceType(std::move(deviceType));
+                    auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
+                        0, 64, 0, 64, true, true, true, false);
+                    audioSetupComp.reset(audioDeviceSelectorComponent);
+                    addAndMakeVisible(audioSetupComp.get());
+                    //updateInputsComboBox();
+                    //updateOutputsComboBox();
                     resized();
                     break;
                 }
@@ -413,7 +419,7 @@ namespace juce {
 #else
         AudioDeviceManager& audioDeviceManager{ getSharedAudioDeviceManager(1, 0) };
 #endif
-        //std::unique_ptr<AudioDeviceSelectorComponent> audioSetupComp;
+        std::unique_ptr<AudioDeviceSelectorComponent> audioSetupComp;
         //LiveScrollingAudioDisplay liveAudioScroller;
         //RecordingThumbnail recordingThumbnail;
         //AudioRecorder recorder{ recordingThumbnail.getAudioThumbnail() };
