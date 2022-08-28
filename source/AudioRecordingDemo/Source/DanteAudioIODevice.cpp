@@ -29,7 +29,7 @@ DanteAudioIODeviceType::DanteAudioIODeviceType(std::shared_ptr<Component> compon
     mDalAppBase->init(access_token, mConfig, true);
     mDalAppBase->run();
 
-    mComponent->postCommandMessage(1);
+    mComponent->postCommandMessage(0);
 
     // Create ConnectionsAPI
     Audinate::DAL::ConnectionsConfig config;

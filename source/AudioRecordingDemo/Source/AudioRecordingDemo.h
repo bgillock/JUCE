@@ -55,6 +55,68 @@
 
 namespace juce {
     //==============================================================================
+    class ChannelsListComponent: public Component,
+        private ListBoxModel
+    {
+    public: 
+        ChannelsListComponent() : mChannelNames() {};
+        void setNames(std::vector<std::string> channelNames, bool isInput)
+        {
+            mChannelNames = channelNames;
+            addAndMakeVisible(listBox);
+            listBox.setTitle("Channel List");
+            listBox.setModel(this);
+            listBox.selectRow(0);
+        }
+
+        void resized() override
+        {
+            listBox.setBounds(getLocalBounds());
+        }
+
+        int getNumRows() override
+        {
+            return mChannelNames.size();
+        }
+
+        void paintListBoxItem(int rowNumber, Graphics& g, int width, int height, bool rowIsSelected) override
+        {
+            if (rowNumber >= getNumRows())
+                return;
+
+            if (rowIsSelected)
+                g.fillAll(Colour::contrasting(findColour(ListBox::textColourId),
+                    findColour(ListBox::backgroundColourId)));
+
+            g.setColour(findColour(ListBox::textColourId));
+            g.setFont(14.0f);
+            g.drawFittedText(getNameForRow(rowNumber), 8, 0, width - 10, height, Justification::centredLeft, 2);
+        }
+
+        String getNameForRow(int rowNumber) override
+        {
+            if (rowNumber < getNumRows())
+                return mChannelNames[rowNumber];
+            else
+                return "";
+             
+
+            return {};
+        }
+
+        void selectedRowsChanged(int lastRowSelected) override
+        {
+            
+        }
+
+    private:
+        ListBox listBox;
+        std::vector<std::string> mChannelNames;
+
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(ChannelsListComponent)
+    };
+
+    //==============================================================================
     /** A simple class that acts as an AudioIODeviceCallback and writes the
         incoming audio data to a WAV file.
     */
@@ -243,8 +305,8 @@ namespace juce {
 
             audioDeviceManager.getAvailableDeviceTypes();
            // audioDeviceManager.addAudioDeviceType(std::move(deviceType));
-            auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
-                0, 256, 0, 256, true, true, true, false);
+           // auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
+           //     0, 256, 0, 256, true, true, true, false);
             //audioSetupComp.reset(audioDeviceSelectorComponent);            
             deviceType = std::make_unique<DanteAudioIODeviceType>(std::shared_ptr<Component>(this));
             //audioDeviceManager.addChangeListener(audioSetupComp->);
@@ -311,13 +373,13 @@ namespace juce {
             explanationLabel.setBounds(Rectangle<int>(10, 10, 400, 30));
             if (outputDeviceDropDown != nullptr)
             {
-                outputDeviceDropDown->setBounds(Rectangle<int>(100, 30, 300, 40));
+                outputDeviceDropDown->setBounds(Rectangle<int>(80, 30, 200, 20));
             }
 
             if (inputDeviceDropDown != nullptr)
             {
                 //inputLevelMeter->setBounds(row.removeFromRight(testButton != nullptr ? testButton->getWidth() : row.getWidth() / 6));
-                inputDeviceDropDown->setBounds(Rectangle<int>(100, 50, 300, 60));
+                inputDeviceDropDown->setBounds(Rectangle<int>(80, 60, 200, 20));
             }
         }
 
@@ -362,7 +424,12 @@ namespace juce {
         //File lastRecording;
         std::unique_ptr<ComboBox> outputDeviceDropDown, inputDeviceDropDown;
         std::unique_ptr<Label> outputDeviceLabel, inputDeviceLabel;
+        ChannelsListComponent outputChannelsList, inputChannelsList;
 
+        void setChannelsList(String device, bool isInput)
+        {
+           
+        }
         void addNamesToDeviceBox(ComboBox& combo, bool isInputs)
         {
             const StringArray devs(deviceType->getDeviceNames(isInputs));
@@ -379,7 +446,7 @@ namespace juce {
             if (outputDeviceDropDown == nullptr)
             {
                 outputDeviceDropDown.reset(new ComboBox());
-                outputDeviceDropDown->onChange = [this] {  };
+                outputDeviceDropDown->onChange = [this] {setChannelsList(outputDeviceDropDown->getItemText(outputDeviceDropDown->getSelectedItemIndex()), false);  };
 
                 addAndMakeVisible(outputDeviceDropDown.get());
 
@@ -395,7 +462,7 @@ namespace juce {
             if (inputDeviceDropDown == nullptr)
             {
                 inputDeviceDropDown.reset(new ComboBox());
-                inputDeviceDropDown->onChange = [this] {  };
+                inputDeviceDropDown->onChange = [this] { setChannelsList(inputDeviceDropDown->getItemText(inputDeviceDropDown->getSelectedItemIndex()), true); };
                 addAndMakeVisible(inputDeviceDropDown.get());
 
                 inputDeviceLabel.reset(new Label({}, TRANS("Input:")));
