@@ -4,8 +4,8 @@ DAL device is activated
 Instance state changed, now Starting
 Instance state changed, now Running
 
-Socket Descriptor validation: 701534.792730800: control=0 audio=1159 late=0 nonSeq=0
-ProtocolArcp config=30440 actual=30440
+Socket Descriptor validation: ProtocolArcp config=30440 actual=30440
+39355.146104400: control=0 audio=939 late=0 nonSeq=0
 ProtocolArcpLocal config=30441 actual=30441
 ProtocolDbcp config=30455 actual=30455
 ProtocolCmcp config=34800 actual=34800
@@ -13,95 +13,107 @@ ProtocolConmonChannels config=34700 actual=34700
 ProtocolConmonClient config=34900 actual=34900
 ProtocolDomainClientProxy config=34001 actual=34001
 ProtocolAudioBase config=30336 actual=30336
-ProtocolWebSocket config=0 actual=51965
+ProtocolWebSocket config=0 actual=65148
 ProtocolMdnsClient config=34002 actual=34002
-701547.33213500: control=0 audio=21235 late=0 nonSeq=0
-701548.12784300: control=12240596 audio=1053 late=0 nonSeq=0
-701549.12463600: control=23517 audio=1526 late=0 nonSeq=0
+39367.239630400: control=0 audio=36860 late=0 nonSeq=0
+39368.20608400: control=12093614 audio=838 late=0 nonSeq=0
+39369.1112900: control=23497 audio=935 late=0 nonSeq=0
 Component ConmonServer status changed, now Running
 Component Mdns status changed, now Running
-701550.11712000: control=23582 audio=1429 late=0 nonSeq=0
+39370.19183500: control=23987 audio=985 late=0 nonSeq=0
 Component Apec status changed, now Running
-701551.790500: control=23822 audio=1748 late=0 nonSeq=0
-701552.1695600: control=23685 audio=1298 late=0 nonSeq=0
-701553.7734400: control=42147 audio=1246 late=0 nonSeq=0
-701554.1206900: control=342078 audio=1316 late=0 nonSeq=0
-701555.13226500: control=24043 audio=1427 late=0 nonSeq=0
-701556.3725400: control=20825 audio=1971 late=0 nonSeq=0
-701557.10760800: control=26831 audio=1320 late=0 nonSeq=0
-701558.16252500: control=24015 audio=1737 late=0 nonSeq=0
-701559.16269300: control=23661 audio=973 late=0 nonSeq=0
-701560.19762700: control=23546 audio=1305 late=0 nonSeq=0
-701561.20099200: control=23544 audio=1060 late=0 nonSeq=0
-701562.8260600: control=23622 audio=1390 late=0 nonSeq=0
-701563.3220400: control=23643 audio=1145 late=0 nonSeq=0
-701564.7747100: control=26278 audio=1039 late=0 nonSeq=0
-701565.1264700: control=24523 audio=1205 late=0 nonSeq=0
-701566.12708500: control=21125 audio=1301 late=0 nonSeq=0
-701567.8213600: control=21303 audio=1256 late=0 nonSeq=0
-701568.14749100: control=23892 audio=1306 late=0 nonSeq=0
-701569.5193000: control=23716 audio=1244 late=0 nonSeq=0
-701572.420745600: control=23325 audio=2896736 late=0 nonSeq=0
-701573.6758000: control=2917475 audio=916 late=0 nonSeq=0
-701574.18211000: control=23666 audio=1018 late=0 nonSeq=0
-701575.3199400: control=23487 audio=1260 late=0 nonSeq=0
-701576.5807000: control=23632 audio=1055 late=0 nonSeq=0
-701577.7805600: control=23909 audio=1086 late=0 nonSeq=0
-701578.20197100: control=25118 audio=1336 late=0 nonSeq=0
-701579.17759900: control=24002 audio=1393 late=0 nonSeq=0
-701580.14704200: control=25096 audio=1173 late=0 nonSeq=0
-701581.20236900: control=23948 audio=1192 late=0 nonSeq=0
-701582.18763300: control=20754 audio=803 late=0 nonSeq=0
-701583.1391300: control=24011 audio=1372 late=0 nonSeq=0
-701584.6311200: control=24262 audio=1015 late=0 nonSeq=0
-701585.1737800: control=24207 audio=1138 late=0 nonSeq=0
-701586.9244700: control=23764 audio=859 late=0 nonSeq=0
-701587.7744800: control=23836 audio=1261 late=0 nonSeq=0
-701588.18733700: control=23907 audio=709 late=0 nonSeq=0
-701589.3809500: control=23904 audio=1410 late=0 nonSeq=0
-701590.12759200: control=24057 audio=932 late=0 nonSeq=0
-701591.14757000: control=23575 audio=1209 late=0 nonSeq=0
-701592.7298100: control=24544 audio=1598 late=0 nonSeq=0
-701593.19801000: control=23849 audio=1066 late=0 nonSeq=0
-701594.19784400: control=24075 audio=1035 late=0 nonSeq=0
-701595.17718300: control=23958 audio=1188 late=0 nonSeq=0
-701596.8745500: control=23972 audio=1214 late=0 nonSeq=0
-701597.6778500: control=24104 audio=1033 late=0 nonSeq=0
-701598.12785000: control=24170 audio=734 late=0 nonSeq=0
-701599.14269500: control=23882 audio=828 late=0 nonSeq=0
-701600.19740500: control=24189 audio=872 late=0 nonSeq=0
-701601.3239000: control=20895 audio=908 late=0 nonSeq=0
-701602.3297000: control=24686 audio=1344 late=0 nonSeq=0
-701603.3764300: control=23850 audio=1004 late=0 nonSeq=0
-701604.17765800: control=23558 audio=1365 late=0 nonSeq=0
-701605.18756900: control=24005 audio=874 late=0 nonSeq=0
-701606.17228300: control=24106 audio=1159 late=0 nonSeq=0
-701607.11803000: control=23822 audio=1159 late=0 nonSeq=0
-701608.11826000: control=23921 audio=1059 late=0 nonSeq=0
-701609.12256800: control=24688 audio=946 late=0 nonSeq=0
-701610.2314000: control=23562 audio=787 late=0 nonSeq=0
-701611.6282500: control=24101 audio=1172 late=0 nonSeq=0
-701612.16248700: control=24027 audio=1097 late=0 nonSeq=0
-701613.13760200: control=24015 audio=942 late=0 nonSeq=0
-701614.4734100: control=23620 audio=1013 late=0 nonSeq=0
-701615.13253900: control=24049 audio=1336 late=0 nonSeq=0
-701616.7789200: control=24011 audio=1048 late=0 nonSeq=0
-701617.10281500: control=20736 audio=1040 late=0 nonSeq=0
-701618.5303400: control=27944 audio=813 late=0 nonSeq=0
-701619.16279500: control=23997 audio=1041 late=0 nonSeq=0
-701620.12244900: control=24356 audio=927 late=0 nonSeq=0
-701621.18259700: control=23496 audio=1146 late=0 nonSeq=0
-701622.8285800: control=23871 audio=875 late=0 nonSeq=0
-701623.3794500: control=23441 audio=2970 late=0 nonSeq=0
-701624.9290200: control=20821 audio=892 late=0 nonSeq=0
-701625.19770000: control=21436 audio=950 late=0 nonSeq=0
-701626.15744400: control=24008 audio=966 late=0 nonSeq=0
-701627.19265000: control=23973 audio=969 late=0 nonSeq=0
-701628.10286700: control=23526 audio=867 late=0 nonSeq=0
-701629.3300500: control=23816 audio=1088 late=0 nonSeq=0
-701630.6262200: control=23689 audio=1336 late=0 nonSeq=0
-701631.10275300: control=24186 audio=1041 late=0 nonSeq=0
-701632.19303600: control=21658 audio=872 late=0 nonSeq=0
-701633.8753300: control=23728 audio=854 late=0 nonSeq=0
-701634.20773800: control=24158 audio=1368 late=0 nonSeq=0
-701635.4752000: control=20767 audio=936 late=0 nonSeq=0
+39371.5665900: control=23814 audio=1146 late=0 nonSeq=0
+39372.4683300: control=23485 audio=1417 late=0 nonSeq=0
+39373.5197100: control=356014 audio=1085 late=0 nonSeq=0
+39374.7103600: control=23167 audio=1174 late=0 nonSeq=0
+39375.6598500: control=23597 audio=1023 late=0 nonSeq=0
+39376.12616700: control=23925 audio=2151 late=0 nonSeq=0
+39377.13107800: control=23391 audio=884 late=0 nonSeq=0
+39378.4601400: control=23356 audio=767 late=0 nonSeq=0
+39379.19612500: control=24475 audio=1009 late=0 nonSeq=0
+39380.14599500: control=23722 audio=957 late=0 nonSeq=0
+39381.4641500: control=24307 audio=1096 late=0 nonSeq=0
+39382.6096900: control=23372 audio=846 late=0 nonSeq=0
+39383.12096700: control=23986 audio=1081 late=0 nonSeq=0
+39384.14614800: control=25095 audio=993 late=0 nonSeq=0
+39385.13172600: control=23619 audio=1133 late=0 nonSeq=0
+39386.626200: control=23648 audio=904 late=0 nonSeq=0
+39387.4152700: control=23152 audio=1313 late=0 nonSeq=0
+39388.20114900: control=23902 audio=921 late=0 nonSeq=0
+39389.5605200: control=25342 audio=1165 late=0 nonSeq=0
+39390.10657500: control=23817 audio=1039 late=0 nonSeq=0
+39391.4606500: control=23984 audio=882 late=0 nonSeq=0
+39392.18099600: control=22285 audio=1294 late=0 nonSeq=0
+39393.7129500: control=23654 audio=1009 late=0 nonSeq=0
+39394.14117000: control=23505 audio=1214 late=0 nonSeq=0
+39395.2102900: control=20916 audio=1398 late=0 nonSeq=0
+39396.1170300: control=23534 audio=1351 late=0 nonSeq=0
+39397.8132100: control=23339 audio=1004 late=0 nonSeq=0
+39398.20098400: control=20753 audio=936 late=0 nonSeq=0
+39399.19665200: control=23481 audio=1415 late=0 nonSeq=0
+39400.6163100: control=23729 audio=831 late=0 nonSeq=0
+39401.4675100: control=24750 audio=868 late=0 nonSeq=0
+39402.2595000: control=23571 audio=935 late=0 nonSeq=0
+39403.14691900: control=23394 audio=815 late=0 nonSeq=0
+39404.12338500: control=22087 audio=1038 late=0 nonSeq=0
+39405.9189100: control=21153 audio=1549 late=0 nonSeq=0
+39406.19636400: control=23633 audio=940 late=0 nonSeq=0
+39407.10615700: control=23493 audio=1021 late=0 nonSeq=0
+39423.203594400: control=23348 audio=6380357 late=0 nonSeq=0
+Component Mdns status changed, now Pending
+Component Apec status changed, now Pending
+39424.18151000: control=15680750 audio=888 late=0 nonSeq=0
+39425.15743200: control=23569 audio=1621 late=0 nonSeq=0
+39426.5398000: control=23968 audio=929 late=0 nonSeq=0
+39427.6233800: control=23662 audio=1080 late=0 nonSeq=0
+39428.5104800: control=24041 audio=1120 late=0 nonSeq=0
+39429.12657600: control=23561 audio=945 late=0 nonSeq=0
+39430.19180400: control=23588 audio=986 late=0 nonSeq=0
+39431.10125800: control=23554 audio=827 late=0 nonSeq=0
+Component Apec status changed, now Running
+Component Mdns status changed, now Running
+39432.3115800: control=23917 audio=930 late=0 nonSeq=0
+39433.8106200: control=23676 audio=1216 late=0 nonSeq=0
+Component ConmonServer status changed, now Pending
+39434.3657000: control=23519 audio=923 late=0 nonSeq=0
+39435.14147500: control=23462 audio=1252 late=0 nonSeq=0
+39436.16102100: control=23547 audio=1040 late=0 nonSeq=0
+39437.8145600: control=23305 audio=890 late=0 nonSeq=0
+39438.1105500: control=23407 audio=1552 late=0 nonSeq=0
+39439.3642900: control=23458 audio=983 late=0 nonSeq=0
+39440.6629500: control=24100 audio=1024 late=0 nonSeq=0
+39441.6690400: control=23279 audio=1064 late=0 nonSeq=0
+Component ConmonServer status changed, now Running
+39442.20130100: control=23348 audio=1017 late=0 nonSeq=0
+39443.8668100: control=23966 audio=1059 late=0 nonSeq=0
+39444.13133000: control=41606 audio=1121 late=0 nonSeq=0
+39445.12629100: control=23536 audio=921 late=0 nonSeq=0
+39446.7109200: control=23444 audio=887 late=0 nonSeq=0
+39447.1137500: control=23150 audio=1139 late=0 nonSeq=0
+39448.13639400: control=23546 audio=1213 late=0 nonSeq=0
+39449.19613400: control=25531 audio=935 late=0 nonSeq=0
+39450.19112400: control=24163 audio=905 late=0 nonSeq=0
+39451.18607200: control=23517 audio=1004 late=0 nonSeq=0
+39452.2150000: control=26072 audio=929 late=0 nonSeq=0
+39453.4231100: control=23952 audio=1014 late=0 nonSeq=0
+39454.10192000: control=23506 audio=936 late=0 nonSeq=0
+39455.2204500: control=23651 audio=858 late=0 nonSeq=0
+39456.4669200: control=23979 audio=1045 late=0 nonSeq=0
+39457.13613700: control=23581 audio=1245 late=0 nonSeq=0
+39458.8108800: control=24284 audio=1117 late=0 nonSeq=0
+39459.10746700: control=23962 audio=1195 late=0 nonSeq=0
+39460.5103400: control=23669 audio=898 late=0 nonSeq=0
+39461.18107100: control=23985 audio=1021 late=0 nonSeq=0
+39462.19117400: control=23619 audio=811 late=0 nonSeq=0
+39463.9117800: control=23744 audio=824 late=0 nonSeq=0
+39464.1158000: control=24843 audio=757 late=0 nonSeq=0
+39465.6605200: control=23644 audio=958 late=0 nonSeq=0
+39466.16605400: control=23590 audio=610 late=0 nonSeq=0
+39467.13140400: control=20641 audio=792 late=0 nonSeq=0
+39468.18633200: control=20797 audio=872 late=0 nonSeq=0
+39469.4168600: control=23858 audio=825 late=0 nonSeq=0
+39470.7096700: control=24020 audio=1119 late=0 nonSeq=0
+39471.20656700: control=23803 audio=1031 late=0 nonSeq=0
+39472.9128100: control=24020 audio=812 late=0 nonSeq=0
+39473.13128600: control=23499 audio=1429 late=0 nonSeq=0
+39474.12226700: control=23072 audio=967 late=0 nonSeq=0

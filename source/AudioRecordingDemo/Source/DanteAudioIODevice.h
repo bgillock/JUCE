@@ -38,11 +38,16 @@ class DanteAudioIODevice : public AudioIODevice {
     int getXRunCount() const noexcept override;
 
 public:
-    DanteAudioIODevice(const String& deviceName);
+    DanteAudioIODevice(const String& deviceName, DAL::DalAppBase* dalAppBase);
 private:
     DanteAudioIODevice* inputDevice = nullptr;
     DanteAudioIODevice* outputDevice = nullptr;    
     int actualNumChannels = 0;
+    BigInteger mInputChannels;
+    BigInteger mOutputChannels;
+    double mSampleRate;
+    int mBufferSizeSamples;
+    DAL::DalAppBase* mDalAppBase;
 };
 
 class DanteAudioIODeviceType : public AudioIODeviceType {
@@ -60,11 +65,8 @@ private:
     bool mChannelsReady = false;
     DAL::DalAppBase* mDalAppBase = nullptr;
     DAL::DalConfig mConfig;
-    std::shared_ptr<Audinate::DAL::Connections> mConnections;
-    OwnedArray<AudioIODevice> mOutputDevices;
-    OwnedArray<AudioIODevice> mInputDevices;    
-    StringArray mOutputDeviceNames;
-    StringArray mInputDeviceNames;
+    std::shared_ptr<Audinate::DAL::Connections> mConnections;  
+    StringArray mDeviceNames;
     std::shared_ptr<Component> mComponent;
     bool hasScanned = false;
     void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
