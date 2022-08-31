@@ -1,6 +1,6 @@
 #include <JuceHeader.h>
 #include "DalAppBase.hpp"
-class DanteAudioIODevice : public AudioIODevice {
+class DanteAudioIODevice : public AudioIODevice, public Thread {
 
     String open(const BigInteger&, const BigInteger&, double, int) override;
     void close() override;
@@ -36,23 +36,32 @@ class DanteAudioIODevice : public AudioIODevice {
     int getInputLatencyInSamples() override;
 
     int getXRunCount() const noexcept override;
-
+    void run() override;
 public:
     DanteAudioIODevice(const String& deviceName, DAL::DalAppBase* dalAppBase);
 private:
-    DanteAudioIODevice* inputDevice = nullptr;
-    DanteAudioIODevice* outputDevice = nullptr;    
+    //static void transfer(const Audinate::DAL::AudioProperties& properties,
+    //    const Audinate::DAL::AudioTransferParameters& params,
+    //    unsigned int numChannels, unsigned int latencySamples);  
     int actualNumChannels = 0;
     BigInteger mInputChannels;
     BigInteger mOutputChannels;
     double mSampleRate;
     int mBufferSizeSamples;
     DAL::DalAppBase* mDalAppBase;
+    DAL::DalAppBase* inputDevice = nullptr;
+    DAL::DalAppBase* outputDevice = nullptr;
+    bool isOpen_ = false, isStarted = false;
+    int currentBufferSizeSamples = 0;
+    double currentSampleRate = 0;
+    std::atomic<bool> shouldShutdown{ false }, deviceSampleRateChanged{ false };
+    AudioIODeviceCallback* callback = {};
+    CriticalSection startStopLock;
 };
 
 class DanteAudioIODeviceType : public AudioIODeviceType {
 public:
-    DanteAudioIODeviceType(std::shared_ptr<Component>);
+    DanteAudioIODeviceType(Component*);
     virtual void scanForDevices() override;
     virtual StringArray getDeviceNames(bool) const override;
     virtual int getDefaultDeviceIndex(bool) const override;
@@ -67,7 +76,7 @@ private:
     DAL::DalConfig mConfig;
     std::shared_ptr<Audinate::DAL::Connections> mConnections;  
     StringArray mDeviceNames;
-    std::shared_ptr<Component> mComponent;
+    Component* mComponent;
     bool hasScanned = false;
     void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
 };

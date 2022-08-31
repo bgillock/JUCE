@@ -76,7 +76,7 @@ namespace DAL {
 
 		// Defaut config values.
 #define DEFAULT_SAMPLE_RATE 48000
-#define DEFAULT_SAMPLES_PER_PERIOD 128
+#define DEFAULT_SAMPLES_PER_PERIOD 960
 #define DEFAULT_PERIODS_PER_BUFFER 64
 #define DEFAULT_ENCODING 24
 #define DEFAULT_TX_CHANS 2
@@ -114,7 +114,7 @@ namespace DAL {
 
 	bool DalAppBase::isSupportedSampleRate(uint32_t sampleRate) const
 	{
-		std::vector<uint32_t> supportedSampleRates = { 44100, 48000, 88200, 96000 };
+		std::vector<uint32_t> supportedSampleRates = { 48000 };
 		auto findResult =
 			std::find
 			(

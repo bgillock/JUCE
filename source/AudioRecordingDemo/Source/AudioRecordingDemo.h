@@ -291,7 +291,7 @@ namespace juce {
 
         JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(RecordingThumbnail)
     };
- 
+   
     //==============================================================================
     class AudioRecordingDemo : public Component
     {
@@ -300,18 +300,13 @@ namespace juce {
         {
             setOpaque(true);
 
-            // auto deviceType = new DanteAudioIODeviceType();
-
-
             audioDeviceManager.getAvailableDeviceTypes();
-           // 
-       
-            deviceType = std::make_unique<DanteAudioIODeviceType>(std::shared_ptr<Component>(this));
-            //audioDeviceManager.addChangeListener(audioSetupComp->);
+            deviceType = this->createAudioIODeviceType();
+
             //addAndMakeVisible(audioSetupComp.get());
 
-            //addAndMakeVisible(liveAudioScroller);
-
+            addAndMakeVisible(liveAudioScroller);
+            
             addAndMakeVisible(explanationLabel);
             explanationLabel.setFont(Font(15.0f, Font::plain));
             explanationLabel.setJustificationType(Justification::topLeft);
@@ -343,7 +338,7 @@ namespace juce {
                 });
 #endif
 
-            //audioDeviceManager.addAudioCallback(&liveAudioScroller);
+            audioDeviceManager.addAudioCallback(&liveAudioScroller);
             //audioDeviceManager.addAudioCallback(&recorder);
 
             setSize(500, 500);
@@ -352,7 +347,7 @@ namespace juce {
         ~AudioRecordingDemo() override
         {
             //audioDeviceManager.removeAudioCallback(&recorder);
-            //audioDeviceManager.removeAudioCallback(&liveAudioScroller);
+            audioDeviceManager.removeAudioCallback(&liveAudioScroller);
         }
 
         void paint(Graphics& g) override
@@ -367,7 +362,7 @@ namespace juce {
             if (audioSetupComp != nullptr) 
                 audioSetupComp->setBounds(area.removeFromTop(60));
 
-                //liveAudioScroller.setBounds(area.removeFromTop(80).reduced(8));
+            liveAudioScroller.setBounds(area.removeFromTop(500).reduced(8));
                 //recordingThumbnail.setBounds(area.removeFromTop(80).reduced(8));
                 //recordButton.setBounds(area.removeFromTop(36).removeFromLeft(140).reduced(8));
             explanationLabel.setText("",NotificationType::dontSendNotification);
@@ -397,9 +392,8 @@ namespace juce {
                 }
                 case 2: {
                     explanationLabel.setText("Dante Channels available!", NotificationType::sendNotification);
-                    // What devices can we see now?
-                    //StringArray inputDevices = deviceType->getDeviceNames(true);
-                    audioDeviceManager.addAudioDeviceType(std::move(deviceType));
+                    if (audioDeviceManager.getAvailableDeviceTypes().indexOf(deviceType) == -1) 
+                        audioDeviceManager.addAudioDeviceType(std::unique_ptr<AudioIODeviceType> (deviceType));
                     auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
                         0, 64, 0, 64, true, true, true, false);
                     audioSetupComp.reset(audioDeviceSelectorComponent);
@@ -420,10 +414,10 @@ namespace juce {
         AudioDeviceManager& audioDeviceManager{ getSharedAudioDeviceManager(1, 0) };
 #endif
         std::unique_ptr<AudioDeviceSelectorComponent> audioSetupComp;
-        //LiveScrollingAudioDisplay liveAudioScroller;
+        LiveScrollingAudioDisplay liveAudioScroller;
         //RecordingThumbnail recordingThumbnail;
         //AudioRecorder recorder{ recordingThumbnail.getAudioThumbnail() };
-        std::unique_ptr<DanteAudioIODeviceType> deviceType;
+        AudioIODeviceType* deviceType;
         Label explanationLabel{ {}, "Initializing Dante...\n"
         };
         //TextButton recordButton{ "Record" };
@@ -431,7 +425,7 @@ namespace juce {
         std::unique_ptr<ComboBox> outputDeviceDropDown, inputDeviceDropDown;
         std::unique_ptr<Label> outputDeviceLabel, inputDeviceLabel;
         ChannelsListComponent outputChannelsList, inputChannelsList;
-
+        AudioIODeviceType* createAudioIODeviceType() { return new DanteAudioIODeviceType(this); }
         void setChannelsList(String device, bool isInput)
         {
            

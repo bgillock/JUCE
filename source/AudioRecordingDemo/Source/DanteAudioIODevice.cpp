@@ -1,18 +1,64 @@
 #include "DanteAudioIODevice.h"
 #include "juce_audio_devices/juce_audio_devices.h"   
+#include <functional>
 
 #define APP_NAME "AudioRecordingDemo"
 #define APP_MODEL_NAME "Audio Recording Demo"
 const Audinate::DAL::Id64 APP_MODEL_ID('A', 'U', 'R', 'C', 'R', 'D', 'D', 'M');
 
 #define DEFAULT_BITS_PER_SAMPLE 16
+/*
+ *  Dante Application Library Access Token - Generated for bgillocksbc@yahoo.com
+ *  Token issue date :  2022-08-15
+ *  Token expiry date :  2022-09-14
+ */
 const unsigned char access_token[] =
-"c37078d1e3ea18fd3ddedc4fcf7e75be734f156fe2233bc26a9a4e4ac148dd06110b467b7150b3e5" \
-"fc1f243b3174ac08d80860111719b27faa9bc5ee2ce1240e35393738333300004175645f44414c00" \
-"00000000000000000000000000000000000000000000000000000000000000009d25e76200000000" \
-"9db20e6300000000451bb4cc4f164ffa941324f9d3e6b8540100000000000000";
+"84b5272032a1ed08c8f973c0876c268c82a842f6b9e0125829645d7c75742aee87f771ec05428f5b" \
+"fc8745186685375be166e668d8bfc93c243ee4b48016aa0035393738333300004175645f44414c00" \
+"0000000000000000000000000000000000000000000000000000000000000000f0d3f96200000000" \
+"f06021630000000054498adc59764064b2dadd5033c5930a0100000000000000";
+static bool bufferAllocated = false;
+static bool bufferReady = false;
+static float** inputBuffers;
+static float** outputBuffers;
 
-DanteAudioIODeviceType::DanteAudioIODeviceType(std::shared_ptr<Component> component) : AudioIODeviceType("Dante"), mComponent(component), mDeviceNames()
+static void myTransfer(const Audinate::DAL::AudioProperties& properties,
+    const Audinate::DAL::AudioTransferParameters& params,
+    unsigned int numChannels, unsigned int latencySamples)
+{
+    if (!bufferAllocated) return;
+
+    unsigned int positionSamples =
+        (params.mAvailableDataOffsetInPeriods * properties.mSamplesPerPeriod)
+        % properties.mSamplesPerBuffer;
+    unsigned int numSamples = params.mNumPeriodsAvailable * properties.mSamplesPerPeriod;
+
+    uint16_t bitsPerSample = properties.mBytesPerSample * 8;
+    size_t numCopyChannels = numChannels;
+    uint8_t bytesPerSample = bitsPerSample / 8;
+
+    // Copy non-interleaved u32 channel data to interleaved little endian audio data with
+    // the configure bits per sample.
+    uint32_t samplesLeft = numSamples;
+    int i = 0;
+    while (i < numSamples)
+    {
+        for (size_t chan = 0; chan < numCopyChannels; chan++)
+        {
+            const uint32_t* bufferPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[chan] +
+                (positionSamples % properties.mSamplesPerBuffer) * 4);
+            inputBuffers[chan][i] = (float)*bufferPtr;
+        }
+        positionSamples++;
+    }
+
+    //waveWriter->putU32Samples(properties.mRxChannelBuffers, positionSamples,
+    //	properties.mSamplesPerBuffer, numSamples);
+    bufferReady = true;
+    return;
+}
+
+DanteAudioIODeviceType::DanteAudioIODeviceType(Component* component) : AudioIODeviceType("Dante"), mComponent(component), mDeviceNames()
 {
     mConfig.setInterfaceIndex(11);
     mConfig.setTimeSource(Audinate::DAL::TimeSource::RxAudio);
@@ -31,6 +77,7 @@ DanteAudioIODeviceType::DanteAudioIODeviceType(std::shared_ptr<Component> compon
     mConfig.setTxChannelName(0, "Left");
     mConfig.setTxChannelName(1, "Right");
     mDalAppBase = new DAL::DalAppBase(APP_NAME, APP_MODEL_NAME, APP_MODEL_ID);
+    mDalAppBase->setTransferFn(&myTransfer);
     mDalAppBase->init(access_token, mConfig, true);
     mDalAppBase->run();
 
@@ -135,7 +182,7 @@ void DanteAudioIODeviceType::onAvailableChannelsChanged(std::vector<unsigned int
     mComponent->postCommandMessage(2);
 }
 
-DanteAudioIODevice::DanteAudioIODevice(const String& deviceName, DAL::DalAppBase* dalAppBase) : AudioIODevice(deviceName,"Dante"), mDalAppBase(dalAppBase){};
+DanteAudioIODevice::DanteAudioIODevice(const String& deviceName, DAL::DalAppBase* dalAppBase) : AudioIODevice(deviceName,"Dante"), Thread("JUCE DANTE"), mDalAppBase(dalAppBase){};
 
 StringArray DanteAudioIODevice::getOutputChannelNames()
 {
@@ -162,7 +209,7 @@ StringArray DanteAudioIODevice::getInputChannelNames()
 
 Array<double> DanteAudioIODevice::getAvailableSampleRates() { return { 48000.0 }; };
 Array<int> DanteAudioIODevice::getAvailableBufferSizes() { return { 960 }; };
-int DanteAudioIODevice::getDefaultBufferSize() { return 0; };
+int DanteAudioIODevice::getDefaultBufferSize() { return 960; };
 String DanteAudioIODevice::open(const BigInteger& inputChannels,
     const BigInteger& outputChannels,
     double sampleRate,
@@ -181,18 +228,150 @@ String DanteAudioIODevice::open(const BigInteger& inputChannels,
         mOutputChannels.setBit(i);
     }
 
-    Audinate::DAL::InstanceConfig iConfig = mDalAppBase->getConfig();
-    mInputChannels = inputChannels;
-    mOutputChannels = outputChannels;
+    //mInputChannels = inputChannels;
+    //mOutputChannels = outputChannels;
     mSampleRate = sampleRate;
-    mBufferSizeSamples = bufferSizeSamples;
+
+    //mDalAppBase->setTransferFn(std::bind(&DanteAudioIODevice::transfer,this, 
+    //    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+
+    startThread(8);
+    Thread::sleep(5);
+    /*
+    if (inputDevice != nullptr && inputDevice->client != nullptr)
+    {
+        latencyIn = (int)(inputDevice->latencySamples + currentBufferSizeSamples);
+
+        if (!inputDevice->start(currentBufferSizeSamples))
+        {
+            close();
+            lastError = TRANS("Couldn't start the input device!");
+            return lastError;
+        }
+    }
+
+    if (outputDevice != nullptr && outputDevice->client != nullptr)
+    {
+        latencyOut = (int)(outputDevice->latencySamples + currentBufferSizeSamples);
+
+        if (!outputDevice->start())
+        {
+            close();
+            lastError = TRANS("Couldn't start the output device!");
+            return lastError;
+        }
+    }*/
+    isOpen_ = true;
     return "";
 };
-void DanteAudioIODevice::close() {};
-bool DanteAudioIODevice::isOpen() { return 0; };
-void DanteAudioIODevice::start(AudioIODeviceCallback* callback) { };
-void DanteAudioIODevice::stop() { };
-bool DanteAudioIODevice::isPlaying() { return 0; };
+void DanteAudioIODevice::close() 
+{
+    stop();
+    signalThreadShouldExit();
+
+  //  if (inputDevice != nullptr)   SetEvent(inputDevice->clientEvent);
+  //  if (outputDevice != nullptr)  SetEvent(outputDevice->clientEvent);
+
+    stopThread(5000);
+
+  //  if (inputDevice != nullptr)   inputDevice->close();
+  //  if (outputDevice != nullptr)  outputDevice->close();
+
+    isOpen_ = false;
+};
+bool DanteAudioIODevice::isOpen() { return isOpen_ && isThreadRunning(); }
+bool DanteAudioIODevice::isPlaying()  { return isStarted && isOpen_ && isThreadRunning(); }
+void DanteAudioIODevice::start(AudioIODeviceCallback* call) 
+{ 
+    if (isOpen_ && call != nullptr && !isStarted)
+    {
+        if (!isThreadRunning())
+        {
+            // something's gone wrong and the thread's stopped..
+            isOpen_ = false;
+            return;
+        }
+
+        call->audioDeviceAboutToStart(this);
+
+        const ScopedLock sl(startStopLock);
+        callback = call;
+        isStarted = true;
+    }
+};
+void DanteAudioIODevice::stop() 
+{
+    if (isStarted)
+    {
+        auto* callbackLocal = callback;
+
+        {
+            const ScopedLock sl(startStopLock);
+            isStarted = false;
+        }
+
+        if (callbackLocal != nullptr)
+            callbackLocal->audioDeviceStopped();
+    }
+};
+
+void DanteAudioIODevice::run()
+{
+    // setMMThreadPriority();
+    Audinate::DAL::AudioProperties properties;
+    mDalAppBase->getAudioProperties(properties);
+    mBufferSizeSamples = properties.mSamplesPerBuffer;
+    inputBuffers = new float* [properties.mRxActivatedChannelCount];
+    for (int i = 0; i < properties.mRxActivatedChannelCount; i++)
+    {
+        inputBuffers[i] = new float[mBufferSizeSamples + 32];
+    }
+    outputBuffers = new float* [properties.mTxActivatedChannelCount];
+    for (int i = 0; i < properties.mTxActivatedChannelCount; i++)
+    {
+        outputBuffers[i] = new float[mBufferSizeSamples + 32];
+    }
+    //bufferAllocated = true;
+
+    while (!threadShouldExit())
+    {
+        /*
+        if ((outputDevice != nullptr && outputDevice->shouldShutdown)
+            || (inputDevice != nullptr && inputDevice->shouldShutdown))
+        {
+            shouldShutdown = true;
+      //      triggerAsyncUpdate();
+
+            break;
+        }
+        */
+
+        auto inputDeviceActive = (inputDevice != nullptr && inputDevice->isDeviceActivated());
+        auto outputDeviceActive = (outputDevice != nullptr && outputDevice->isDeviceActivated());
+
+     //   if (!inputDeviceActive && !outputDeviceActive)
+     //       continue;
+
+        if (inputDeviceActive)
+        {
+            //inputDevice->copyBuffersFromReservoir(inputBuffers, numInputBuffers, bufferSize);
+        }
+
+        {
+            const ScopedTryLock sl(startStopLock);
+
+            if (sl.isLocked() && isStarted && bufferReady)
+                callback->audioDeviceIOCallbackWithContext(const_cast<const float**> (inputBuffers),
+                    properties.mRxActivatedChannelCount,
+                    outputBuffers,
+                    properties.mTxActivatedChannelCount,
+                    mBufferSizeSamples,
+                    {});
+ 
+        }
+    }
+}
+
 String DanteAudioIODevice::getLastError() { return ""; };
 int DanteAudioIODevice::getCurrentBufferSizeSamples() { return mBufferSizeSamples; };
 double DanteAudioIODevice::getCurrentSampleRate() { return mSampleRate; };
