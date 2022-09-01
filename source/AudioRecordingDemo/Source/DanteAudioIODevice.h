@@ -38,7 +38,7 @@ class DanteAudioIODevice : public AudioIODevice, public Thread {
     int getXRunCount() const noexcept override;
     void run() override;
 public:
-    DanteAudioIODevice(const String& deviceName, DAL::DalAppBase* dalAppBase);
+    DanteAudioIODevice(const String& deviceName);
 private:
     //static void transfer(const Audinate::DAL::AudioProperties& properties,
     //    const Audinate::DAL::AudioTransferParameters& params,
@@ -48,7 +48,8 @@ private:
     BigInteger mOutputChannels;
     double mSampleRate;
     int mBufferSizeSamples;
-    DAL::DalAppBase* mDalAppBase;
+    bool mChannelsReady = false;
+    DAL::DalConfig mConfig;
     DAL::DalAppBase* inputDevice = nullptr;
     DAL::DalAppBase* outputDevice = nullptr;
     bool isOpen_ = false, isStarted = false;
@@ -61,7 +62,7 @@ private:
 
 class DanteAudioIODeviceType : public AudioIODeviceType {
 public:
-    DanteAudioIODeviceType(Component*);
+    DanteAudioIODeviceType();
     virtual void scanForDevices() override;
     virtual StringArray getDeviceNames(bool) const override;
     virtual int getDefaultDeviceIndex(bool) const override;
@@ -70,13 +71,7 @@ public:
     virtual AudioIODevice* createDevice(const String& outputDeviceName,
         const String& inputDeviceName) override;        
     
-private:
-    bool mChannelsReady = false;
-    DAL::DalAppBase* mDalAppBase = nullptr;
-    DAL::DalConfig mConfig;
-    std::shared_ptr<Audinate::DAL::Connections> mConnections;  
+private: 
     StringArray mDeviceNames;
-    Component* mComponent;
     bool hasScanned = false;
-    void onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds);
 };

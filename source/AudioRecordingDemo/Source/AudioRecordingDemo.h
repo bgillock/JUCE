@@ -300,9 +300,13 @@ namespace juce {
         {
             setOpaque(true);
 
-            audioDeviceManager.getAvailableDeviceTypes();
             deviceType = this->createAudioIODeviceType();
-
+            if (audioDeviceManager.getAvailableDeviceTypes().indexOf(deviceType) == -1)
+                audioDeviceManager.addAudioDeviceType(std::unique_ptr<AudioIODeviceType>(deviceType));
+            auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
+                0, 64, 0, 64, false, false, true, false);
+            audioSetupComp.reset(audioDeviceSelectorComponent);
+            addAndMakeVisible(audioSetupComp.get());
             //addAndMakeVisible(audioSetupComp.get());
 
             addAndMakeVisible(liveAudioScroller);
@@ -341,7 +345,7 @@ namespace juce {
             audioDeviceManager.addAudioCallback(&liveAudioScroller);
             //audioDeviceManager.addAudioCallback(&recorder);
 
-            setSize(500, 500);
+            setSize(410, 520);
         }
 
         ~AudioRecordingDemo() override
@@ -360,23 +364,14 @@ namespace juce {
             auto area = getLocalBounds();
 
             if (audioSetupComp != nullptr) 
-                audioSetupComp->setBounds(area.removeFromTop(60));
+                audioSetupComp->setBounds(Rectangle<int>(10, 10, 400, 400));
 
-            liveAudioScroller.setBounds(area.removeFromTop(500).reduced(8));
+            liveAudioScroller.setBounds(Rectangle<int>(10, 410, 400, 80));
                 //recordingThumbnail.setBounds(area.removeFromTop(80).reduced(8));
                 //recordButton.setBounds(area.removeFromTop(36).removeFromLeft(140).reduced(8));
             explanationLabel.setText("",NotificationType::dontSendNotification);
-            explanationLabel.setBounds(Rectangle<int>(10, 10, 400, 30));
-            if (outputDeviceDropDown != nullptr)
-            {
-                outputDeviceDropDown->setBounds(Rectangle<int>(80, 30, 200, 20));
-            }
-
-            if (inputDeviceDropDown != nullptr)
-            {
-                //inputLevelMeter->setBounds(row.removeFromRight(testButton != nullptr ? testButton->getWidth() : row.getWidth() / 6));
-                inputDeviceDropDown->setBounds(Rectangle<int>(80, 60, 200, 20));
-            }
+            explanationLabel.setBounds(Rectangle<int>(10, 490, 400, 20));
+           
         }
 
         void handleCommandMessage(int commandId) override
@@ -392,12 +387,7 @@ namespace juce {
                 }
                 case 2: {
                     explanationLabel.setText("Dante Channels available!", NotificationType::sendNotification);
-                    if (audioDeviceManager.getAvailableDeviceTypes().indexOf(deviceType) == -1) 
-                        audioDeviceManager.addAudioDeviceType(std::unique_ptr<AudioIODeviceType> (deviceType));
-                    auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
-                        0, 64, 0, 64, true, true, true, false);
-                    audioSetupComp.reset(audioDeviceSelectorComponent);
-                    addAndMakeVisible(audioSetupComp.get());
+                   
                     //updateInputsComboBox();
                     //updateOutputsComboBox();
                     resized();
@@ -425,7 +415,7 @@ namespace juce {
         std::unique_ptr<ComboBox> outputDeviceDropDown, inputDeviceDropDown;
         std::unique_ptr<Label> outputDeviceLabel, inputDeviceLabel;
         ChannelsListComponent outputChannelsList, inputChannelsList;
-        AudioIODeviceType* createAudioIODeviceType() { return new DanteAudioIODeviceType(this); }
+        AudioIODeviceType* createAudioIODeviceType() { return new DanteAudioIODeviceType(); }
         void setChannelsList(String device, bool isInput)
         {
            

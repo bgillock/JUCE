@@ -53,7 +53,7 @@
 #include "DalAppBase.hpp"
 
 namespace DAL {
-	static bool g_running = true;
+	static bool g_running = false;
 	static bool g_restart = false;
 	static std::ofstream mLog;
 	static std::uint16_t  DAL_EXAMPLE_ARCP_PORT = 30440;
@@ -124,7 +124,7 @@ namespace DAL {
 			);
 		return (findResult != supportedSampleRates.end());
 	}
-
+	static bool componentApecRunning = false;
 	static void handleEvent(Audinate::DAL::Instance& instance, const Audinate::DAL::InstanceEvent& ev)
 	{
 		switch (ev.getType())
@@ -134,6 +134,10 @@ namespace DAL {
 			break;
 		case Audinate::DAL::InstanceEvent::Type::ComponentStatusChanged:
 			mLog << "Component " << Audinate::DAL::toString(ev.getComponent()) << " status changed, now " << Audinate::DAL::toString(instance.getComponentStatus(ev.getComponent())) << std::endl << std::flush;
+			if (ev.getComponent() == Audinate::DAL::Component::Apec)
+			{
+				componentApecRunning = (instance.getComponentStatus(ev.getComponent()) == Audinate::DAL::ComponentStatus::Running);
+			}
 			break;
 		case Audinate::DAL::InstanceEvent::Type::DomainInfoChanged:
 			if (instance.getDomainInfo().mIsEnrolled)
@@ -201,7 +205,7 @@ namespace DAL {
 
 	int DalAppBase::init(const unsigned char* access_token, DalConfig instanceConfig, bool monitor)
 	{
-
+		componentApecRunning = false;
 		mLog.open("dal.log");
 		// Create DAL
 		try
@@ -210,7 +214,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
+			mLog << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			g_running = false;
 			mDal = nullptr;
 			return -1;
@@ -241,7 +245,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
+			mLog << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			g_running = false;
 			mDal = nullptr;
 			return -1;
@@ -288,7 +292,7 @@ namespace DAL {
 	{
 		if (!mInstance)
 		{
-			std::cerr << "DAL instance has not been created" << std::endl << std::flush;
+			mLog << "DAL instance has not been created" << std::endl << std::flush;
 			return;
 		}
 
@@ -298,7 +302,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
+			mLog << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			g_running = false;
 		}
 
@@ -309,6 +313,7 @@ namespace DAL {
 			auto actualSd = mInstance->getProtocolSocketDescriptor(iter);
 			mLog << "Protocol" << Audinate::DAL::toString(iter) << " config=" << Audinate::DAL::toString(configSd) << " actual=" << Audinate::DAL::toString(actualSd) << std::endl << std::flush;
 		}
+
 	}
 
 	void DalAppBase::stop()
@@ -338,7 +343,7 @@ namespace DAL {
 
 		if (mInstance->getInstanceState() != Audinate::DAL::InstanceState::Stopped)
 		{
-			std::cerr << "DAL instance should be stopped before updating audio transfer" << std::endl << std::flush;
+			mLog << "DAL instance should be stopped before updating audio transfer" << std::endl << std::flush;
 			return;
 		}
 
@@ -356,6 +361,9 @@ namespace DAL {
 				((int)properties.mRxActivatedChannelCount, (int)properties.mTxActivatedChannelCount);
 
 			unsigned int latencySamples = LATENCY_SAMPLES;
+
+			mLog << "SetupAudioTransfer function...Instance state" << Audinate::DAL::toString(mInstance->getInstanceState()) << std::endl << std::flush;
+			
 			audio->setTransferFn([properties, numChannels, latencySamples, this](const Audinate::DAL::AudioTransferParameters& params)->void {
 				mTransferFn(properties, params, numChannels, latencySamples);
 				});
@@ -368,7 +376,7 @@ namespace DAL {
 
 	bool DalAppBase::isDeviceActivated()
 	{
-		return mInstance->isDeviceActivated();
+		return componentApecRunning;
 	}
 
 	//This function stops the DAL instance, resets the audio transfer
@@ -387,7 +395,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
+			mLog << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 		}
 	}
 
@@ -402,7 +410,7 @@ namespace DAL {
 		}
 		catch (const Audinate::DAL::DalException& exception)
 		{
-			std::cerr << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
+			mLog << exception.getErrorDescription() << "\t(" << exception.getErrorName() << ")" << std::endl << std::flush;
 			return;
 		}
 	}

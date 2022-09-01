@@ -114,7 +114,6 @@ namespace DAL {
 		std::shared_ptr<Audinate::DAL::DAL> mDal;
 		std::shared_ptr<Audinate::DAL::Instance> mInstance;
 		DalAppTransferFn mTransferFn;
-
 		void stopDalInstance();
 		void resetDalInstance();
 		void setupAudioTransfer();

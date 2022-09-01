@@ -49,7 +49,7 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
                 (positionSamples % properties.mSamplesPerBuffer) * 4);
             inputBuffers[chan][i] = (float)*bufferPtr;
         }
-        positionSamples++;
+        i++;
     }
 
     //waveWriter->putU32Samples(properties.mRxChannelBuffers, positionSamples,
@@ -58,45 +58,9 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
     return;
 }
 
-DanteAudioIODeviceType::DanteAudioIODeviceType(Component* component) : AudioIODeviceType("Dante"), mComponent(component), mDeviceNames()
+DanteAudioIODeviceType::DanteAudioIODeviceType() : AudioIODeviceType("Dante"), mDeviceNames()
 {
-    mConfig.setInterfaceIndex(11);
-    mConfig.setTimeSource(Audinate::DAL::TimeSource::RxAudio);
-    mConfig.setManufacturerName("BitRate27");
-    Audinate::DAL::Version dalAppVersion(1, 0, 0);
-    mConfig.setManufacturerVersion(dalAppVersion);
-    mConfig.setDefaultName(APP_NAME);
-    mConfig.setModelName(APP_MODEL_NAME);
-    mConfig.setModelId(APP_MODEL_ID);
-    mConfig.setProcessPath("D:\\Audio\\Repos\\Audinate\\bin");
-    mConfig.setLoggingPath("D:\\Audio\\Repos\\Audinate\\logs");
-    mConfig.setNumRxChannels(2);
-    mConfig.setRxChannelName(0, "Left");
-    mConfig.setRxChannelName(1, "Right");
-    mConfig.setNumTxChannels(2);
-    mConfig.setTxChannelName(0, "Left");
-    mConfig.setTxChannelName(1, "Right");
-    mDalAppBase = new DAL::DalAppBase(APP_NAME, APP_MODEL_NAME, APP_MODEL_ID);
-    mDalAppBase->setTransferFn(&myTransfer);
-    mDalAppBase->init(access_token, mConfig, true);
-    mDalAppBase->run();
-
-    mComponent->postCommandMessage(0);
-
-    // Create ConnectionsAPI
-    Audinate::DAL::ConnectionsConfig config;
-
-    config.setArcpSocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::Arcp));
-    config.setConmonClientSocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::ConmonClient));
-    config.setDomainClientProxySocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::DomainClientProxy));
-#ifdef _WIN32
-    config.setMdnsClientSocketDescriptor(mDalAppBase->getConfig().getProtocolSocketDescriptor(Audinate::DAL::Protocol::MdnsClient));
-#endif
-
-    mConnections = Audinate::DAL::createConnections(mDalAppBase->getDal(), config);
-    mComponent->postCommandMessage(1); 
-    // Setup a call back for when the Channels are ready
-    mConnections->setAvailableChannelsChangedFn(bind(&DanteAudioIODeviceType::onAvailableChannelsChanged, this, std::placeholders::_1, std::placeholders::_2));
+   
 };
 void DanteAudioIODeviceType::scanForDevices()
 {
@@ -134,60 +98,40 @@ AudioIODevice* DanteAudioIODeviceType::createDevice(const String& outputDeviceNa
 
     std::unique_ptr<DanteAudioIODevice> device;
 
-    device.reset(new DanteAudioIODevice(outputDeviceName,mDalAppBase));
+    device.reset(new DanteAudioIODevice(outputDeviceName));
     
     return device.release();
 };
-void DanteAudioIODeviceType::onAvailableChannelsChanged(std::vector<unsigned int> txChannelIds, std::vector<unsigned int> rxChannelIds)
+
+DanteAudioIODevice::DanteAudioIODevice(const String& deviceName) : AudioIODevice(deviceName,"Dante"), Thread("JUCE DANTE")
 {
-    /*
-    mOutputDeviceNames.clear();
-    for (auto txChannelId : txChannelIds)
-    {
-        auto available = mConnections->getAvailableDestinations(txChannelId);
-        for (auto x : available.mDevices)
-        {
-            if (mOutputDeviceNames.indexOf(x.mDeviceName) == -1)
-            {
-                mOutputDeviceNames.add(x.mDeviceName);
-                auto newDevice = createDevice(x.mDeviceName, "");
-                mOutputDevices.add(newDevice);
-            }
-            for (auto y : x.mChannelNames)
-            {
+    mConfig.setInterfaceIndex(12);
+    mConfig.setTimeSource(Audinate::DAL::TimeSource::RxAudio);
+    mConfig.setManufacturerName("BitRate27");
+    Audinate::DAL::Version dalAppVersion(1, 0, 0);
+    mConfig.setManufacturerVersion(dalAppVersion);
+    mConfig.setDefaultName(APP_NAME);
+    mConfig.setModelName(APP_MODEL_NAME);
+    mConfig.setModelId(APP_MODEL_ID);
+    mConfig.setProcessPath("D:\\Audio\\Repos\\Audinate\\bin");
+    mConfig.setLoggingPath("D:\\Audio\\Repos\\Audinate\\logs");
+    mConfig.setNumRxChannels(2);
+    mConfig.setRxChannelName(0, "Left");
+    mConfig.setRxChannelName(1, "Right");
+    mConfig.setNumTxChannels(2);
+    mConfig.setTxChannelName(0, "Left");
+    mConfig.setTxChannelName(1, "Right");
+    inputDevice = new DAL::DalAppBase(APP_NAME, APP_MODEL_NAME, APP_MODEL_ID);
+    inputDevice->setTransferFn(&myTransfer);
+    inputDevice->init(access_token, mConfig, true);
+    inputDevice->run();
 
-            }
-        }
-    }
-    mInputDeviceNames.clear();
-    for (auto rxChannelId : rxChannelIds)
-    {
-        auto available = mConnections->getAvailableDestinations(rxChannelId);
-        for (auto x : available.mDevices)
-        {
-            if (mInputDeviceNames.indexOf(x.mDeviceName) == -1)
-            {
-                mInputDeviceNames.add(x.mDeviceName);
-                mInputDevices.add(createDevice(x.mDeviceName,""));
-            }
-            for (auto y : x.mChannelNames)
-            {
-
-            }
-        }
-    }
-  
-    mChannelsReady = true;
-    */
-    mComponent->postCommandMessage(2);
-}
-
-DanteAudioIODevice::DanteAudioIODevice(const String& deviceName, DAL::DalAppBase* dalAppBase) : AudioIODevice(deviceName,"Dante"), Thread("JUCE DANTE"), mDalAppBase(dalAppBase){};
+};
 
 StringArray DanteAudioIODevice::getOutputChannelNames()
 {
     StringArray outChannels;
-    Audinate::DAL::InstanceConfig iConfig = mDalAppBase->getConfig();
+    Audinate::DAL::InstanceConfig iConfig = inputDevice->getConfig();
 
     for (int i = 0; i < iConfig.getNumTxChannels(); ++i)
             outChannels.add(iConfig.getTxChannelName(i));
@@ -199,7 +143,7 @@ StringArray DanteAudioIODevice::getInputChannelNames()
 {
     StringArray inChannels;
 
-    Audinate::DAL::InstanceConfig iConfig = mDalAppBase->getConfig();
+    Audinate::DAL::InstanceConfig iConfig = inputDevice->getConfig();
 
     for (int i = 0; i < iConfig.getNumRxChannels(); ++i)
         inChannels.add(iConfig.getRxChannelName(i));
@@ -214,29 +158,19 @@ String DanteAudioIODevice::open(const BigInteger& inputChannels,
     const BigInteger& outputChannels,
     double sampleRate,
     int bufferSizeSamples) 
-{
-    Audinate::DAL::AudioProperties properties;
-    mDalAppBase->getAudioProperties(properties);
-    mInputChannels = 0;
-    for (int i = 0; i < properties.mRxActivatedChannelCount; ++i)
-    {
-        mInputChannels.setBit(i);
-    }
-    mOutputChannels = 0;
-    for (int i = 0; i < properties.mTxActivatedChannelCount; ++i)
-    {
-        mOutputChannels.setBit(i);
-    }
+{   
 
-    //mInputChannels = inputChannels;
-    //mOutputChannels = outputChannels;
+    mInputChannels = inputChannels;
+    mOutputChannels = outputChannels;
     mSampleRate = sampleRate;
-
-    //mDalAppBase->setTransferFn(std::bind(&DanteAudioIODevice::transfer,this, 
-    //    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+    mBufferSizeSamples = bufferSizeSamples;
 
     startThread(8);
-    Thread::sleep(5);
+
+    //inputDevice->setTransferFn(std::bind(&DanteAudioIODevice::transfer,this, 
+    //    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4));
+
+
     /*
     if (inputDevice != nullptr && inputDevice->client != nullptr)
     {
@@ -318,9 +252,23 @@ void DanteAudioIODevice::stop()
 void DanteAudioIODevice::run()
 {
     // setMMThreadPriority();
+    while (!inputDevice->isDeviceActivated())
+    {
+        Thread::sleep(1000);
+    }
     Audinate::DAL::AudioProperties properties;
-    mDalAppBase->getAudioProperties(properties);
-    mBufferSizeSamples = properties.mSamplesPerBuffer;
+    inputDevice->getAudioProperties(properties);
+    mInputChannels = 0;
+    for (int i = 0; i < properties.mRxActivatedChannelCount; ++i)
+    {
+        mInputChannels.setBit(i);
+    }
+    mOutputChannels = 0;
+    for (int i = 0; i < properties.mTxActivatedChannelCount; ++i)
+    {
+        mOutputChannels.setBit(i);
+    }
+
     inputBuffers = new float* [properties.mRxActivatedChannelCount];
     for (int i = 0; i < properties.mRxActivatedChannelCount; i++)
     {
@@ -331,7 +279,7 @@ void DanteAudioIODevice::run()
     {
         outputBuffers[i] = new float[mBufferSizeSamples + 32];
     }
-    //bufferAllocated = true;
+    bufferAllocated = true;
 
     while (!threadShouldExit())
     {
