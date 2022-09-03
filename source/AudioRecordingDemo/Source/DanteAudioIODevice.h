@@ -39,6 +39,7 @@ class DanteAudioIODevice : public AudioIODevice, public Thread {
     void run() override;
 public:
     DanteAudioIODevice(const String& deviceName);
+    ~DanteAudioIODevice();
 private:
     //static void transfer(const Audinate::DAL::AudioProperties& properties,
     //    const Audinate::DAL::AudioTransferParameters& params,
@@ -56,8 +57,6 @@ private:
     int currentBufferSizeSamples = 0;
     double currentSampleRate = 0;
     std::atomic<bool> shouldShutdown{ false }, deviceSampleRateChanged{ false };
-    AudioIODeviceCallback* callback = {};
-    CriticalSection startStopLock;
 };
 
 class DanteAudioIODeviceType : public AudioIODeviceType {

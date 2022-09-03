@@ -77,7 +77,7 @@ namespace DAL {
 		// Defaut config values.
 #define DEFAULT_SAMPLE_RATE 48000
 #define DEFAULT_SAMPLES_PER_PERIOD 960
-#define DEFAULT_PERIODS_PER_BUFFER 64
+#define DEFAULT_PERIODS_PER_BUFFER 10
 #define DEFAULT_ENCODING 24
 #define DEFAULT_TX_CHANS 2
 #define DEFAULT_RX_CHANS 2
@@ -227,8 +227,7 @@ namespace DAL {
 
 		Audinate::DAL::DALVersion dalVersion = Audinate::DAL::getVersion();
 		mLog << "DAL version is " << unsigned(dalVersion.mMajor) << "." << unsigned(dalVersion.mMinor) << "." << dalVersion.mBugfix << "." << dalVersion.mBuildNumber << std::endl << std::flush;
-
-
+		
 		// Create DAL instance
 		try
 		{

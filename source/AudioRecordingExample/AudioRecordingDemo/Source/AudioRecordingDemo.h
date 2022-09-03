@@ -257,6 +257,10 @@ public:
 
         addAndMakeVisible (recordingThumbnail);
 
+        auto audioDeviceSelectorComponent = new AudioDeviceSelectorComponent(audioDeviceManager,
+            0, 64, 0, 64, false, false, true, false);
+        audioSetupComp.reset(audioDeviceSelectorComponent);
+        addAndMakeVisible(audioSetupComp.get());
        #ifndef JUCE_DEMO_RUNNER
         RuntimePermissions::request (RuntimePermissions::recordAudio,
                                      [this] (bool granted)
@@ -291,6 +295,7 @@ public:
         recordingThumbnail.setBounds (area.removeFromTop (80).reduced (8));
         recordButton      .setBounds (area.removeFromTop (36).removeFromLeft (140).reduced (8));
         explanationLabel  .setBounds (area.reduced (8));
+        audioSetupComp   ->setBounds (area.removeFromTop(200).reduced(8));
     }
 
 private:
@@ -300,7 +305,7 @@ private:
    #else
     AudioDeviceManager& audioDeviceManager { getSharedAudioDeviceManager (1, 0) };
    #endif
-
+    std::unique_ptr<AudioDeviceSelectorComponent> audioSetupComp;
     LiveScrollingAudioDisplay liveAudioScroller;
     RecordingThumbnail recordingThumbnail;
     AudioRecorder recorder  { recordingThumbnail.getAudioThumbnail() };

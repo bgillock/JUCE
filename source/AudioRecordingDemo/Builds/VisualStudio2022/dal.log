@@ -6,7 +6,7 @@ Instance state changed, now Starting
 Instance state changed, now Running
 
 Socket Descriptor validation: ProtocolArcp config=30440 actual=30440
-10136.370100600: control=0 audio=1137 late=0 nonSeq=0
+14800.123740900: control=0 audio=2140 late=0 nonSeq=0
 ProtocolArcpLocal config=30441 actual=30441
 ProtocolDbcp config=30455 actual=30455
 ProtocolCmcp config=34800 actual=34800
@@ -14,174 +14,35 @@ ProtocolConmonChannels config=34700 actual=34700
 ProtocolConmonClient config=34900 actual=34900
 ProtocolDomainClientProxy config=34001 actual=34001
 ProtocolAudioBase config=30336 actual=30336
-ProtocolWebSocket config=0 actual=51340
+ProtocolWebSocket config=0 actual=52890
 ProtocolMdnsClient config=34002 actual=34002
-10151.67011200: control=0 audio=4640384 late=0 nonSeq=0
-10152.15502300: control=14696785 audio=976 late=2 nonSeq=2
-10153.4020900: control=23834 audio=1090 late=2 nonSeq=2
+14812.191695400: control=0 audio=1715 late=0 nonSeq=0
+14813.9900400: control=12068029 audio=1323 late=2 nonSeq=2
+14814.8247000: control=23885 audio=1150 late=2 nonSeq=2
 Component ConmonServer status changed, now Running
 Component Mdns status changed, now Running
-10154.16503400: control=23305 audio=1179 late=2 nonSeq=2
+14815.2191200: control=24420 audio=1524 late=2 nonSeq=2
 Component Apec status changed, now Running
-10155.6548000: control=23506 audio=1052 late=2 nonSeq=2
-10156.510600: control=23585 audio=1111 late=2 nonSeq=2
-10165.310565900: control=359476 audio=3361515 late=3 nonSeq=3
-10166.9535000: control=8390007 audio=985 late=3 nonSeq=3
-10167.1004100: control=23610 audio=1152 late=3 nonSeq=3
-10168.12595600: control=23463 audio=884 late=3 nonSeq=3
-10169.19068400: control=20696 audio=1583 late=3 nonSeq=3
-10170.17543600: control=20764 audio=1082 late=3 nonSeq=3
-10171.16540800: control=24083 audio=1219 late=3 nonSeq=3
-10172.19050200: control=23475 audio=1082 late=3 nonSeq=3
-10173.5045500: control=23522 audio=1017 late=3 nonSeq=3
-10174.16592500: control=23835 audio=1015 late=3 nonSeq=3
-10175.7500300: control=23795 audio=1046 late=3 nonSeq=3
-10176.14545100: control=24539 audio=1217 late=3 nonSeq=3
-10177.509000: control=23377 audio=1175 late=3 nonSeq=3
-10178.17538300: control=23440 audio=1036 late=3 nonSeq=3
-10179.18556100: control=23407 audio=1164 late=3 nonSeq=3
-10180.1009100: control=23686 audio=1357 late=3 nonSeq=3
-10181.1061200: control=24031 audio=1126 late=3 nonSeq=3
-10182.12034500: control=23484 audio=1597 late=3 nonSeq=3
-10183.8607200: control=23748 audio=1071 late=3 nonSeq=3
-10184.8554300: control=24020 audio=1052 late=3 nonSeq=3
-10185.12680700: control=23598 audio=1087 late=3 nonSeq=3
-10186.9537300: control=23544 audio=1247 late=3 nonSeq=3
-10187.18562400: control=23207 audio=1204 late=3 nonSeq=3
-10188.9058400: control=23870 audio=1054 late=3 nonSeq=3
-10189.12012600: control=23292 audio=904 late=3 nonSeq=3
-10190.5991800: control=20746 audio=1081 late=3 nonSeq=3
-10191.17174300: control=23537 audio=1348 late=3 nonSeq=3
-10192.12517600: control=23690 audio=796 late=3 nonSeq=3
-10193.19548800: control=24715 audio=1085 late=3 nonSeq=3
-10194.3562600: control=23868 audio=1038 late=3 nonSeq=3
-10195.19995300: control=21136 audio=1040 late=3 nonSeq=3
-10196.3159600: control=24569 audio=1350 late=3 nonSeq=3
-10197.12575800: control=23836 audio=1279 late=3 nonSeq=3
-10198.8144300: control=23568 audio=1344 late=3 nonSeq=3
-10199.9569500: control=24815 audio=1168 late=3 nonSeq=3
-10200.4011000: control=24184 audio=1101 late=3 nonSeq=3
-10201.6011300: control=23864 audio=972 late=3 nonSeq=3
-10202.16999400: control=24034 audio=1147 late=3 nonSeq=3
-10203.7541400: control=23479 audio=1008 late=3 nonSeq=3
-10204.11531300: control=23495 audio=1378 late=3 nonSeq=3
-10205.15034300: control=23345 audio=985 late=3 nonSeq=3
-10206.605700: control=23886 audio=1014 late=3 nonSeq=3
-10207.5059500: control=24040 audio=1169 late=3 nonSeq=3
-10208.11506100: control=23518 audio=1036 late=3 nonSeq=3
-10209.11544500: control=23586 audio=1064 late=3 nonSeq=3
-10210.17059900: control=23704 audio=897 late=3 nonSeq=3
-10211.19514200: control=27515 audio=1153 late=3 nonSeq=3
-10212.12110300: control=20953 audio=979 late=3 nonSeq=3
-10213.13696900: control=24062 audio=958 late=3 nonSeq=3
-10214.7561300: control=23616 audio=985 late=3 nonSeq=3
-10215.12030200: control=24088 audio=1001 late=3 nonSeq=3
-Component Apec status changed, now Pending
-Component ConmonServer status changed, now Pending
-Component Mdns status changed, now Pending
-10537.546553100: control=24021 audio=64416711 late=3 nonSeq=3
-10538.6050800: control=322328309 audio=863 late=0 nonSeq=0
-10539.531200: control=23580 audio=1198 late=2 nonSeq=2
-10540.559500: control=23753 audio=898 late=2 nonSeq=2
-Component Apec status changed, now Running
-Component ConmonServer status changed, now Running
-Component Mdns status changed, now Running
-10541.20058600: control=23950 audio=1046 late=2 nonSeq=2
-10542.1517100: control=23902 audio=915 late=2 nonSeq=2
-10543.4993000: control=42132 audio=1218 late=2 nonSeq=2
-10605.360535500: control=26088 audio=61346684 late=3 nonSeq=3
-Component Apec status changed, now Pending
-Component Mdns status changed, now Pending
-10606.535300: control=61364915 audio=1070 late=3 nonSeq=3
-10607.11110900: control=76338 audio=894 late=2 nonSeq=2
-10608.18069100: control=23653 audio=929 late=2 nonSeq=2
-10609.13559200: control=23970 audio=970 late=2 nonSeq=2
-10610.18109200: control=23701 audio=1516 late=2 nonSeq=2
-10611.16557200: control=24010 audio=1127 late=0 nonSeq=0
-10612.6595200: control=20788 audio=1071 late=3 nonSeq=3
-10613.742100: control=24247 audio=1077 late=3 nonSeq=3
-Component Apec status changed, now Running
-Component Mdns status changed, now Running
-10614.2535500: control=23344 audio=1089 late=3 nonSeq=3
-10615.555200: control=23523 audio=1116 late=3 nonSeq=3
-Component ConmonServer status changed, now Pending
-10616.4583000: control=24809 audio=1058 late=3 nonSeq=3
-10617.8101100: control=23622 audio=1093 late=3 nonSeq=3
-10618.18564000: control=23640 audio=1445 late=3 nonSeq=3
-10619.18162400: control=23619 audio=1641 late=3 nonSeq=3
-10620.17032700: control=23938 audio=1165 late=3 nonSeq=3
-10621.9137100: control=24195 audio=1078 late=3 nonSeq=3
-10622.19048500: control=23602 audio=1516 late=3 nonSeq=3
-10623.3040300: control=25720 audio=1154 late=3 nonSeq=3
-Component ConmonServer status changed, now Running
-10624.8011900: control=23556 audio=1127 late=3 nonSeq=3
-10625.19040500: control=23866 audio=1168 late=3 nonSeq=3
-10626.13580700: control=43665 audio=1094 late=3 nonSeq=3
-10627.7117900: control=23678 audio=1102 late=3 nonSeq=3
-10628.11502300: control=20675 audio=1131 late=3 nonSeq=3
-10629.8064300: control=25400 audio=911 late=3 nonSeq=3
-10630.7017200: control=24128 audio=1076 late=3 nonSeq=3
-10631.10164100: control=23164 audio=1039 late=3 nonSeq=3
-10632.7221600: control=23812 audio=1103 late=3 nonSeq=3
-10633.8033000: control=23335 audio=1117 late=3 nonSeq=3
-10634.14018300: control=23830 audio=1144 late=3 nonSeq=3
-10635.1580100: control=24000 audio=1082 late=3 nonSeq=3
-10636.8101300: control=23844 audio=1171 late=3 nonSeq=3
-10637.19532800: control=23232 audio=1242 late=3 nonSeq=3
-10638.20070300: control=23463 audio=1595 late=3 nonSeq=3
-10639.6078300: control=23824 audio=964 late=3 nonSeq=3
-10640.1590400: control=23429 audio=1132 late=3 nonSeq=3
-10641.10036500: control=23410 audio=1329 late=3 nonSeq=3
-10642.11000900: control=23410 audio=1181 late=3 nonSeq=3
-10643.15233400: control=23455 audio=1081 late=3 nonSeq=3
-10644.15603800: control=22992 audio=947 late=3 nonSeq=3
-10645.10069300: control=20820 audio=1427 late=3 nonSeq=3
-10646.9577200: control=24225 audio=1092 late=3 nonSeq=3
-10647.10534100: control=23667 audio=988 late=3 nonSeq=3
-10648.5581000: control=23730 audio=1039 late=3 nonSeq=3
-10649.14538700: control=23465 audio=1236 late=3 nonSeq=3
-10650.12058400: control=23610 audio=961 late=3 nonSeq=3
-10651.14505100: control=30112 audio=979 late=3 nonSeq=3
-10652.5509600: control=24127 audio=1699 late=3 nonSeq=3
-10653.55100: control=23686 audio=883 late=3 nonSeq=3
-10654.16510700: control=23758 audio=1125 late=3 nonSeq=3
-10655.2039800: control=23802 audio=1089 late=3 nonSeq=3
-10656.1683200: control=23301 audio=1273 late=3 nonSeq=3
-10657.2004400: control=23701 audio=995 late=3 nonSeq=3
-10658.14155200: control=23886 audio=1020 late=3 nonSeq=3
-10659.91200: control=24006 audio=1346 late=3 nonSeq=3
-10660.19057000: control=23942 audio=1797 late=3 nonSeq=3
-10661.5559100: control=23398 audio=965 late=3 nonSeq=3
-10662.14538600: control=23618 audio=1325 late=3 nonSeq=3
-10663.17521800: control=23936 audio=1262 late=3 nonSeq=3
-10664.17515400: control=23221 audio=868 late=3 nonSeq=3
-10665.11561600: control=23657 audio=2511 late=3 nonSeq=3
-10666.8549400: control=24128 audio=1128 late=3 nonSeq=3
-10667.1110600: control=23692 audio=1042 late=3 nonSeq=3
-10668.3014500: control=23273 audio=1105 late=3 nonSeq=3
-10669.19013600: control=23529 audio=1099 late=3 nonSeq=3
-10670.12517500: control=24046 audio=810 late=3 nonSeq=3
-10671.4533400: control=23563 audio=962 late=3 nonSeq=3
-10672.7558200: control=23491 audio=1175 late=3 nonSeq=3
-10673.1512600: control=23721 audio=1099 late=3 nonSeq=3
-10674.3014600: control=23434 audio=1281 late=3 nonSeq=3
-10675.9572000: control=23286 audio=1298 late=3 nonSeq=3
-10676.7514500: control=23652 audio=1117 late=3 nonSeq=3
-10677.588800: control=23461 audio=1452 late=3 nonSeq=3
-10678.3554300: control=23484 audio=965 late=3 nonSeq=3
-10679.4510300: control=23503 audio=1076 late=3 nonSeq=3
-10680.9535700: control=25237 audio=1215 late=3 nonSeq=3
-10681.10512900: control=26134 audio=1573 late=3 nonSeq=3
-10682.16105700: control=20650 audio=1136 late=3 nonSeq=3
-10683.10028500: control=24009 audio=1196 late=3 nonSeq=3
-10684.12033700: control=24079 audio=1111 late=3 nonSeq=3
-10685.2542700: control=23526 audio=1114 late=3 nonSeq=3
-10686.16625800: control=23862 audio=1064 late=3 nonSeq=3
-10687.2067900: control=23571 audio=911 late=3 nonSeq=3
-10688.2548800: control=20702 audio=1369 late=3 nonSeq=3
-10689.10545500: control=23563 audio=1019 late=3 nonSeq=3
-10690.6010300: control=27265 audio=1644 late=3 nonSeq=3
-10691.10591700: control=23443 audio=1074 late=3 nonSeq=3
-10692.13535100: control=23968 audio=930 late=3 nonSeq=3
-10693.20049200: control=24082 audio=1100 late=3 nonSeq=3
-10694.8060800: control=23752 audio=1039 late=3 nonSeq=3
+14816.13193100: control=23801 audio=1367 late=2 nonSeq=2
+14817.20257700: control=24404 audio=2725 late=2 nonSeq=2
+14821.751194600: control=340851 audio=4072505 late=3 nonSeq=3
+14822.7740400: control=4085355 audio=1997 late=3 nonSeq=3
+14823.9691400: control=24348 audio=1181 late=2 nonSeq=2
+14824.4228100: control=23571 audio=1342 late=2 nonSeq=2
+14825.14749600: control=23732 audio=1180 late=2 nonSeq=2
+14826.17208400: control=23947 audio=1192 late=2 nonSeq=2
+14827.11274500: control=24053 audio=1202 late=2 nonSeq=2
+14828.9762500: control=23920 audio=1152 late=2 nonSeq=2
+14829.3761800: control=24326 audio=1328 late=2 nonSeq=2
+14830.19687700: control=23778 audio=1328 late=2 nonSeq=2
+14831.8769500: control=23533 audio=7497 late=3 nonSeq=3
+14832.11206500: control=23755 audio=2161 late=3 nonSeq=3
+14833.7218200: control=23967 audio=21013 late=3 nonSeq=3
+14834.15718700: control=23669 audio=2508 late=3 nonSeq=3
+14835.11223800: control=23379 audio=2025 late=3 nonSeq=3
+14836.16266300: control=23853 audio=101968 late=3 nonSeq=3
+14837.12733100: control=25727 audio=20034 late=3 nonSeq=3
+14838.19741900: control=23948 audio=10565 late=3 nonSeq=3
+14839.3778500: control=24064 audio=2325 late=3 nonSeq=3
+14840.239100: control=21643 audio=67019 late=3 nonSeq=3
+14841.2768400: control=24038 audio=15994 late=3 nonSeq=3

@@ -1,7 +1,9 @@
 #include "DanteAudioIODevice.h"
 #include "juce_audio_devices/juce_audio_devices.h"   
 #include <functional>
-
+#include <iostream>
+#include <fstream>
+#include <chrono>
 #define APP_NAME "AudioRecordingDemo"
 #define APP_MODEL_NAME "Audio Recording Demo"
 const Audinate::DAL::Id64 APP_MODEL_ID('A', 'U', 'R', 'C', 'R', 'D', 'D', 'M');
@@ -19,42 +21,105 @@ const unsigned char access_token[] =
 "f06021630000000054498adc59764064b2dadd5033c5930a0100000000000000";
 static bool bufferAllocated = false;
 static bool bufferReady = false;
+static int samplesInBuffers = 0;
 static float** inputBuffers;
 static float** outputBuffers;
-
+static CriticalSection bufferLock;
+static std::ofstream mt("myTransfer.txt", std::ios::out | std::ios::app);
+static AudioIODeviceCallback* callback = nullptr;
+static void convert24BitSignedtoFloat(uint32_t* from, float* to) 
+{
+    unsigned char* f = (unsigned char*)from;
+    int32_t it;
+    unsigned char* t = (unsigned char*)&it;
+    t[0] = 0x00;
+    char tc = f[1] >> 7;
+    if (tc == 0x01) t[0] = 0xff;
+    t[1] = f[1];
+    t[2] = f[2];
+    t[3] = f[3];
+    *to = (float)it / 8388607.0f;
+}
+static void printStatus(std::ofstream& mt, String sa, int a)
+{
+    mt << sa << "=" << String(a) << std::endl << std::flush;
+}
 static void myTransfer(const Audinate::DAL::AudioProperties& properties,
     const Audinate::DAL::AudioTransferParameters& params,
     unsigned int numChannels, unsigned int latencySamples)
 {
+
     if (!bufferAllocated) return;
-
-    unsigned int positionSamples =
-        (params.mAvailableDataOffsetInPeriods * properties.mSamplesPerPeriod)
-        % properties.mSamplesPerBuffer;
-    unsigned int numSamples = params.mNumPeriodsAvailable * properties.mSamplesPerPeriod;
-
-    uint16_t bitsPerSample = properties.mBytesPerSample * 8;
-    size_t numCopyChannels = numChannels;
-    uint8_t bytesPerSample = bitsPerSample / 8;
-
-    // Copy non-interleaved u32 channel data to interleaved little endian audio data with
-    // the configure bits per sample.
-    uint32_t samplesLeft = numSamples;
-    int i = 0;
-    while (i < numSamples)
+ //   const ScopedTryLock sl(bufferLock);
+ //   if (sl.isLocked())
     {
-        for (size_t chan = 0; chan < numCopyChannels; chan++)
-        {
-            const uint32_t* bufferPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[chan] +
-                (positionSamples % properties.mSamplesPerBuffer) * 4);
-            inputBuffers[chan][i] = (float)*bufferPtr;
-        }
-        i++;
-    }
+        unsigned int positionSamples =
+            (params.mAvailableDataOffsetInPeriods * properties.mSamplesPerPeriod)
+            % properties.mSamplesPerBuffer;
+        unsigned int numSamples = params.mNumPeriodsAvailable * properties.mSamplesPerPeriod;
 
-    //waveWriter->putU32Samples(properties.mRxChannelBuffers, positionSamples,
-    //	properties.mSamplesPerBuffer, numSamples);
-    bufferReady = true;
+        uint16_t bitsPerSample = properties.mBytesPerSample * 8;
+        size_t numCopyChannels = numChannels;
+        uint8_t bytesPerSample = bitsPerSample / 8;
+      
+        printStatus(mt, "mAvailableDataOffsetInPeriods", params.mAvailableDataOffsetInPeriods);
+        
+        std::ofstream wf("dantebuffer.dat", std::ios::out | std::ios::app);
+        const uint32_t* bPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[0] +
+            (positionSamples % properties.mSamplesPerBuffer) * 4);
+        wf.write((char*)bPtr, numSamples * properties.mBytesPerSample);
+        char ff = 0xff;
+        wf.write((char*)&ff, sizeof(ff));
+        wf.write((char*)&ff, sizeof(ff));
+        wf.write((char*)&ff, sizeof(ff));
+        wf.write((char*)&ff, sizeof(ff));
+        bPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[1] +
+            (positionSamples % properties.mSamplesPerBuffer) * 4);
+        wf.write((char*)bPtr, numSamples * properties.mBytesPerSample);
+        ff = 0xee;
+        wf.write((char*)&ff, sizeof(ff));
+        wf.write((char*)&ff, sizeof(ff));
+        wf.write((char*)&ff, sizeof(ff));
+        wf.write((char*)&ff, sizeof(ff));
+        wf.close();
+        
+
+        // Copy non-interleaved u32 channel data to interleaved little endian audio data with
+        // the configure bits per sample.
+        uint32_t samplesLeft = numSamples;
+        int i = samplesInBuffers;
+
+        uint32_t test;
+        char* tchar = (char *)&test;
+        tchar[0] = 0x00; tchar[1] = 0x0F; tchar[2] = 0x00; tchar[3] = 0x00;
+        float tfloat = 0.0;
+        convert24BitSignedtoFloat(&test, &tfloat);
+        tchar[0] = 0x00; tchar[1] = 0xF1; tchar[2] = 0x56; tchar[3] = 0x76;
+        convert24BitSignedtoFloat(&test, &tfloat);
+        while (i < numSamples)
+        {
+            for (size_t chan = 0; chan < numCopyChannels; chan++)
+            {
+                const uint32_t* bufferPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[chan] +
+                    (positionSamples % properties.mSamplesPerBuffer) * 4);
+                inputBuffers[chan][i] = ((float)*bufferPtr)/8388607.0f;
+            }
+            positionSamples++;
+            i++;
+        }
+        samplesInBuffers += numSamples;
+        if ((callback != nullptr))// && (params.mAvailableDataOffsetInPeriods == properties.mPeriodsPerBuffer - 1))
+        {
+            callback->audioDeviceIOCallbackWithContext(const_cast<const float**> (inputBuffers),
+                properties.mRxActivatedChannelCount,
+                outputBuffers,
+                properties.mTxActivatedChannelCount,
+                samplesInBuffers,
+                {});
+            samplesInBuffers = 0;
+        }
+        
+    }
     return;
 }
 
@@ -104,8 +169,8 @@ AudioIODevice* DanteAudioIODeviceType::createDevice(const String& outputDeviceNa
 };
 
 DanteAudioIODevice::DanteAudioIODevice(const String& deviceName) : AudioIODevice(deviceName,"Dante"), Thread("JUCE DANTE")
-{
-    mConfig.setInterfaceIndex(12);
+{   
+    mConfig.setInterfaceName(L"Ethernet");
     mConfig.setTimeSource(Audinate::DAL::TimeSource::RxAudio);
     mConfig.setManufacturerName("BitRate27");
     Audinate::DAL::Version dalAppVersion(1, 0, 0);
@@ -127,7 +192,11 @@ DanteAudioIODevice::DanteAudioIODevice(const String& deviceName) : AudioIODevice
     inputDevice->run();
 
 };
-
+DanteAudioIODevice::~DanteAudioIODevice() 
+{
+    mt.close();
+    stop();
+}
 StringArray DanteAudioIODevice::getOutputChannelNames()
 {
     StringArray outChannels;
@@ -228,7 +297,7 @@ void DanteAudioIODevice::start(AudioIODeviceCallback* call)
 
         call->audioDeviceAboutToStart(this);
 
-        const ScopedLock sl(startStopLock);
+        const ScopedLock sl(bufferLock);
         callback = call;
         isStarted = true;
     }
@@ -240,7 +309,7 @@ void DanteAudioIODevice::stop()
         auto* callbackLocal = callback;
 
         {
-            const ScopedLock sl(startStopLock);
+            const ScopedLock sl(bufferLock);
             isStarted = false;
         }
 
@@ -251,7 +320,7 @@ void DanteAudioIODevice::stop()
 
 void DanteAudioIODevice::run()
 {
-    // setMMThreadPriority();
+    // Wait for local device to become activated (Apec running)
     while (!inputDevice->isDeviceActivated())
     {
         Thread::sleep(1000);
@@ -280,6 +349,8 @@ void DanteAudioIODevice::run()
         outputBuffers[i] = new float[mBufferSizeSamples + 32];
     }
     bufferAllocated = true;
+    bufferReady = false;
+    samplesInBuffers = 0;
 
     while (!threadShouldExit())
     {
@@ -304,19 +375,21 @@ void DanteAudioIODevice::run()
         {
             //inputDevice->copyBuffersFromReservoir(inputBuffers, numInputBuffers, bufferSize);
         }
-
+        /*
         {
-            const ScopedTryLock sl(startStopLock);
+            const ScopedTryLock sl(bufferLock);
 
-            if (sl.isLocked() && isStarted && bufferReady)
+            if (sl.isLocked() && isStarted)
+            {
                 callback->audioDeviceIOCallbackWithContext(const_cast<const float**> (inputBuffers),
                     properties.mRxActivatedChannelCount,
                     outputBuffers,
                     properties.mTxActivatedChannelCount,
                     mBufferSizeSamples,
                     {});
- 
+            }
         }
+        */
     }
 }
 
