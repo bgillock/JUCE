@@ -4,6 +4,7 @@
 #include <iostream>
 #include <fstream>
 #include <chrono>
+#include <cmath> 
 #define APP_NAME "AudioRecordingDemo"
 #define APP_MODEL_NAME "Audio Recording Demo"
 const Audinate::DAL::Id64 APP_MODEL_ID('A', 'U', 'R', 'C', 'R', 'D', 'D', 'M');
@@ -52,46 +53,21 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
     if (!bufferAllocated) return;
  //   const ScopedTryLock sl(bufferLock);
  //   if (sl.isLocked())
+    try 
     {
         unsigned int positionSamples =
             (params.mAvailableDataOffsetInPeriods * properties.mSamplesPerPeriod)
             % properties.mSamplesPerBuffer;
         unsigned int numSamples = params.mNumPeriodsAvailable * properties.mSamplesPerPeriod;
-
-        uint16_t bitsPerSample = properties.mBytesPerSample * 8;
-        size_t numCopyChannels = numChannels;
-        uint8_t bytesPerSample = bitsPerSample / 8;
       
-        printStatus(mt, "mAvailableDataOffsetInPeriods", params.mAvailableDataOffsetInPeriods);
-        /*
-        std::ofstream wf("dantebuffer.dat", std::ios::out | std::ios::app);
-        const uint32_t* bPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[0] +
-            (positionSamples % properties.mSamplesPerBuffer) * 4);
-        wf.write((char*)bPtr, numSamples * properties.mBytesPerSample);
-        char ff = 0xff;
-        wf.write((char*)&ff, sizeof(ff));
-        wf.write((char*)&ff, sizeof(ff));
-        wf.write((char*)&ff, sizeof(ff));
-        wf.write((char*)&ff, sizeof(ff));
-        bPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[1] +
-            (positionSamples % properties.mSamplesPerBuffer) * 4);
-        wf.write((char*)bPtr, numSamples * properties.mBytesPerSample);
-        ff = 0xee;
-        wf.write((char*)&ff, sizeof(ff));
-        wf.write((char*)&ff, sizeof(ff));
-        wf.write((char*)&ff, sizeof(ff));
-        wf.write((char*)&ff, sizeof(ff));
-        wf.close();
-        */
+        printStatus(mt, "numSamples", numSamples);
 
-        // Copy non-interleaved u32 channel data to interleaved little endian audio data with
-        // the configure bits per sample.
         uint32_t samplesLeft = numSamples;
         int i = samplesInBuffers;
 
         while (i < numSamples)
         {
-            for (size_t chan = 0; chan < numCopyChannels; chan++)
+            for (size_t chan = 0; chan < numChannels; chan++)
             {
                 const uint32_t* bufferPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[chan] +
                     (positionSamples % properties.mSamplesPerBuffer) * 4);
@@ -101,8 +77,9 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
             i++;
         }
         samplesInBuffers += numSamples;
-        if ((callback != nullptr))// && (params.mAvailableDataOffsetInPeriods == properties.mPeriodsPerBuffer - 1))
+        if ((callback != nullptr))
         {
+            printStatus(mt, "mSamplesInBuffers", samplesInBuffers);
             callback->audioDeviceIOCallbackWithContext(const_cast<const float**> (inputBuffers),
                 properties.mRxActivatedChannelCount,
                 outputBuffers,
@@ -112,6 +89,10 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
             samplesInBuffers = 0;
         }
         
+    }
+    catch (const std::exception& exception)
+    {
+        bufferAllocated = false;
     }
     return;
 }
@@ -214,8 +195,8 @@ StringArray DanteAudioIODevice::getInputChannelNames()
 }
 
 Array<double> DanteAudioIODevice::getAvailableSampleRates() { return { 48000.0 }; };
-Array<int> DanteAudioIODevice::getAvailableBufferSizes() { return { 960 }; };
-int DanteAudioIODevice::getDefaultBufferSize() { return 960; };
+Array<int> DanteAudioIODevice::getAvailableBufferSizes() { return { 128 }; };
+int DanteAudioIODevice::getDefaultBufferSize() { return 128; };
 String DanteAudioIODevice::open(const BigInteger& inputChannels,
     const BigInteger& outputChannels,
     double sampleRate,
@@ -334,56 +315,17 @@ void DanteAudioIODevice::run()
     inputBuffers = new float* [properties.mRxActivatedChannelCount];
     for (int i = 0; i < properties.mRxActivatedChannelCount; i++)
     {
-        inputBuffers[i] = new float[mBufferSizeSamples + 32];
+        inputBuffers[i] = new float[(mBufferSizeSamples * properties.mPeriodsPerBuffer) + 32];
     }
     outputBuffers = new float* [properties.mTxActivatedChannelCount];
     for (int i = 0; i < properties.mTxActivatedChannelCount; i++)
     {
-        outputBuffers[i] = new float[mBufferSizeSamples + 32];
+        outputBuffers[i] = new float[(mBufferSizeSamples * properties.mPeriodsPerBuffer) + 32];
     }
     bufferAllocated = true;
     bufferReady = false;
     samplesInBuffers = 0;
-
-    while (!threadShouldExit())
-    {
-        /*
-        if ((outputDevice != nullptr && outputDevice->shouldShutdown)
-            || (inputDevice != nullptr && inputDevice->shouldShutdown))
-        {
-            shouldShutdown = true;
-      //      triggerAsyncUpdate();
-
-            break;
-        }
-        */
-
-        auto inputDeviceActive = (inputDevice != nullptr && inputDevice->isDeviceActivated());
-        auto outputDeviceActive = (outputDevice != nullptr && outputDevice->isDeviceActivated());
-
-     //   if (!inputDeviceActive && !outputDeviceActive)
-     //       continue;
-
-        if (inputDeviceActive)
-        {
-            //inputDevice->copyBuffersFromReservoir(inputBuffers, numInputBuffers, bufferSize);
-        }
-        /*
-        {
-            const ScopedTryLock sl(bufferLock);
-
-            if (sl.isLocked() && isStarted)
-            {
-                callback->audioDeviceIOCallbackWithContext(const_cast<const float**> (inputBuffers),
-                    properties.mRxActivatedChannelCount,
-                    outputBuffers,
-                    properties.mTxActivatedChannelCount,
-                    mBufferSizeSamples,
-                    {});
-            }
-        }
-        */
-    }
+    return;
 }
 
 String DanteAudioIODevice::getLastError() { return ""; };
