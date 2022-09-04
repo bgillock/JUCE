@@ -27,17 +27,17 @@ static float** outputBuffers;
 static CriticalSection bufferLock;
 static std::ofstream mt("myTransfer.txt", std::ios::out | std::ios::app);
 static AudioIODeviceCallback* callback = nullptr;
-static void convert24BitSignedtoFloat(uint32_t* from, float* to) 
+static void convert24BitSignedtoFloat(const uint32_t* from, float* to) 
 {
     unsigned char* f = (unsigned char*)from;
     int32_t it;
     unsigned char* t = (unsigned char*)&it;
-    t[0] = 0x00;
-    char tc = f[1] >> 7;
-    if (tc == 0x01) t[0] = 0xff;
-    t[1] = f[1];
-    t[2] = f[2];
-    t[3] = f[3];
+    t[3] = 0x00;
+    char tc = f[3] >> 7;
+    if (tc == 0x01) t[3] = 0xff;
+    t[0] = f[1];
+    t[1] = f[2];
+    t[2] = f[3];
     *to = (float)it / 8388607.0f;
 }
 static void printStatus(std::ofstream& mt, String sa, int a)
@@ -63,7 +63,7 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
         uint8_t bytesPerSample = bitsPerSample / 8;
       
         printStatus(mt, "mAvailableDataOffsetInPeriods", params.mAvailableDataOffsetInPeriods);
-        
+        /*
         std::ofstream wf("dantebuffer.dat", std::ios::out | std::ios::app);
         const uint32_t* bPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[0] +
             (positionSamples % properties.mSamplesPerBuffer) * 4);
@@ -82,27 +82,20 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
         wf.write((char*)&ff, sizeof(ff));
         wf.write((char*)&ff, sizeof(ff));
         wf.close();
-        
+        */
 
         // Copy non-interleaved u32 channel data to interleaved little endian audio data with
         // the configure bits per sample.
         uint32_t samplesLeft = numSamples;
         int i = samplesInBuffers;
 
-        uint32_t test;
-        char* tchar = (char *)&test;
-        tchar[0] = 0x00; tchar[1] = 0x0F; tchar[2] = 0x00; tchar[3] = 0x00;
-        float tfloat = 0.0;
-        convert24BitSignedtoFloat(&test, &tfloat);
-        tchar[0] = 0x00; tchar[1] = 0xF1; tchar[2] = 0x56; tchar[3] = 0x76;
-        convert24BitSignedtoFloat(&test, &tfloat);
         while (i < numSamples)
         {
             for (size_t chan = 0; chan < numCopyChannels; chan++)
             {
                 const uint32_t* bufferPtr = reinterpret_cast<const uint32_t*>(properties.mRxChannelBuffers[chan] +
                     (positionSamples % properties.mSamplesPerBuffer) * 4);
-                inputBuffers[chan][i] = ((float)*bufferPtr)/8388607.0f;
+                convert24BitSignedtoFloat(bufferPtr,&inputBuffers[chan][i]);
             }
             positionSamples++;
             i++;
