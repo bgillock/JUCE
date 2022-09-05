@@ -60,7 +60,7 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
             % properties.mSamplesPerBuffer;
         unsigned int numSamples = params.mNumPeriodsAvailable * properties.mSamplesPerPeriod;
       
-        printStatus(mt, "numSamples", numSamples);
+        //printStatus(mt, "numSamples", numSamples);
 
         uint32_t samplesLeft = numSamples;
         int i = samplesInBuffers;
@@ -79,7 +79,7 @@ static void myTransfer(const Audinate::DAL::AudioProperties& properties,
         samplesInBuffers += numSamples;
         if ((callback != nullptr))
         {
-            printStatus(mt, "mSamplesInBuffers", samplesInBuffers);
+            //printStatus(mt, "mSamplesInBuffers", samplesInBuffers);
             callback->audioDeviceIOCallbackWithContext(const_cast<const float**> (inputBuffers),
                 properties.mRxActivatedChannelCount,
                 outputBuffers,
