@@ -3203,6 +3203,11 @@
     <None Include="..\..\..\..\..\modules\juce_graphics\image_formats\jpglib\changes to libjpeg for JUCE.txt" />
     <None Include="..\..\..\..\..\modules\juce_graphics\image_formats\pnglib\libpng_readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\AudioRecordingDemo\Builds\VisualStudio2022\AudioRecordingDemo_App.vcxproj">
+      <Project>{dc200071-62cc-844e-10ec-7f13b6b214df}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

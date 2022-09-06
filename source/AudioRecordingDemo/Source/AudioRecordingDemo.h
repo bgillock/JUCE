@@ -50,6 +50,8 @@
 
 #include "DemoUtilities.h"
 #include "AudioLiveScrollingDisplay.h"
+#include <winsock2.h>
+#include <windows.h>
 #include "DanteAudioIODevice.h"
 //#include "DalAppBase.hpp"
 
