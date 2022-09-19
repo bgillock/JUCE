@@ -195,7 +195,7 @@ public:
         : AudioProcessor (getBusesProperties()),
           state (*this, nullptr, "state",
                  { std::make_unique<AudioParameterFloat> (ParameterID { "threshold",  1 }, "threshold",           NormalisableRange<float> (0.0f, 1.0f), 0.9f),
-                   std::make_unique<AudioParameterFloat> (ParameterID { "delay", 1 }, "Delay Feedback", NormalisableRange<float> (0.0f, 1.0f), 0.5f) })
+                   std::make_unique<AudioParameterFloat> (ParameterID { "attack", 1 }, "attack Feedback", NormalisableRange<float> (0.0f, 1.0f), 0.5f) })
     {
         // Add a sub-tree to store the state of our UI
         state.state.addChild ({ "uiState", { { "width",  400 }, { "height", 200 } }, {} }, -1, nullptr);
@@ -365,7 +365,7 @@ private:
         JuceDemoPluginAudioProcessorEditor (JuceDemoPluginAudioProcessor& owner)
             : AudioProcessorEditor (owner),
               thresholdAttachment       (owner.state, "threshold",  thresholdSlider),
-              delayAttachment      (owner.state, "delay", delaySlider)
+              attackAttachment      (owner.state, "attack", attackSlider)
         {
             // add some sliders..
             addAndMakeVisible (thresholdSlider);
@@ -373,21 +373,21 @@ private:
             thresholdSlider.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
             thresholdSlider.setNumDecimalPlacesToDisplay(2);
 
-            addAndMakeVisible (delaySlider);
-            delaySlider.setSliderStyle (Slider::Rotary);
-            delaySlider.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
-            delaySlider.setNumDecimalPlacesToDisplay(2);
+            addAndMakeVisible (attackSlider);
+            attackSlider.setSliderStyle (Slider::Rotary);
+            attackSlider.setTextBoxStyle(Slider::TextBoxBelow, false, 50, 15);
+            attackSlider.setNumDecimalPlacesToDisplay(2);
 
             // add some labels for the sliders..
             thresholdLabel.attachToComponent (&thresholdSlider, false);
-            thresholdLabel.setText("threshold", NotificationType::dontSendNotification);
+            thresholdLabel.setText("Threshold", NotificationType::dontSendNotification);
             thresholdLabel.setFont (Font (14.0f));
             thresholdLabel.setJustificationType(Justification::centred);
 
-            delayLabel.attachToComponent (&delaySlider, false);
-            delayLabel.setText("Delay",NotificationType::dontSendNotification);
-            delayLabel.setFont (Font (14.0f));
-            delayLabel.setJustificationType(Justification::centred);
+            attackLabel.attachToComponent (&attackSlider, false);
+            attackLabel.setText("Attack",NotificationType::dontSendNotification);
+            attackLabel.setFont (Font (14.0f));
+            attackLabel.setJustificationType(Justification::centred);
 
             // set resize limits for this plug-in
             setResizeLimits (400, 200, 1024, 700);
@@ -423,7 +423,7 @@ private:
             r.removeFromTop (20);
             auto sliderArea = r.removeFromTop (60);
             thresholdSlider.setBounds  (sliderArea.removeFromLeft (jmin (180, sliderArea.getWidth() / 2)));
-            delaySlider.setBounds (sliderArea.removeFromLeft (jmin (180, sliderArea.getWidth())));
+            attackSlider.setBounds (sliderArea.removeFromLeft (jmin (180, sliderArea.getWidth())));
 
             lastUIWidth  = getWidth();
             lastUIHeight = getHeight();
@@ -434,7 +434,7 @@ private:
             if (&control == &thresholdSlider)
                 return 0;
 
-            if (&control == &delaySlider)
+            if (&control == &attackSlider)
                 return 1;
 
             return -1;
@@ -451,9 +451,9 @@ private:
         }
 
     private:
-        Label thresholdLabel, delayLabel;
-        M32CompressorSlider thresholdSlider, delaySlider;
-        AudioProcessorValueTreeState::SliderAttachment thresholdAttachment, delayAttachment;
+        Label thresholdLabel, attackLabel;
+        M32CompressorSlider thresholdSlider, attackSlider;
+        AudioProcessorValueTreeState::SliderAttachment thresholdAttachment, attackAttachment;
         Colour backgroundColour;
 
         // these are used to persist the UI's size - the values are stored along with the
@@ -479,7 +479,7 @@ private:
     void process (AudioBuffer<FloatType>& buffer, MidiBuffer& midiMessages)
     {
         auto thresholdParamValue  = state.getParameter ("threshold") ->getValue();
-        auto delayParamValue = state.getParameter ("delay")->getValue();
+        auto attackParamValue = state.getParameter ("attack")->getValue();
         auto numSamples = buffer.getNumSamples();
 
         // In case we have more outputs than inputs, we'll clear any output
@@ -488,22 +488,53 @@ private:
         for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
             buffer.clear (i, 0, numSamples);
 
-
+        // Compress channels based on previous data
+        applyCompression(buffer, numSamples, thresholdParamValue, attackParamValue);
         // Apply our gain change to the outgoing data..
-        // applyGain (buffer, delayBuffer, gainParamValue);
+        //applyGain (buffer, numSamples, attackBuffer, gainParamValue);
+    }
+
+    float CompressValue(float threshold, float ratio, float value)
+    {
+        float diff = abs(value - threshold);
+        if (diff > 0.0)
+        {
+            return value * (1.0 + ratio);
+        }
+        else return value;
     }
 
     template <typename FloatType>
-    void applyGain (AudioBuffer<FloatType>& buffer, AudioBuffer<FloatType>& delayBuffer, float gainLevel)
+    void applyCompression (AudioBuffer<FloatType>& buffer, int numSamples, float threshold, float attack)
     {
-        ignoreUnused (delayBuffer);
+        if (!buffer.hasBeenCleared())
+        {
+            int tBufferPos = bufferPos;
+            for (auto channel = 0; channel < buffer.getTotalNumInputChannels(); ++channel)
+            {
+                auto* b = bufferFloat[channel] + tBufferPos;
+                if (tBufferPos + n>= bufferFloat.getNumSamples()) tBufferPos = 0;
 
+                auto* d = channels[channel];
+
+                while (--numSamples >= 0)
+                {
+
+                    *d++ *= startGain;
+                    startGain += increment;
+                }
+            }
+        }
         for (auto channel = 0; channel < getTotalNumOutputChannels(); ++channel)
             buffer.applyGain (channel, 0, buffer.getNumSamples(), gainLevel);
     }
 
 
-
+    int aboveThresholdIndex, belowThresholdIndex;
+    int attackSamples, releaseSamples;
+    AudioBuffer<float> bufferFloat;
+    AudioBuffer<double> bufferDouble;
+    int bufferPos;
     CriticalSection trackPropertiesLock;
     TrackProperties trackProperties;
 
