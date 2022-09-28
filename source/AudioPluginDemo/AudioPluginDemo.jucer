@@ -1,15 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT name="M32Compressor" companyName="JUCE" version="1.0.0" userNotes="Synthesiser audio plugin."
-              companyWebsite="http://juce.com" displaySplashScreen="1" defines="PIP_JUCE_EXAMPLES_DIRECTORY=RDpcQXVkaW9cUmVwb3NcSlVDRVxleGFtcGxlcw=="
+<JUCERPROJECT name="AudioPluginDemoClean" companyName="JUCE" version="1.0.0"
+              userNotes="Synthesiser audio plugin." companyWebsite="http://juce.com"
+              displaySplashScreen="1" defines="PIP_JUCE_EXAMPLES_DIRECTORY=RDpcQXVkaW9cUmVwb3NcSlVDRVxleGFtcGxlcw=="
               projectType="audioplug" pluginAUIsSandboxSafe="1" pluginManufacturer="JUCE"
-              pluginFormats="buildAU,buildStandalone,buildVST3" pluginCharacteristicsValue="pluginEditorRequiresKeys"
-              useAppConfig="0" addUsingNamespaceToJuceHeader="1" id="JanCbH"
+              pluginFormats="buildVST3,buildAU,buildStandalone,buildAUv3" pluginCharacteristicsValue="pluginIsSynth,pluginWantsMidiIn,pluginProducesMidiOut,pluginEditorRequiresKeys"
+              useAppConfig="0" addUsingNamespaceToJuceHeader="1" id="i4ypRg"
               jucerFormatVersion="1">
-  <MAINGROUP id="ew7ijT" name="M32Compressor">
+  <MAINGROUP id="BqRsu2" name="AudioPluginDemoClean">
     <GROUP id="{056977FF-BCFE-D573-FE4D-A421508C9959}" name="Source">
-      <FILE id="VkJcUK" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
-      <FILE id="bvTCt1" name="AudioPluginDemo.h" compile="0" resource="0"
+      <FILE id="kpyJEl" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
+      <FILE id="CFiHPJ" name="AudioPluginDemo.h" compile="0" resource="0"
             file="Source/AudioPluginDemo.h"/>
     </GROUP>
   </MAINGROUP>

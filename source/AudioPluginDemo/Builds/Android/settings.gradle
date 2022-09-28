@@ -1,2 +1,2 @@
-rootProject.name = 'M32Compressor'
+rootProject.name = 'AudioPluginDemoClean'
 include ':app'
