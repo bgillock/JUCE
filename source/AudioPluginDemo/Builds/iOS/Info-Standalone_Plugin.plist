@@ -12,11 +12,11 @@
     <key>CFBundleExecutable</key>
     <string>${EXECUTABLE_NAME}</string>
     <key>CFBundleIdentifier</key>
-    <string>com.JUCE.AudioPluginDemoClean</string>
+    <string>com.JUCE.AudioPluginDemo</string>
     <key>CFBundleName</key>
-    <string>AudioPluginDemoClean</string>
+    <string>AudioPluginDemo</string>
     <key>CFBundleDisplayName</key>
-    <string>AudioPluginDemoClean</string>
+    <string>AudioPluginDemo</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>

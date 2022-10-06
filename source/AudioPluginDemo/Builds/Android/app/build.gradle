@@ -18,7 +18,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.juce.audioplugindemoclean"
+        applicationId "com.juce.audioplugindemo"
         minSdkVersion    16
         targetSdkVersion 30
         externalNativeBuild {

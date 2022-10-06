@@ -47,6 +47,7 @@
 #pragma once
 
 #include "DemoUtilities.h"
+#include "AudioPluginDemo.h"
 
 inline std::unique_ptr<InputSource> makeInputSource (const URL& url)
 {
@@ -321,6 +322,14 @@ public:
         startStopButton.setColour (TextButton::buttonColourId, Colour (0xff79ed7f));
         startStopButton.setColour (TextButton::textColourOffId, Colours::black);
         startStopButton.onClick = [this] { startOrStop(); };
+        
+        addAndMakeVisible(pluginEditorButton);
+        pluginEditorButton.onClick = [this] { lauchEditor(); };
+
+        audioProcessorEditor = audioProcessor.createEditor();
+        //addAndMakeVisible(*audioProcessorEditor);
+
+
 
         // audio setup
         formatManager.registerBasicFormats();
@@ -368,7 +377,10 @@ public:
     {
         auto r = getLocalBounds().reduced (4);
 
-        auto controls = r.removeFromBottom (90);
+        auto controls = r.removeFromBottom (115);
+
+        auto editorButton = controls.removeFromBottom(25);
+        pluginEditorButton.setBounds(editorButton.reduced(2));
 
         auto controlRightBounds = controls.removeFromRight (controls.getWidth() / 3);
 
@@ -394,6 +406,7 @@ public:
         r.removeFromBottom (6);
 
         fileTreeComp.setBounds (r);
+        //audioProcessorEditor->setBounds(0,0,100,200);
        #endif
     }
 
@@ -420,6 +433,10 @@ private:
     URL currentAudioFile;
     AudioSourcePlayer audioSourcePlayer;
     AudioTransportSource transportSource;
+    JuceDemoPluginAudioProcessor audioProcessor;
+    AudioProcessorEditor *audioProcessorEditor;
+    std::unique_ptr<Component> editor;
+
     std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
 
     std::unique_ptr<DemoThumbnailComp> thumbnail;
@@ -427,6 +444,7 @@ private:
     Slider zoomSlider                   { Slider::LinearHorizontal, Slider::NoTextBox };
     ToggleButton followTransportButton  { "Follow Transport" };
     TextButton startStopButton          { "Play/Stop" };
+    TextButton pluginEditorButton       { "Show Plugin Editor" };
 
     //==============================================================================
     void showAudioResource (URL resource)
@@ -484,6 +502,20 @@ private:
         }
     }
 
+    void lauchEditor()
+    {
+        editor = [&]() -> std::unique_ptr<Component>
+        {
+            audioProcessorEditor = audioProcessor.createEditor();
+            const auto bg = getLookAndFeel().findColour(ResizableWindow::backgroundColourId).darker();
+            auto window = std::make_unique<DocumentWindow>("Editor", bg, 0);
+            window->setAlwaysOnTop(true);
+            window->setContentOwned(audioProcessorEditor, true);
+            window->centreAroundComponent(this, window->getWidth(), window->getHeight());
+            window->setVisible(true);
+            return window;
+        }();
+    }
     void updateFollowTransportState()
     {
         thumbnail->setFollowsTransport (followTransportButton.getToggleState());

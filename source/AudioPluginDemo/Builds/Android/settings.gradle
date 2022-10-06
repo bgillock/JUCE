@@ -1,2 +1,2 @@
-rootProject.name = 'AudioPluginDemoClean'
+rootProject.name = 'AudioPluginDemo'
 include ':app'

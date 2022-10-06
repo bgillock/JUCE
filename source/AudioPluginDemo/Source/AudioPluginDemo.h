@@ -336,7 +336,7 @@ public:
                    std::make_unique<AudioParameterFloat> (ParameterID { "delay", 1 }, "Delay Feedback", NormalisableRange<float> (0.0f, 1.0f), 0.5f) })
     {
         // Add a sub-tree to store the state of our UI
-        state.state.addChild ({ "uiState", { { "width",  400 }, { "height", 200 } }, {} }, -1, nullptr);
+        state.state.addChild ({ "uiState", { { "width",  400 }, { "height", 600 } }, {} }, -1, nullptr);
 
         initialiseSynth();
     }
@@ -533,6 +533,8 @@ public:
             const juce::SpinLock::ScopedLockType lock(mutex);
             return _dbuffer;
         }
+
+
     private:
         juce::SpinLock mutex;
         double _sampleRate;
@@ -548,7 +550,7 @@ public:
         // calling `get`. This is unlikely to matter in practice because
         // we'll be calling `set` much more frequently than `get`.
 
-        void set(const AudioBuffer<float> &newAmps, double sampleRate, AudioPlayHead::PositionInfo newInfo)
+        void set(const AudioBuffer<float> &newAmps, double sampleRate, double startTime)
         {
             const juce::SpinLock::ScopedTryLockType lock(mutex);
 
@@ -556,11 +558,11 @@ public:
             {
                 _isFloat = false;
                 _sampleRate = sampleRate;
-                _posInfo = newInfo;
+                _startTimeOfBuffer = startTime;
                 _floatAmps = newAmps;
             }
         }
-        void set(const AudioBuffer<double>& newAmps, double sampleRate, AudioPlayHead::PositionInfo newInfo)
+        void set(const AudioBuffer<double>& newAmps, double sampleRate, double startTime)
         {
             const juce::SpinLock::ScopedTryLockType lock(mutex);
 
@@ -568,11 +570,43 @@ public:
             {
                 _isFloat = false;
                 _sampleRate = sampleRate;
-                _posInfo = newInfo;
+                _startTimeOfBuffer = startTime;
                 _doubleAmps = newAmps;
             }
         }
+        SpinLockedAmps& add(const AudioBuffer<float>& newAmps, double sampleRate, double startTime)
+        {
+            const juce::SpinLock::ScopedTryLockType lock(mutex);
 
+            if (lock.isLocked())
+            {
+                SpinLockedAmps newSpinAmps;
+                newSpinAmps.set(newAmps, sampleRate, startTime);
+                _nextSpinAmps = &newSpinAmps;
+                _isFloat = false;
+                _sampleRate = sampleRate;
+                _startTimeOfBuffer = startTime;
+                _floatAmps = newAmps;
+                return newSpinAmps;
+            }
+        }
+        SpinLockedAmps& add(const AudioBuffer<double>& newAmps, double sampleRate, double startTime)
+        {
+            const juce::SpinLock::ScopedTryLockType lock(mutex);
+          
+            if (lock.isLocked())
+            {  
+                SpinLockedAmps newSpinAmps;
+                newSpinAmps.set(newAmps, sampleRate, startTime);
+                _nextSpinAmps = &newSpinAmps;
+                _isFloat = false;
+                _sampleRate = sampleRate;
+                _startTimeOfBuffer = startTime;
+                _doubleAmps = newAmps;
+                return newSpinAmps;
+            }
+
+        }
         AudioBuffer<float> getFloat() const noexcept
         {
             const juce::SpinLock::ScopedLockType lock(mutex);
@@ -589,7 +623,8 @@ public:
         juce::SpinLock mutex;
         bool _isFloat;
         double _sampleRate;
-        AudioPlayHead::PositionInfo _posInfo;
+        double _startTimeOfBuffer;
+        SpinLockedAmps* _nextSpinAmps;
         AudioBuffer<float> _floatAmps;
         AudioBuffer<double> _doubleAmps;
         
@@ -609,6 +644,8 @@ public:
 
     // this keeps a copy of the last set of amplitudes after processing
     SpinLockedAmps lastAmps;
+    SpinLockedAmps firstAmps;
+    bool recording = false;
 
     // Our plug-in's current state
     AudioProcessorValueTreeState state;
@@ -651,7 +688,7 @@ private:
             timecodeDisplayLabel.setFont (Font (Font::getDefaultMonospacedFontName(), 15.0f, Font::plain));
 
             // set resize limits for this plug-in
-            setResizeLimits (400, 200, 1024, 700);
+            setResizeLimits (400, 200, 1024, 1024);
             setResizable (true, owner.wrapperType != wrapperType_AudioUnitv3);
 
             lastUIWidth .referTo (owner.state.state.getChildWithName ("uiState").getPropertyAsValue ("width",  nullptr));
@@ -854,8 +891,14 @@ private:
 
         // Now ask the host for the current time so we can store it to be displayed later...
         updateCurrentTimeInfoFromHost();   
-
-        lastAmps.set(buffer, getSampleRate(), lastPosInfo.get());
+        if (recording)
+        {
+            // lastAmps = lastAmps.add(buffer, getSampleRate(), lastPosInfo.get().getTimeInSeconds().orFallback(0.0));
+        }
+        else
+        {
+            lastAmps.set(buffer, getSampleRate(), lastPosInfo.get().getTimeInSeconds().orFallback(0.0));
+        }
     }
 
     template <typename FloatType>
