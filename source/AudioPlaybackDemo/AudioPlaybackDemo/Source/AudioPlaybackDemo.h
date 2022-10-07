@@ -268,6 +268,24 @@ private:
 };
 
 //==============================================================================
+/** Just a simple window that deletes itself when closed. */
+class BasicWindow : public DocumentWindow
+{
+public:
+    BasicWindow(const String& name, Colour backgroundColour, int buttonsNeeded)
+        : DocumentWindow(name, backgroundColour, buttonsNeeded)
+    {}
+
+    void closeButtonPressed()
+    {
+        setVisible(false);
+    }
+
+private:
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(BasicWindow)
+};
+
+//==============================================================================
 class AudioPlaybackDemo  : public Component,
                           #if (JUCE_ANDROID || JUCE_IOS)
                            private Button::Listener,
@@ -435,7 +453,7 @@ private:
     AudioTransportSource transportSource;
     JuceDemoPluginAudioProcessor audioProcessor;
     AudioProcessorEditor *audioProcessorEditor;
-    std::unique_ptr<Component> editor;
+    std::unique_ptr<Component> editor = nullptr;
 
     std::unique_ptr<AudioFormatReaderSource> currentAudioFileSource;
 
@@ -504,17 +522,24 @@ private:
 
     void lauchEditor()
     {
-        editor = [&]() -> std::unique_ptr<Component>
+        if (editor == nullptr)
         {
-            audioProcessorEditor = audioProcessor.createEditor();
-            const auto bg = getLookAndFeel().findColour(ResizableWindow::backgroundColourId).darker();
-            auto window = std::make_unique<DocumentWindow>("Editor", bg, 0);
-            window->setAlwaysOnTop(true);
-            window->setContentOwned(audioProcessorEditor, true);
-            window->centreAroundComponent(this, window->getWidth(), window->getHeight());
-            window->setVisible(true);
-            return window;
-        }();
+            editor = [&]() -> std::unique_ptr<Component>
+            {
+                audioProcessorEditor = audioProcessor.createEditor();
+                const auto bg = getLookAndFeel().findColour(ResizableWindow::backgroundColourId).darker();
+                auto window = std::make_unique<BasicWindow>("Editor", bg, DocumentWindow::TitleBarButtons::allButtons);
+                window->setAlwaysOnTop(true);
+                window->setContentOwned(audioProcessorEditor, true);
+                window->centreAroundComponent(this, window->getWidth(), window->getHeight());
+                window->setVisible(true);
+                return window;
+            }();
+        }
+        else
+        {
+            editor->setVisible(true);
+        }
     }
     void updateFollowTransportState()
     {

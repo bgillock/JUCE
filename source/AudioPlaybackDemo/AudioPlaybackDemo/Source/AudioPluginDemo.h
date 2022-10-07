@@ -680,9 +680,6 @@ private:
 
             addAndMakeVisible(waveDisplay);
 
-            // add the midi keyboard component..
-            addAndMakeVisible (midiKeyboard);
-
             // add a label that will display the current timecode and status..
             addAndMakeVisible (timecodeDisplayLabel);
             timecodeDisplayLabel.setFont (Font (Font::getDefaultMonospacedFontName(), 15.0f, Font::plain));
@@ -722,8 +719,6 @@ private:
             auto r = getLocalBounds().reduced (8);
 
             timecodeDisplayLabel.setBounds (r.removeFromTop (26));
-            midiKeyboard        .setBounds (r.removeFromBottom (70));
-
 
             r.removeFromTop (20);
             auto sliderArea = r.removeFromTop (60);
@@ -732,9 +727,8 @@ private:
 
             auto sliderv = gainSlider.getBounds();
             r.setTop(sliderv.getBottom() + 10);
-            auto midiv = midiKeyboard.getBounds();
-            r.setBottom(midiv.getY() - 10);
-            waveDisplay.setBounds(r);
+
+            waveDisplay.setBounds(r.removeFromBottom(350));
             lastUIWidth  = getWidth();
             lastUIHeight = getHeight();
         }
