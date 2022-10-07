@@ -20,7 +20,7 @@ public:
 
     void initialise (const juce::String&) override
     {
-        mainWindow.reset (new MainWindow ("AudioPlaybackDemo", new AudioPlaybackDemo, *this));
+        mainWindow.reset (new MainWindow("AudioPlaybackDemo", new AudioPlaybackDemo(), *this));
     }
 
     void shutdown() override                         { mainWindow = nullptr; }

@@ -48,6 +48,7 @@
 
 #include "DemoUtilities.h"
 #include "AudioPluginDemo.h"
+#include "AudioProcessorSource.h"
 
 inline std::unique_ptr<InputSource> makeInputSource (const URL& url)
 {
@@ -363,8 +364,11 @@ public:
                                      });
        #endif
 
-        audioDeviceManager.addAudioCallback (&audioSourcePlayer);
+        audioSourcePlayer.setProcessor(&audioProcessor);
         audioSourcePlayer.setSource (&transportSource);
+        audioDeviceManager.addAudioCallback (&audioSourcePlayer);    
+
+
 
         setOpaque (true);
         setSize (500, 500);
@@ -449,7 +453,7 @@ private:
    #endif
 
     URL currentAudioFile;
-    AudioSourcePlayer audioSourcePlayer;
+    AudioProcessorSource audioSourcePlayer;
     AudioTransportSource transportSource;
     JuceDemoPluginAudioProcessor audioProcessor;
     AudioProcessorEditor *audioProcessorEditor;

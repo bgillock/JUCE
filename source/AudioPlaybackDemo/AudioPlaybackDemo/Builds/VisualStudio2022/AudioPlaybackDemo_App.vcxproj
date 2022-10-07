@@ -134,6 +134,7 @@
     <Lib />
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\AudioProcessorSource.cpp" />
     <ClCompile Include="..\..\Source\Main.cpp" />
     <ClCompile Include="..\..\..\..\..\modules\juce_audio_basics\buffers\juce_AudioChannelSet.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -2274,6 +2275,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\Source\AudioPlaybackDemo.h" />
     <ClInclude Include="..\..\Source\AudioPluginDemo.h" />
+    <ClInclude Include="..\..\Source\AudioProcessorSource.h" />
     <ClInclude Include="..\..\Source\DemoUtilities.h" />
     <ClInclude Include="..\..\..\..\..\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h" />
     <ClInclude Include="..\..\..\..\..\modules\juce_audio_basics\buffers\juce_AudioChannelSet.h" />

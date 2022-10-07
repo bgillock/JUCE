@@ -203,73 +203,7 @@ private:
     }
 };
 
-//==============================================================================
-/** A demo synth sound that's just a basic sine wave.. */
-class SineWaveSound : public SynthesiserSound
-{
-public:
-    SineWaveSound() {}
-
-    bool appliesToNote (int /*midiNoteNumber*/) override    { return true; }
-    bool appliesToChannel (int /*midiChannel*/) override    { return true; }
-};
-
-//==============================================================================
-/** A simple demo synth voice that just plays a sine wave.. */
-class SineWaveVoice   : public SynthesiserVoice
-{
-public:
-    SineWaveVoice() {}
-
-    bool canPlaySound (SynthesiserSound* sound) override
-    {
-        return dynamic_cast<SineWaveSound*> (sound) != nullptr;
-    }
-
-    void startNote (int midiNoteNumber, float velocity,
-                    SynthesiserSound* /*sound*/,
-                    int /*currentPitchWheelPosition*/) override
-    {
-        currentAngle = 0.0;
-        level = velocity * 0.15;
-        tailOff = 0.0;
-
-        auto cyclesPerSecond = MidiMessage::getMidiNoteInHertz (midiNoteNumber);
-        auto cyclesPerSample = cyclesPerSecond / getSampleRate();
-
-        angleDelta = cyclesPerSample * MathConstants<double>::twoPi;
-    }
-
-    void stopNote (float /*velocity*/, bool allowTailOff) override
-    {
-        if (allowTailOff)
-        {
-            // start a tail-off by setting this flag. The render callback will pick up on
-            // this and do a fade out, calling clearCurrentNote() when it's finished.
-
-            if (tailOff == 0.0) // we only need to begin a tail-off if it's not already doing so - the
-                                // stopNote method could be called more than once.
-                tailOff = 1.0;
-        }
-        else
-        {
-            // we're being told to stop playing immediately, so reset everything..
-
-            clearCurrentNote();
-            angleDelta = 0.0;
-        }
-    }
-
-    void pitchWheelMoved (int /*newValue*/) override
-    {
-        // not implemented for the purposes of this demo!
-    }
-
-    void controllerMoved (int /*controllerNumber*/, int /*newValue*/) override
-    {
-        // not implemented for the purposes of this demo!
-    }
-
+/*
     void renderNextBlock (AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override
     {
         if (angleDelta != 0.0)
@@ -314,7 +248,6 @@ public:
         }
     }
 
-    using SynthesiserVoice::renderNextBlock;
 
 private:
     double currentAngle = 0.0;
@@ -322,7 +255,7 @@ private:
     double level        = 0.0;
     double tailOff      = 0.0;
 };
-
+*/
 //==============================================================================
 /** As the name suggest, this class does the actual audio processing. */
 class JuceDemoPluginAudioProcessor  : public AudioProcessor
@@ -337,8 +270,6 @@ public:
     {
         // Add a sub-tree to store the state of our UI
         state.state.addChild ({ "uiState", { { "width",  400 }, { "height", 500 } }, {} }, -1, nullptr);
-
-        initialiseSynth();
     }
 
     ~JuceDemoPluginAudioProcessor() override = default;
@@ -363,11 +294,6 @@ public:
 
     void prepareToPlay (double newSampleRate, int /*samplesPerBlock*/) override
     {
-        // Use this method as the place to do any pre-playback
-        // initialisation that you need..
-        synth.setCurrentPlaybackSampleRate (newSampleRate);
-        keyboardState.reset();
-
         if (isUsingDoublePrecision())
         {
             delayBufferDouble.setSize (2, 12000);
@@ -386,7 +312,7 @@ public:
     {
         // When playback stops, you can use this as an opportunity to free up any
         // spare memory, etc.
-        keyboardState.reset();
+        state.state.removeAllProperties(state.undoManager);
     }
 
     void reset() override
@@ -634,10 +560,6 @@ public:
     // A bit of a hacky way to do it, but it's only a demo! Obviously in your own
     // code you'll do this much more neatly..
 
-    // this is kept up to date with the midi messages that arrive, and the UI component
-    // registers with it so it can represent the incoming messages
-    MidiKeyboardState keyboardState;
-
     // this keeps a copy of the last set of time info that was acquired during an audio
     // callback - the UI component will read this and display it.
     SpinLockedPosInfo lastPosInfo;
@@ -660,7 +582,6 @@ private:
     public:
         JuceDemoPluginAudioProcessorEditor (JuceDemoPluginAudioProcessor& owner)
             : AudioProcessorEditor (owner),
-              midiKeyboard         (owner.keyboardState, MidiKeyboardComponent::horizontalKeyboard),
               gainAttachment       (owner.state, "gain",  gainSlider),
               delayAttachment      (owner.state, "delay", delaySlider)
         {
@@ -745,11 +666,6 @@ private:
             waveDisplay.repaint();
         }
 
-        void hostMIDIControllerIsAvailable (bool controllerIsAvailable) override
-        {
-            midiKeyboard.setVisible (! controllerIsAvailable);
-        }
-
         int getControlParameterIndex (Component& control) override
         {
             if (&control == &gainSlider)
@@ -772,7 +688,7 @@ private:
         }
 
     private:
-        MidiKeyboardComponent midiKeyboard;
+
         WaveDisplayComponent waveDisplay;
         Label timecodeDisplayLabel,
               gainLabel  { {}, "Throughput level:" },
@@ -869,12 +785,8 @@ private:
         for (auto i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
             buffer.clear (i, 0, numSamples);
 
-        // Now pass any incoming midi messages to our keyboard state object, and let it
-        // add messages to the buffer if the user is clicking on the on-screen keys
-        keyboardState.processNextMidiBuffer (midiMessages, 0, numSamples, true);
-
         // and now get our synth to process these midi events and generate its output.
-        synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
+        // synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
 
         // Apply our delay effect to the new output..
         applyDelay (buffer, delayBuffer, delayParamValue);
@@ -936,22 +848,8 @@ private:
 
     int delayPosition = 0;
 
-    Synthesiser synth;
-
     CriticalSection trackPropertiesLock;
     TrackProperties trackProperties;
-
-    void initialiseSynth()
-    {
-        auto numVoices = 8;
-
-        // Add some voices...
-        for (auto i = 0; i < numVoices; ++i)
-            synth.addVoice (new SineWaveVoice());
-
-        // ..and give the synth a sound to play
-        synth.addSound (new SineWaveSound());
-    }
 
     void updateCurrentTimeInfoFromHost()
     {
