@@ -265,7 +265,7 @@ public:
     JuceDemoPluginAudioProcessor()
         : AudioProcessor (getBusesProperties()),
           state (*this, nullptr, "state",
-                 { std::make_unique<AudioParameterFloat> (ParameterID { "gain",  1 }, "Gain",           NormalisableRange<float> (0.0f, 1.0f), 0.9f),
+                 { std::make_unique<AudioParameterFloat> (ParameterID { "gain",  1 }, "Gain",           NormalisableRange<float> (0.0f, 10.0f), 0.9f),
                    std::make_unique<AudioParameterFloat> (ParameterID { "delay", 1 }, "Delay Feedback", NormalisableRange<float> (0.0f, 1.0f), 0.5f) })
     {
         // Add a sub-tree to store the state of our UI
@@ -649,7 +649,7 @@ private:
             auto sliderv = gainSlider.getBounds();
             r.setTop(sliderv.getBottom() + 10);
 
-            waveDisplay.setBounds(r.removeFromBottom(350));
+            waveDisplay.setBounds(r);
             lastUIWidth  = getWidth();
             lastUIHeight = getHeight();
         }
