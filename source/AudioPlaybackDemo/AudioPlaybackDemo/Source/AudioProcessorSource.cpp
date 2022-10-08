@@ -135,11 +135,11 @@ void AudioProcessorSource::audioDeviceIOCallback (const float** inputChannelData
 
         AudioBuffer<float> buffer (channels, numActiveChans, numSamples);
         MidiBuffer midiMessages;
-        audioProcessor->processBlock(buffer, midiMessages );
+
 
         AudioSourceChannelInfo info (&buffer, 0, numSamples);
         source->getNextAudioBlock (info);
-
+        audioProcessor->processBlock(buffer, midiMessages );
        // for (int i = info.buffer->getNumChannels(); --i >= 0;)
        //     buffer.applyGainRamp (i, info.startSample, info.numSamples, lastGain, gain);
 
