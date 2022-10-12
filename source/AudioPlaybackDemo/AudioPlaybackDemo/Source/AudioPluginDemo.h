@@ -472,88 +472,186 @@ public:
     class SpinLockedAmps
     {
     public:
+        SpinLockedAmps(const int size, const bool isUsingDoublePrecision)
+        {
+            if (isUsingDoublePrecision)
+            {
+                _doubleAmps.setSize (2, size);
+                _floatAmps.setSize (1, 1);
+            }
+            else
+            {
+                _floatAmps.setSize (2, size);
+                _doubleAmps.setSize (1, 1);
+            }
+            _nSamples = 0;
+            _startIndex = 0;
+            _isFloat = !isUsingDoublePrecision;
+        }
         // Wait-free, but setting new info may fail if the main thread is currently
         // calling `get`. This is unlikely to matter in practice because
         // we'll be calling `set` much more frequently than `get`.
 
-        void set(const AudioBuffer<float> &newAmps, double sampleRate, double startTime)
+        void set(const AudioBuffer<float> &newAmps)
         {
             const juce::SpinLock::ScopedTryLockType lock(mutex);
 
-            if (lock.isLocked())
+            if (lock.isLocked() && _isFloat)
             {
-                _isFloat = false;
-                _sampleRate = sampleRate;
-                _startTimeOfBuffer = startTime;
                 _floatAmps = newAmps;
             }
         }
-        void set(const AudioBuffer<double>& newAmps, double sampleRate, double startTime)
+        void set(const AudioBuffer<double>& newAmps)
         {
             const juce::SpinLock::ScopedTryLockType lock(mutex);
 
-            if (lock.isLocked())
+            if (lock.isLocked() && !_isFloat) 
             {
-                _isFloat = false;
-                _sampleRate = sampleRate;
-                _startTimeOfBuffer = startTime;
                 _doubleAmps = newAmps;
             }
         }
-        SpinLockedAmps& add(const AudioBuffer<float>& newAmps, double sampleRate, double startTime)
+        void add(const AudioBuffer<float>& newAmps)
         {
             const juce::SpinLock::ScopedTryLockType lock(mutex);
 
-            if (lock.isLocked())
+            if (lock.isLocked() && _isFloat)
             {
-                SpinLockedAmps newSpinAmps;
-                newSpinAmps.set(newAmps, sampleRate, startTime);
-                _nextSpinAmps = &newSpinAmps;
-                _isFloat = false;
-                _sampleRate = sampleRate;
-                _startTimeOfBuffer = startTime;
                 _floatAmps = newAmps;
-                return newSpinAmps;
             }
         }
-        SpinLockedAmps& add(const AudioBuffer<double>& newAmps, double sampleRate, double startTime)
+        template <typename FloatType>
+        SpinLockedAmps& add(const AudioBuffer<FloatType>& newAmps)
         {
             const juce::SpinLock::ScopedTryLockType lock(mutex);
-          
-            if (lock.isLocked())
+            
+            if (lock.isLocked() && !_isFloat)
             {  
-                SpinLockedAmps newSpinAmps;
-                newSpinAmps.set(newAmps, sampleRate, startTime);
-                _nextSpinAmps = &newSpinAmps;
-                _isFloat = false;
-                _sampleRate = sampleRate;
-                _startTimeOfBuffer = startTime;
-                _doubleAmps = newAmps;
-                return newSpinAmps;
-            }
+                int newStartIndex = _startIndex;
+                int newNSamples = _nSamples;
+                int bufferSize = _doubleAmps.size;
 
+                for (int c=0; c<newAmps.getNumChannels(); c++)
+                {
+                    auto channelData = newAmps.getWritePointer (c);
+                    int nSamples = min(newAmps.getNumSamples(),bufferSize - _nSamples)
+
+                    for (int i=0;i<nSamples; i++)
+                    {
+                        _doubleAmps[n+i] = channelData[i];                     
+                    }
+                    newNSamples = _nSamples + nSamples;
+
+                    int si = _startIndex;
+                    if (newNSamples == bufferSize) // buffer overrun, wrap around
+                    {
+                        for (int i=nSamples;i<newAmps.getNumSamples(); i++) // put remaining at beg
+                        {
+                            _doubleAmps[si] = channelData[i];  
+                            si = si + 1 % bufferSize; // wrap around                   
+                        }
+                        newStartIndex = si;
+                    }
+                }
+                _startIndex = newStartIndex;
+                _nSamples = newNSamples;
+            }
+            if (lock.isLocked() && _isFloat)
+            {  
+                int newStartIndex = _startIndex;
+                int newNSamples = _nSamples;
+                int bufferSize = _floatAmps.size;
+
+                for (int c=0; c<newAmps.getNumChannels(); c++)
+                {
+                    auto channelData = newAmps.getWritePointer (c);
+                    int nSamples = min(newAmps.getNumSamples(),bufferSize - _nSamples)
+
+                    for (int i=0;i<nSamples; i++)
+                    {
+                        _floatAmps[_nSamples+i] = channelData[i];                     
+                    }
+                    newNSamples = _nSamples + nSamples;
+
+                    int si = _startIndex;
+                    if (newNSamples == bufferSize) // buffer overrun, wrap around
+                    {
+                        for (int i=nSamples;i<newAmps.getNumSamples(); i++) // put remaining at beg
+                        {
+                            _floatAmps[si] = channelData[i];  
+                            si = si + 1 % bufferSize; // wrap around                   
+                        }
+                        newStartIndex = si;
+                    }
+                }
+                _startIndex = newStartIndex;
+                _nSamples = newNSamples;
+            }
         }
         AudioBuffer<float> getFloat() const noexcept
         {
             const juce::SpinLock::ScopedLockType lock(mutex);
-            return _floatAmps;
+            AudioBuffer<float> _returnAmps(_floatAmps.getNumChannels(),_nSamples);
+            if (_isFloat)
+            {
+                for (int c=0; c<_floatAmps.getNumChannels(); c++)
+                {
+                    auto channelData = _floatAmps.getReadPointer (c);
+                    auto returnChannelData = _returnAmps.getWritePointer(c);
+                    int rIndex = 0;
+                    for (int i=_startIndex;i<_nSamples;i++)
+                    {
+                        returnChannelData[rIndex++] = channelData[i];
+                    }
+                    if (_startIndex > 0)
+                    {
+                        for (int i=0;i<_startIndex;i++)
+                        {
+                            returnChannelData[rIndex++] = channelData[i];
+                        }
+                    }
+                }
+                _startIndex = 0;
+                _nSamples = 0;
+                return _returnAmps;
+            }
         }
 
         AudioBuffer<double> getDouble() const noexcept
         {
             const juce::SpinLock::ScopedLockType lock(mutex);
-            return _doubleAmps;
+            AudioBuffer<double> _returnAmps(_doubleAmps.getNumChannels(),_nSamples);
+            if (!_isFloat)
+            {
+                for (int c=0; c<_floatAmps.getNumChannels(); c++)
+                {
+                    auto channelData = _doubleAmps.getReadPointer (c);
+                    auto returnChannelData = _returnAmps.getWritePointer(c);
+                    int rIndex = 0;
+                    for (int i=_startIndex;i<_nSamples;i++)
+                    {
+                        returnChannelData[rIndex++] = channelData[i];
+                    }
+                    if (_startIndex > 0)
+                    {
+                        for (int i=0;i<_startIndex;i++)
+                        {
+                            returnChannelData[rIndex++] = channelData[i];
+                        }
+                    }
+                }
+                _startIndex = 0;
+                _nSamples = 0;
+                return _returnAmps;
+            }
         }
 
     private:
         juce::SpinLock mutex;
         bool _isFloat;
-        double _sampleRate;
-        double _startTimeOfBuffer;
-        SpinLockedAmps* _nextSpinAmps;
+        int _nSamples;
+        int _startIndex;
         AudioBuffer<float> _floatAmps;
-        AudioBuffer<double> _doubleAmps;
-        
+        AudioBuffer<double> _doubleAmps;        
     };
     //==============================================================================
     // These properties are public so that our editor component can access them
@@ -565,8 +663,8 @@ public:
     SpinLockedPosInfo lastPosInfo;
 
     // this keeps a copy of the last set of amplitudes after processing
-    SpinLockedAmps lastAmps;
-    SpinLockedAmps firstAmps;
+    SpinLockedAmps lastAmps(12000);
+  
     bool recording = false;
 
     // Our plug-in's current state
