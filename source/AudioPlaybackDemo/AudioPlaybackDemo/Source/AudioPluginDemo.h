@@ -203,59 +203,6 @@ private:
     }
 };
 
-/*
-    void renderNextBlock (AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override
-    {
-        if (angleDelta != 0.0)
-        {
-            if (tailOff > 0.0)
-            {
-                while (--numSamples >= 0)
-                {
-                    auto currentSample = (float) (sin (currentAngle) * level * tailOff);
-
-                    for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
-                        outputBuffer.addSample (i, startSample, currentSample);
-
-                    currentAngle += angleDelta;
-                    ++startSample;
-
-                    tailOff *= 0.99;
-
-                    if (tailOff <= 0.005)
-                    {
-                        // tells the synth that this voice has stopped
-                        clearCurrentNote();
-
-                        angleDelta = 0.0;
-                        break;
-                    }
-                }
-            }
-            else
-            {
-                while (--numSamples >= 0)
-                {
-                    auto currentSample = (float) (sin (currentAngle) * level);
-
-                    for (auto i = outputBuffer.getNumChannels(); --i >= 0;)
-                        outputBuffer.addSample (i, startSample, currentSample);
-
-                    currentAngle += angleDelta;
-                    ++startSample;
-                }
-            }
-        }
-    }
-
-
-private:
-    double currentAngle = 0.0;
-    double angleDelta   = 0.0;
-    double level        = 0.0;
-    double tailOff      = 0.0;
-};
-*/
 //==============================================================================
 /** As the name suggest, this class does the actual audio processing. */
 class JuceDemoPluginAudioProcessor  : public AudioProcessor
@@ -296,14 +243,15 @@ public:
     {
         if (isUsingDoublePrecision())
         {
-            delayBufferDouble.setSize (2, 12000);
-            delayBufferFloat .setSize (1, 1);
+            delayBufferDouble.setSize(2, 12000);
+            delayBufferFloat.setSize(1, 1);
         }
         else
         {
-            delayBufferFloat .setSize (2, 12000);
-            delayBufferDouble.setSize (1, 1);
+            delayBufferFloat.setSize(2, 12000);
+            delayBufferDouble.setSize(1, 1);
         }
+        lastAmps.init(12000, isUsingDoublePrecision());
 
         reset();
     }
@@ -472,7 +420,7 @@ public:
     class SpinLockedAmps
     {
     public:
-        SpinLockedAmps(const int size, const bool isUsingDoublePrecision)
+        void init(const int size, const bool isUsingDoublePrecision)
         {
             if (isUsingDoublePrecision)
             {
@@ -510,139 +458,135 @@ public:
                 _doubleAmps = newAmps;
             }
         }
-        void add(const AudioBuffer<float>& newAmps)
-        {
-            const juce::SpinLock::ScopedTryLockType lock(mutex);
 
-            if (lock.isLocked() && _isFloat)
-            {
-                _floatAmps = newAmps;
-            }
-        }
         template <typename FloatType>
-        SpinLockedAmps& add(const AudioBuffer<FloatType>& newAmps)
+        void add(AudioBuffer<FloatType>& newAmps)
         {
             const juce::SpinLock::ScopedTryLockType lock(mutex);
-            
-            if (lock.isLocked() && !_isFloat)
-            {  
+
+            if (lock.isLocked() && (_isFloat))
+            {
                 int newStartIndex = _startIndex;
                 int newNSamples = _nSamples;
-                int bufferSize = _doubleAmps.size;
+                int bufferSize = _floatAmps.getNumSamples();
 
-                for (int c=0; c<newAmps.getNumChannels(); c++)
+                for (int c = 0; c < newAmps.getNumChannels(); c++)
                 {
-                    auto channelData = newAmps.getWritePointer (c);
-                    int nSamples = min(newAmps.getNumSamples(),bufferSize - _nSamples)
+                    auto* newChannelData = newAmps.getReadPointer(c);
+                    auto* floatChannelData = _floatAmps.getWritePointer(c);
 
-                    for (int i=0;i<nSamples; i++)
+                    int nSamples = std::min(newAmps.getNumSamples(), bufferSize - _nSamples);
+
+                    for (int i = 0; i < nSamples; i++)
                     {
-                        _doubleAmps[n+i] = channelData[i];                     
+                        floatChannelData[newNSamples + i] = newChannelData[i];
                     }
                     newNSamples = _nSamples + nSamples;
 
                     int si = _startIndex;
                     if (newNSamples == bufferSize) // buffer overrun, wrap around
                     {
-                        for (int i=nSamples;i<newAmps.getNumSamples(); i++) // put remaining at beg
+                        for (int i = nSamples; i < newAmps.getNumSamples(); i++) // put remaining at beg
                         {
-                            _doubleAmps[si] = channelData[i];  
-                            si = si + 1 % bufferSize; // wrap around                   
+                            floatChannelData[si] = newChannelData[i];
+                            si = (si + 1) % bufferSize; // wrap around                   
                         }
                         newStartIndex = si;
                     }
                 }
                 _startIndex = newStartIndex;
                 _nSamples = newNSamples;
+                if (_nSamples > _maxNSamples) _maxNSamples = _nSamples;
             }
-            if (lock.isLocked() && _isFloat)
-            {  
+            if (lock.isLocked() && !_isFloat)
+            {
                 int newStartIndex = _startIndex;
                 int newNSamples = _nSamples;
-                int bufferSize = _floatAmps.size;
+                int bufferSize = _doubleAmps.getNumSamples();
 
-                for (int c=0; c<newAmps.getNumChannels(); c++)
+                for (int c = 0; c < newAmps.getNumChannels(); c++)
                 {
-                    auto channelData = newAmps.getWritePointer (c);
-                    int nSamples = min(newAmps.getNumSamples(),bufferSize - _nSamples)
+                    auto* newChannelData = newAmps.getReadPointer(c);
+                    auto* doubleChannelData = _doubleAmps.getWritePointer(c);
 
-                    for (int i=0;i<nSamples; i++)
+                    int nSamples = std::min(newAmps.getNumSamples(), bufferSize - _nSamples);
+
+                    for (int i = 0; i < nSamples; i++)
                     {
-                        _floatAmps[_nSamples+i] = channelData[i];                     
+                        doubleChannelData[newNSamples + i] = newChannelData[i];
                     }
                     newNSamples = _nSamples + nSamples;
 
                     int si = _startIndex;
                     if (newNSamples == bufferSize) // buffer overrun, wrap around
                     {
-                        for (int i=nSamples;i<newAmps.getNumSamples(); i++) // put remaining at beg
+                        for (int i = nSamples; i < newAmps.getNumSamples(); i++) // put remaining at beg
                         {
-                            _floatAmps[si] = channelData[i];  
-                            si = si + 1 % bufferSize; // wrap around                   
+                            doubleChannelData[si] = newChannelData[i];
+                            si = (si + 1) % bufferSize; // wrap around                   
                         }
                         newStartIndex = si;
                     }
                 }
                 _startIndex = newStartIndex;
                 _nSamples = newNSamples;
+                if (_nSamples > _maxNSamples) _maxNSamples = _nSamples;
             }
         }
-        AudioBuffer<float> getFloat() const noexcept
+        AudioBuffer<float> getFloat() noexcept
         {
             const juce::SpinLock::ScopedLockType lock(mutex);
             AudioBuffer<float> _returnAmps(_floatAmps.getNumChannels(),_nSamples);
-            if (_isFloat)
+            jassert(_isFloat);
+            for (int c=0; c<_floatAmps.getNumChannels(); c++)
             {
-                for (int c=0; c<_floatAmps.getNumChannels(); c++)
+                auto channelData = _floatAmps.getReadPointer (c);
+                auto returnChannelData = _returnAmps.getWritePointer(c);
+                int rIndex = 0;
+                for (int i=_startIndex;i<_nSamples;i++)
                 {
-                    auto channelData = _floatAmps.getReadPointer (c);
-                    auto returnChannelData = _returnAmps.getWritePointer(c);
-                    int rIndex = 0;
-                    for (int i=_startIndex;i<_nSamples;i++)
+                    returnChannelData[rIndex++] = channelData[i];
+                }
+                if (_startIndex > 0)
+                {
+                    for (int i=0;i<_startIndex;i++)
                     {
                         returnChannelData[rIndex++] = channelData[i];
                     }
-                    if (_startIndex > 0)
-                    {
-                        for (int i=0;i<_startIndex;i++)
-                        {
-                            returnChannelData[rIndex++] = channelData[i];
-                        }
-                    }
                 }
-                _startIndex = 0;
-                _nSamples = 0;
-                return _returnAmps;
             }
+            _startIndex = 0;
+            _nSamples = 0;
+            return _returnAmps;
         }
 
-        AudioBuffer<double> getDouble() const noexcept
+        AudioBuffer<double> getDouble() noexcept
         {
             const juce::SpinLock::ScopedLockType lock(mutex);
             AudioBuffer<double> _returnAmps(_doubleAmps.getNumChannels(),_nSamples);
-            if (!_isFloat)
+            jassert(!_isFloat);
+
+            for (int c = 0; c < _floatAmps.getNumChannels(); c++)
             {
-                for (int c=0; c<_floatAmps.getNumChannels(); c++)
+                auto channelData = _doubleAmps.getReadPointer(c);
+                auto returnChannelData = _returnAmps.getWritePointer(c);
+                int rIndex = 0;
+                for (int i = _startIndex; i < _nSamples; i++)
                 {
-                    auto channelData = _doubleAmps.getReadPointer (c);
-                    auto returnChannelData = _returnAmps.getWritePointer(c);
-                    int rIndex = 0;
-                    for (int i=_startIndex;i<_nSamples;i++)
+                    returnChannelData[rIndex++] = channelData[i];
+                }
+                if (_startIndex > 0)
+                {
+                    for (int i = 0; i < _startIndex; i++)
                     {
                         returnChannelData[rIndex++] = channelData[i];
                     }
-                    if (_startIndex > 0)
-                    {
-                        for (int i=0;i<_startIndex;i++)
-                        {
-                            returnChannelData[rIndex++] = channelData[i];
-                        }
-                    }
                 }
-                _startIndex = 0;
-                _nSamples = 0;
-                return _returnAmps;
             }
+          
+            _startIndex = 0;
+            _nSamples = 0;
+            return _returnAmps;
         }
 
     private:
@@ -650,8 +594,9 @@ public:
         bool _isFloat;
         int _nSamples;
         int _startIndex;
+        int _maxNSamples = 0;
         AudioBuffer<float> _floatAmps;
-        AudioBuffer<double> _doubleAmps;        
+        AudioBuffer<double> _doubleAmps;
     };
     //==============================================================================
     // These properties are public so that our editor component can access them
@@ -663,7 +608,7 @@ public:
     SpinLockedPosInfo lastPosInfo;
 
     // this keeps a copy of the last set of amplitudes after processing
-    SpinLockedAmps lastAmps(12000);
+    SpinLockedAmps lastAmps;
   
     bool recording = false;
 
@@ -895,14 +840,8 @@ private:
 
         // Now ask the host for the current time so we can store it to be displayed later...
         updateCurrentTimeInfoFromHost();   
-        if (recording)
-        {
-            // lastAmps = lastAmps.add(buffer, getSampleRate(), lastPosInfo.get().getTimeInSeconds().orFallback(0.0));
-        }
-        else
-        {
-            lastAmps.set(buffer, getSampleRate(), lastPosInfo.get().getTimeInSeconds().orFallback(0.0));
-        }
+
+        lastAmps.add(buffer);
     }
 
     template <typename FloatType>
