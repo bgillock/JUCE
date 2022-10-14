@@ -57,7 +57,6 @@ class WaveDisplayComponent : public Component
 {
 public:
     WaveDisplayComponent() {
-        addAndMakeVisible(canvas);
         setSize(400, 100);
     }
 
@@ -109,6 +108,7 @@ public:
 
     void paint(Graphics& g) override
     {
+        
         auto r = getLocalBounds();
 
         g.setColour(Colours::black);
@@ -140,11 +140,13 @@ public:
             g.drawLine(leftX - tickLength, ampAnnoNeg[key].getFloatValue(), rightX, ampAnnoNeg[key].getFloatValue(),1.0);
         }
 
-        float samplesPerPixel = 1.0;
+        int startSample = 0;
+        float samplesPerPixel = 10.0;
+        float scale = 250.0;
         int numSamples = (rightX - leftX) * samplesPerPixel;
 
         // Draw sample numbers
-        StringPairArray sampleNumAnno = get_anno_pairs(0.0, numSamples, leftX, rightX, 100.0, "%3.f");
+        StringPairArray sampleNumAnno = get_anno_pairs(startSample, startSample+numSamples, leftX, rightX, 1000.0, "%5.f");
         for (auto& key : sampleNumAnno.getAllKeys())
         {
             g.drawText(key, sampleNumAnno[key].getFloatValue() - textWidth/2.0, bottomY + tickLength, textWidth, textHeight, Justification::centredRight);
@@ -154,33 +156,35 @@ public:
         int sampleRate = 48000.0;
 
         // Draw time scale
-        StringPairArray secondsAnno = get_anno_pairs(0.0, (double)numSamples/(double)sampleRate, leftX, rightX, 0.001, "%.3f");
+        StringPairArray secondsAnno = get_anno_pairs((double)startSample/(double)sampleRate, (double)(startSample+numSamples)/(double)sampleRate, leftX, rightX, 0.01, "%.2f");
         for (auto& key : secondsAnno.getAllKeys())
         {
             g.drawText(key, secondsAnno[key].getFloatValue() - textWidth / 2.0, bottomY + tickLength + textHeight + 2.0, textWidth, textHeight, Justification::centredRight);
             g.drawLine(secondsAnno[key].getFloatValue(), topY, secondsAnno[key].getFloatValue(), bottomY + textHeight + 2.0 + tickLength, 1.0);
         }
 
+
         if ((floatAmps.getNumSamples() > 0) && (floatAmps.getNumChannels() > 0))
         {
-            float lastAmp = floatAmps.getSample(0, 0);
+            float lastAmp = floatAmps.getSample(0, startSample) * scale;
             g.setColour(Colours::white);
-            for (int i = 1; i < floatAmps.getNumSamples(); i++)
+            for (int i = startSample; i < std::min(floatAmps.getNumSamples(),numSamples); i++)
             {
                 // just do left for now
-                auto thisAmp = floatAmps.getSample(0, i);
-                g.drawLine(leftX + (float)i - 1.0, middleY + (lastAmp * 50.0), leftX + (float)i, middleY + (thisAmp * 50.0), 1.0);
+                auto thisAmp = floatAmps.getSample(0, i) * scale;
+                g.drawLine(leftX + ((float)(i - startSample - 1.0)/samplesPerPixel), middleY + (lastAmp * 50.0), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp * 50.0), 1.0);
                 lastAmp = thisAmp;
             }
         }
         if ((doubleAmps.getNumSamples() > 0) && (doubleAmps.getNumChannels() > 0))
         {
-            double lastAmp = doubleAmps.getSample(0, 0);
+            double lastAmp = doubleAmps.getSample(0, startSample) * scale;
             g.setColour(Colours::white);
-            for (int i = 1; i < doubleAmps.getNumSamples(); i++)
+            for (int i = startSample; i < std::min(doubleAmps.getNumSamples(), numSamples); i++)
             {
-                // just do left for now
-                g.drawLine(leftX + (double)i - 1.0, middleY + (lastAmp * 50.0), leftX + (double)i, middleY + (doubleAmps.getSample(0, i) * 50.0, 2.0));
+                auto thisAmp = doubleAmps.getSample(0, i) * scale;
+                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp * 50.0), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp * 50.0), 1.0);
+                lastAmp = thisAmp;
             }
         }
     }
@@ -188,11 +192,8 @@ public:
     void resized() override
     {
         auto r = getLocalBounds().reduced(5);
-
-        canvas.setBounds(r);
     }
 private:
-    Component canvas;
 
     AudioBuffer<float> floatAmps;
     AudioBuffer<double> doubleAmps;
@@ -251,7 +252,7 @@ public:
             delayBufferFloat.setSize(2, 12000);
             delayBufferDouble.setSize(1, 1);
         }
-        lastAmps.init(12000, isUsingDoublePrecision());
+        lastAmps.init(120000, isUsingDoublePrecision());
 
         reset();
     }
@@ -367,56 +368,6 @@ public:
         AudioPlayHead::PositionInfo info;
     };
 
-    class DisplayBuffer
-    {
-    public:
-        DisplayBuffer() {};
-        DisplayBuffer(AudioBuffer<float>& buffer, const double sampleRate, const AudioPlayHead::PositionInfo startTime)
-        {
-            const juce::SpinLock::ScopedTryLockType lock(mutex);
-
-            if (lock.isLocked())
-            {
-                _fbuffer = buffer;
-                _dbuffer = AudioBuffer<double>(0, 0);
-                _sampleRate = sampleRate;
-                _startTime = startTime;
-            }
-        }
-
-        AudioBuffer<float> getFloat() const noexcept
-        {
-            const juce::SpinLock::ScopedLockType lock(mutex);
-            return _fbuffer;
-        }
-        DisplayBuffer(AudioBuffer<double>& buffer, const double sampleRate, const AudioPlayHead::PositionInfo startTime)
-        {
-            const juce::SpinLock::ScopedTryLockType lock(mutex);
-
-            if (lock.isLocked())
-            {
-                _dbuffer = buffer;
-                _fbuffer = AudioBuffer<float>(0, 0);
-                _sampleRate = sampleRate;
-                _startTime = startTime;
-            }
-        }
-
-        AudioBuffer<double> getDouble() const noexcept
-        {
-            const juce::SpinLock::ScopedLockType lock(mutex);
-            return _dbuffer;
-        }
-
-
-    private:
-        juce::SpinLock mutex;
-        double _sampleRate;
-        AudioPlayHead::PositionInfo _startTime;
-        AudioBuffer<double> _dbuffer;
-        AudioBuffer<float> _fbuffer;
-    };
-
     class SpinLockedAmps
     {
     public:
@@ -472,13 +423,14 @@ public:
 
                 for (int c = 0; c < newAmps.getNumChannels(); c++)
                 {
-                    auto* newChannelData = newAmps.getReadPointer(c);
-                    auto* floatChannelData = _floatAmps.getWritePointer(c);
+                    auto newChannelData = newAmps.getReadPointer(c);
+                    auto floatChannelData = _floatAmps.getWritePointer(c);
 
                     int nSamples = std::min(newAmps.getNumSamples(), bufferSize - _nSamples);
 
                     for (int i = 0; i < nSamples; i++)
                     {
+                        jassert(newNSamples + i < _floatAmps.getNumSamples());
                         floatChannelData[newNSamples + i] = newChannelData[i];
                     }
                     newNSamples = _nSamples + nSamples;
@@ -488,6 +440,7 @@ public:
                     {
                         for (int i = nSamples; i < newAmps.getNumSamples(); i++) // put remaining at beg
                         {
+                            jassert(si < _floatAmps.getNumSamples());
                             floatChannelData[si] = newChannelData[i];
                             si = (si + 1) % bufferSize; // wrap around                   
                         }
@@ -506,13 +459,14 @@ public:
 
                 for (int c = 0; c < newAmps.getNumChannels(); c++)
                 {
-                    auto* newChannelData = newAmps.getReadPointer(c);
-                    auto* doubleChannelData = _doubleAmps.getWritePointer(c);
+                    auto newChannelData = newAmps.getReadPointer(c);
+                    auto doubleChannelData = _doubleAmps.getWritePointer(c);
 
                     int nSamples = std::min(newAmps.getNumSamples(), bufferSize - _nSamples);
 
                     for (int i = 0; i < nSamples; i++)
                     {
+                        jassert(newNSamples + i < _doubleAmps.getNumSamples());
                         doubleChannelData[newNSamples + i] = newChannelData[i];
                     }
                     newNSamples = _nSamples + nSamples;
@@ -522,6 +476,7 @@ public:
                     {
                         for (int i = nSamples; i < newAmps.getNumSamples(); i++) // put remaining at beg
                         {
+                            jassert(si < _doubleAmps.getNumSamples());
                             doubleChannelData[si] = newChannelData[i];
                             si = (si + 1) % bufferSize; // wrap around                   
                         }
@@ -588,7 +543,9 @@ public:
             _nSamples = 0;
             return _returnAmps;
         }
-
+        int getSize() {
+            return _nSamples;
+        }
     private:
         juce::SpinLock mutex;
         bool _isFloat;
@@ -620,6 +577,7 @@ private:
     /** This is the editor component that our filter will display. */
     class JuceDemoPluginAudioProcessorEditor  : public AudioProcessorEditor,
                                                 private Timer,
+                                                private ScrollBar::Listener,
                                                 private Value::Listener
     {
     public:
@@ -642,7 +600,13 @@ private:
             delayLabel.attachToComponent (&delaySlider, false);
             delayLabel.setFont (Font (11.0f));
 
-            addAndMakeVisible(waveDisplay);
+            waveDisplay = std::make_unique<WaveDisplayComponent>();
+            addAndMakeVisible(*waveDisplay);
+
+            addAndMakeVisible(scrollbar);
+            scrollbar.setRangeLimits(Range<double>(0.0, 200.0));
+            scrollbar.setAutoHide(false);
+            scrollbar.addListener(this);
 
             // add a label that will display the current timecode and status..
             addAndMakeVisible (timecodeDisplayLabel);
@@ -664,7 +628,7 @@ private:
             updateTrackProperties();
 
             // start a timer which will keep our timecode display updated
-            startTimerHz (30);
+            startTimerHz (100);
         }
 
         ~JuceDemoPluginAudioProcessorEditor() override {}
@@ -692,7 +656,8 @@ private:
             auto sliderv = gainSlider.getBounds();
             r.setTop(sliderv.getBottom() + 10);
 
-            waveDisplay.setBounds(r);
+            scrollbar.setBounds(r.removeFromBottom(20));
+            waveDisplay->setBounds(r);
             lastUIWidth  = getWidth();
             lastUIHeight = getHeight();
         }
@@ -702,11 +667,11 @@ private:
             updateTimecodeDisplay (getProcessor().lastPosInfo.get());
             
             if (!getProcessor().isUsingDoublePrecision())
-                waveDisplay.setAmps(getProcessor().lastAmps.getFloat());
+                waveDisplay->setAmps(getProcessor().lastAmps.getFloat());
             else 
-                waveDisplay.setAmps(getProcessor().lastAmps.getDouble());
+                waveDisplay->setAmps(getProcessor().lastAmps.getDouble());
 
-            waveDisplay.repaint();
+            waveDisplay->repaint();
         }
 
         int getControlParameterIndex (Component& control) override
@@ -729,10 +694,15 @@ private:
                                                         : trackColour.withAlpha (1.0f).withBrightness (0.266f));
             repaint();
         }
-
+        void scrollBarMoved(ScrollBar* scrollBarThatHasMoved, double newRangeStart) override
+        {
+            //if (scrollBarThatHasMoved == &scrollbar)
+            //    if (!(isFollowingTransport && transportSource.isPlaying()))
+            //        setRange(visibleRange.movedToStartAt(newRangeStart));
+        }
     private:
 
-        WaveDisplayComponent waveDisplay;
+        std::unique_ptr<WaveDisplayComponent> waveDisplay;
         Label timecodeDisplayLabel,
               gainLabel  { {}, "Throughput level:" },
               delayLabel { {}, "Delay:" };
@@ -740,6 +710,7 @@ private:
         Slider gainSlider, delaySlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment, delayAttachment;
         Colour backgroundColour;
+        ScrollBar scrollbar{ false };
 
         // these are used to persist the UI's size - the values are stored along with the
         // filter's other parameters, and the UI component will update them when it gets
@@ -821,6 +792,8 @@ private:
         auto gainParamValue  = state.getParameter ("gain") ->getValue();
         auto delayParamValue = state.getParameter ("delay")->getValue();
         auto numSamples = buffer.getNumSamples();
+
+        if (buffer.hasBeenCleared()) return;
 
         // In case we have more outputs than inputs, we'll clear any output
         // channels that didn't contain input data, (because these aren't
