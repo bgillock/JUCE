@@ -2271,6 +2271,7 @@
       <AdditionalOptions> /bigobj %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_gui_extra.cpp" />
+    <ClCompile Include="..\..\Source\SpinLockedAmps.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\AudioPlaybackDemo.h" />
@@ -3165,6 +3166,7 @@
     <ClInclude Include="..\..\..\..\..\modules\juce_gui_extra\native\juce_mac_NSViewFrameWatcher.h" />
     <ClInclude Include="..\..\..\..\..\modules\juce_gui_extra\juce_gui_extra.h" />
     <ClInclude Include="..\..\JuceLibraryCode\JuceHeader.h" />
+    <ClInclude Include="..\..\Source\SpinLockedAmps.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\..\..\..\modules\juce_audio_devices\native\oboe\CMakeLists.txt" />
