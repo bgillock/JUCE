@@ -52,6 +52,7 @@
 
 #pragma once
 #include <stdio.h>
+#include "SpinLockedAmps.h"
 
 class SpinLockedAmps
 {
@@ -388,7 +389,13 @@ public:
     }
 private:
 
+<<<<<<< HEAD
     SpinLockedAmps _amps;
+=======
+
+    AudioBuffer<float> floatAmps;
+    AudioBuffer<double> doubleAmps;
+>>>>>>> db0aa92248d9dfdc492fbb31754c16cf39d95201
 
     void drawGrid() 
     {
@@ -444,7 +451,7 @@ public:
             delayBufferFloat.setSize(2, 12000);
             delayBufferDouble.setSize(1, 1);
         }
-        lastAmps.init(120000, isUsingDoublePrecision());
+        lastAmps.init(2000, isUsingDoublePrecision());
 
         reset();
     }
@@ -560,7 +567,11 @@ public:
         AudioPlayHead::PositionInfo info;
     };
 
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> db0aa92248d9dfdc492fbb31754c16cf39d95201
     //==============================================================================
     // These properties are public so that our editor component can access them
     // A bit of a hacky way to do it, but it's only a demo! Obviously in your own

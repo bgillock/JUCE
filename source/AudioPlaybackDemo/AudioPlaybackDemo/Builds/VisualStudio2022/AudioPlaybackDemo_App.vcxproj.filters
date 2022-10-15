@@ -2733,6 +2733,9 @@
     <ClCompile Include="..\..\Source\AudioProcessorSource.cpp">
       <Filter>AudioPlaybackDemo\Source</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\Source\SpinLockedAmps.cpp">
+      <Filter>AudioPlaybackDemo\Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Source\AudioPlaybackDemo.h">
@@ -5409,6 +5412,9 @@
       <Filter>AudioPlaybackDemo\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\AudioProcessorSource.h">
+      <Filter>AudioPlaybackDemo\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\SpinLockedAmps.h">
       <Filter>AudioPlaybackDemo\Source</Filter>
     </ClInclude>
   </ItemGroup>
