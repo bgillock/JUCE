@@ -71,6 +71,7 @@ public:
         _nSamples = 0;
         _startIndex = 0;
         _isFloat = !isUsingDoublePrecision;
+        _bufferSize = size;
     }
     // Wait-free, but setting new info may fail if the main thread is currently
     // calling `get`. This is unlikely to matter in practice because
@@ -195,8 +196,8 @@ public:
                 }
             }
         }
-        _startIndex = 0;
-        _nSamples = 0;
+        //_startIndex = 0;
+        //_nSamples = 0;
         return _returnAmps;
     }
 
@@ -224,15 +225,19 @@ public:
             }
         }
 
-        _startIndex = 0;
-        _nSamples = 0;
+        //_startIndex = 0;
+        //_nSamples = 0;
         return _returnAmps;
     }
     bool isFloat() {
         return _isFloat;
     }
-    int getSize() {
+    int getCurrentSize() {
         return _nSamples;
+    }
+    int getMaxSize()
+    {
+        return _bufferSize;
     }
 private:
     juce::SpinLock mutex;
@@ -240,6 +245,7 @@ private:
     int _nSamples;
     int _startIndex;
     int _maxNSamples = 0;
+    int _bufferSize = 0;
     AudioBuffer<float> _floatAmps;
     AudioBuffer<double> _doubleAmps;
 };
@@ -249,9 +255,21 @@ class WaveDisplayComponent : public Component
 public:
     WaveDisplayComponent(bool isUsingDoublePrecision) {
         setSize(400, 100);
-        _amps.init(10000, isUsingDoublePrecision);
+        _amps.init(48000.0*5.0, isUsingDoublePrecision);
+        _startSample = 0;
+        _samplesPerPixel = 20.0;
+        _viewSizePixels = 400;
     }
 
+    int getBufferSize()
+    {
+        return _amps.getCurrentSize();
+    }
+
+    Range<double> getViewRange()
+    {
+        return Range<double>(_startSample, _startSample + ((double)_viewSizePixels * _samplesPerPixel));
+    }
     // enum { height = 30 };
     void addAmps(AudioBuffer<float>& newBuffer)
     {
@@ -331,9 +349,11 @@ public:
             g.drawLine(leftX - tickLength, ampAnnoNeg[key].getFloatValue(), rightX, ampAnnoNeg[key].getFloatValue(),1.0);
         }
 
-        int startSample = 0;
-        float samplesPerPixel = 10.0;
+        int startSample = _startSample;
+        float samplesPerPixel = _samplesPerPixel;
+
         float scale = 250.0;
+        _viewSizePixels = rightX - leftX + 1;
         int numSamples = (rightX - leftX) * samplesPerPixel;
 
         // Draw sample numbers
@@ -355,7 +375,7 @@ public:
         }
 
 
-        if ((_amps.getSize() > 0) && (_amps.isFloat()))
+        if ((_amps.getCurrentSize() > 0) && (_amps.isFloat()))
         {
             AudioBuffer<float> floatAmps = _amps.getFloat();
             float lastAmp = floatAmps.getSample(0, startSample) * scale;
@@ -368,7 +388,7 @@ public:
                 lastAmp = thisAmp;
             }
         }
-        if ((_amps.getSize() > 0) && (!_amps.isFloat()))
+        if ((_amps.getCurrentSize() > 0) && (!_amps.isFloat()))
         {
             AudioBuffer<float> doubleAmps = _amps.getFloat();
             double lastAmp = doubleAmps.getSample(0, startSample) * scale;
@@ -389,7 +409,9 @@ public:
 private:
 
     SpinLockedAmps _amps;
-
+    int _startSample;
+    double _samplesPerPixel;
+    int _viewSizePixels;
     void drawGrid() 
     {
 
@@ -444,7 +466,7 @@ public:
             delayBufferFloat.setSize(2, 12000);
             delayBufferDouble.setSize(1, 1);
         }
-        lastAmps.init(120000, isUsingDoublePrecision());
+        lastAmps.init(12000, isUsingDoublePrecision());
 
         reset();
     }
@@ -667,17 +689,30 @@ private:
             lastUIWidth  = getWidth();
             lastUIHeight = getHeight();
         }
-
+        void setRange(Range<double> newRange)
+        {
+            visibleRange = newRange;
+            scrollbar.setRangeLimits(Range<double>(0, (double)waveDisplay->getBufferSize()));
+            scrollbar.setCurrentRange(visibleRange);
+            //updateCursorPosition();
+            repaint();
+        }
         void timerCallback() override
         {
             updateTimecodeDisplay (getProcessor().lastPosInfo.get());
             
             if (!getProcessor().isUsingDoublePrecision())
+            {
                 waveDisplay->addAmps(getProcessor().lastAmps.getFloat());
-            else 
+                getProcessor().lastAmps.init(12000, false);
+            }
+            else
+            {
                 waveDisplay->addAmps(getProcessor().lastAmps.getDouble());
-
+                getProcessor().lastAmps.init(12000, true);
+            }
             waveDisplay->repaint();
+            setRange(waveDisplay->getViewRange());
         }
 
         int getControlParameterIndex (Component& control) override
@@ -717,6 +752,7 @@ private:
         AudioProcessorValueTreeState::SliderAttachment gainAttachment, delayAttachment;
         Colour backgroundColour;
         ScrollBar scrollbar{ false };
+        Range<double> visibleRange;
 
         // these are used to persist the UI's size - the values are stored along with the
         // filter's other parameters, and the UI component will update them when it gets
