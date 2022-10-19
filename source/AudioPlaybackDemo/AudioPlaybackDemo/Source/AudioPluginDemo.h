@@ -259,6 +259,26 @@ public:
         _startSample = 0;
         _samplesPerPixel = 20.0;
         _viewSizePixels = 400;
+        _vscale = 0.5;
+    }
+    void restartBuffer()
+    {
+        _amps.init(_amps.getMaxSize(), !_amps.isFloat());
+    }
+    void setStartSample(int startSample)
+    {
+        jassert(startSample >= 0.0);
+        Range<double> sampleRange = getViewRange();
+        if (startSample > getBufferSize() - sampleRange.getLength())
+            startSample = getBufferSize() - sampleRange.getLength();
+        _startSample = startSample;
+        repaint();
+    }
+
+    void setVerticalScale(double scale)
+    {
+        _vscale = std::max(scale,0.1);
+        repaint();
     }
 
     int getBufferSize()
@@ -268,7 +288,9 @@ public:
 
     Range<double> getViewRange()
     {
-        return Range<double>(_startSample, _startSample + ((double)_viewSizePixels * _samplesPerPixel));
+        double endSample = _startSample + ((double)_viewSizePixels * _samplesPerPixel);
+        if (endSample >= getBufferSize()) endSample = getBufferSize() - 1.0;
+        return Range<double>(_startSample, endSample);
     }
     // enum { height = 30 };
     void addAmps(AudioBuffer<float>& newBuffer)
@@ -335,14 +357,14 @@ public:
         float tickLength = 5.0;
 
         // Draw float amp annotiation
-        StringPairArray ampAnnoPos = get_anno_pairs(0.0, 1.0, middleY, topY, 0.1, "%-.1f");
+        StringPairArray ampAnnoPos = get_anno_pairs(0.0, (1.0-_vscale), middleY, topY, 0.1, "%-.1f");
         for (auto& key : ampAnnoPos.getAllKeys())
         {
             g.drawText(key, leftX - textWidth - tickLength, ampAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredRight);
             g.drawLine(leftX - tickLength, ampAnnoPos[key].getFloatValue()  , rightX, ampAnnoPos[key].getFloatValue(),1.0);
         }
 
-        StringPairArray ampAnnoNeg = get_anno_pairs(0.0, -1.0, middleY, bottomY, -0.1, "%-.1f");
+        StringPairArray ampAnnoNeg = get_anno_pairs(0.0, -(1.0-_vscale), middleY, bottomY, -0.1, "%-.1f");
         for (auto& key : ampAnnoNeg.getAllKeys())
         {
             g.drawText(key, leftX - textWidth - tickLength, ampAnnoNeg[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredRight);
@@ -352,7 +374,8 @@ public:
         int startSample = _startSample;
         float samplesPerPixel = _samplesPerPixel;
 
-        float scale = 250.0;
+        
+        double scale = (double)(middleY-topY)/(1.0-_vscale);
         _viewSizePixels = rightX - leftX + 1;
         int numSamples = (rightX - leftX) * samplesPerPixel;
 
@@ -380,11 +403,11 @@ public:
             AudioBuffer<float> floatAmps = _amps.getFloat();
             float lastAmp = floatAmps.getSample(0, startSample) * scale;
             g.setColour(Colours::white);
-            for (int i = startSample; i < std::min(floatAmps.getNumSamples(),numSamples); i++)
+            for (int i = startSample; i < std::min(floatAmps.getNumSamples(),startSample + numSamples); i++)
             {
                 // just do left for now
                 auto thisAmp = floatAmps.getSample(0, i) * scale;
-                g.drawLine(leftX + ((float)(i - startSample - 1.0)/samplesPerPixel), middleY + (lastAmp * 50.0), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp * 50.0), 1.0);
+                g.drawLine(leftX + ((float)(i - startSample - 1.0)/samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
                 lastAmp = thisAmp;
             }
         }
@@ -393,10 +416,10 @@ public:
             AudioBuffer<float> doubleAmps = _amps.getFloat();
             double lastAmp = doubleAmps.getSample(0, startSample) * scale;
             g.setColour(Colours::white);
-            for (int i = startSample; i < std::min(doubleAmps.getNumSamples(), numSamples); i++)
+            for (int i = startSample; i < std::min(doubleAmps.getNumSamples(), startSample + numSamples); i++)
             {
                 auto thisAmp = doubleAmps.getSample(0, i) * scale;
-                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp * 50.0), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp * 50.0), 1.0);
+                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
                 lastAmp = thisAmp;
             }
         }
@@ -412,10 +435,7 @@ private:
     int _startSample;
     double _samplesPerPixel;
     int _viewSizePixels;
-    void drawGrid() 
-    {
-
-    }
+    double _vscale;
 };
 
 //==============================================================================
@@ -582,6 +602,19 @@ public:
         AudioPlayHead::PositionInfo info;
     };
 
+    void setRecording(bool recording)
+    {
+        const juce::SpinLock::ScopedTryLockType lock(mutex);
+
+        if (lock.isLocked())
+            _recording = recording;
+    }
+    bool isRecording()
+    {
+        const juce::SpinLock::ScopedTryLockType lock(mutex);
+
+        return _recording;
+    }
 
     //==============================================================================
     // These properties are public so that our editor component can access them
@@ -594,8 +627,6 @@ public:
 
     // this keeps a copy of the last set of amplitudes after processing
     SpinLockedAmps lastAmps;
-  
-    bool recording = false;
 
     // Our plug-in's current state
     AudioProcessorValueTreeState state;
@@ -603,68 +634,77 @@ public:
 private:
     //==============================================================================
     /** This is the editor component that our filter will display. */
-    class JuceDemoPluginAudioProcessorEditor  : public AudioProcessorEditor,
-                                                private Timer,
-                                                private ScrollBar::Listener,
-                                                private Value::Listener
+    class JuceDemoPluginAudioProcessorEditor : public AudioProcessorEditor,
+        private Timer,
+        private ScrollBar::Listener,
+        private Button::Listener,
+        private Value::Listener
     {
     public:
-        JuceDemoPluginAudioProcessorEditor (JuceDemoPluginAudioProcessor& owner)
-            : AudioProcessorEditor (owner),
-              gainAttachment       (owner.state, "gain",  gainSlider),
-              delayAttachment      (owner.state, "delay", delaySlider)
+        JuceDemoPluginAudioProcessorEditor(JuceDemoPluginAudioProcessor& owner)
+            : AudioProcessorEditor(owner),
+            gainAttachment(owner.state, "gain", gainSlider),
+            delayAttachment(owner.state, "delay", delaySlider)
         {
             // add some sliders..
-            addAndMakeVisible (gainSlider);
-            gainSlider.setSliderStyle (Slider::Rotary);
+            addAndMakeVisible(gainSlider);
+            gainSlider.setSliderStyle(Slider::Rotary);
 
-            addAndMakeVisible (delaySlider);
-            delaySlider.setSliderStyle (Slider::Rotary);
+            addAndMakeVisible(delaySlider);
+            delaySlider.setSliderStyle(Slider::Rotary);
 
             // add some labels for the sliders..
-            gainLabel.attachToComponent (&gainSlider, false);
-            gainLabel.setFont (Font (11.0f));
+            gainLabel.attachToComponent(&gainSlider, false);
+            gainLabel.setFont(Font(11.0f));
 
-            delayLabel.attachToComponent (&delaySlider, false);
-            delayLabel.setFont (Font (11.0f));
+            delayLabel.attachToComponent(&delaySlider, false);
+            delayLabel.setFont(Font(11.0f));
 
             waveDisplay = std::make_unique<WaveDisplayComponent>(owner.isUsingDoublePrecision());
             addAndMakeVisible(*waveDisplay);
 
-            addAndMakeVisible(scrollbar);
-            scrollbar.setRangeLimits(Range<double>(0.0, 200.0));
-            scrollbar.setAutoHide(false);
-            scrollbar.addListener(this);
+            addAndMakeVisible(hscrollbar);
+            hscrollbar.setRangeLimits(Range<double>(0.0, 200.0));
+            hscrollbar.setAutoHide(false);
+            hscrollbar.addListener(this);
 
-            // add a label that will display the current timecode and status..
-            addAndMakeVisible (timecodeDisplayLabel);
-            timecodeDisplayLabel.setFont (Font (Font::getDefaultMonospacedFontName(), 15.0f, Font::plain));
+            addAndMakeVisible(vscrollbar);
+            vscrollbar.setRangeLimits(Range<double>(0.0, 1.0));
+            vscrollbar.setAutoHide(false);
+            vscrollbar.addListener(this);
+            vscrollbar.setCurrentRange(Range<double>(0.5, 0.6));
+
+            addAndMakeVisible(recordbutton);
+            recordbutton.setOnColours(Colours::red, Colours::red, Colours::red);
+            recordbutton.setClickingTogglesState(true);
+            recordbutton.shouldUseOnColours(true);
+            recordbutton.addListener(this);
 
             // set resize limits for this plug-in
-            setResizeLimits (400, 200, 1024, 1024);
-            setResizable (true, owner.wrapperType != wrapperType_AudioUnitv3);
+            setResizeLimits(400, 200, 1024, 1024);
+            setResizable(true, owner.wrapperType != wrapperType_AudioUnitv3);
 
-            lastUIWidth .referTo (owner.state.state.getChildWithName ("uiState").getPropertyAsValue ("width",  nullptr));
-            lastUIHeight.referTo (owner.state.state.getChildWithName ("uiState").getPropertyAsValue ("height", nullptr));
+            lastUIWidth.referTo(owner.state.state.getChildWithName("uiState").getPropertyAsValue("width", nullptr));
+            lastUIHeight.referTo(owner.state.state.getChildWithName("uiState").getPropertyAsValue("height", nullptr));
 
             // set our component's initial size to be the last one that was stored in the filter's settings
-            setSize (lastUIWidth.getValue(), lastUIHeight.getValue());
+            setSize(lastUIWidth.getValue(), lastUIHeight.getValue());
 
-            lastUIWidth. addListener (this);
-            lastUIHeight.addListener (this);
+            lastUIWidth.addListener(this);
+            lastUIHeight.addListener(this);
 
             updateTrackProperties();
 
             // start a timer which will keep our timecode display updated
-            startTimerHz (100);
+            startTimerHz(100);
         }
 
         ~JuceDemoPluginAudioProcessorEditor() override {}
 
         //==============================================================================
-        void paint (Graphics& g) override
+        void paint(Graphics& g) override
         {
-            g.setColour (backgroundColour);
+            g.setColour(backgroundColour);
             g.fillAll();
         }
 
@@ -672,50 +712,60 @@ private:
         {
             // This lays out our child components...
 
-            auto r = getLocalBounds().reduced (8);
+            auto r = getLocalBounds().reduced(8);
 
-            timecodeDisplayLabel.setBounds (r.removeFromTop (26));
-
-            r.removeFromTop (20);
-            auto sliderArea = r.removeFromTop (60);
-            gainSlider.setBounds  (sliderArea.removeFromLeft (jmin (180, sliderArea.getWidth() / 2)));
-            delaySlider.setBounds (sliderArea.removeFromLeft (jmin (180, sliderArea.getWidth())));
+            r.removeFromTop(20);
+            auto sliderArea = r.removeFromTop(60);
+            gainSlider.setBounds(sliderArea.removeFromLeft(jmin(180, sliderArea.getWidth() / 2)));
+            delaySlider.setBounds(sliderArea.removeFromLeft(jmin(180, sliderArea.getWidth())));
 
             auto sliderv = gainSlider.getBounds();
             r.setTop(sliderv.getBottom() + 10);
+            
+            auto harea = r.removeFromBottom(20);
+            recordbutton.setBounds(harea.removeFromRight(20).reduced(3));
+            Path p;
+            p.addRoundedRectangle(3, 3, 8, 8, 3);
+            recordbutton.setShape(p, true, true, true);
 
-            scrollbar.setBounds(r.removeFromBottom(20));
-            waveDisplay->setBounds(r);
-            lastUIWidth  = getWidth();
+            hscrollbar.setBounds(harea.reduced(3));
+            vscrollbar.setBounds(r.removeFromRight(20).reduced(3));
+            waveDisplay->setBounds(r.reduced(3));
+
+            lastUIWidth = getWidth();
             lastUIHeight = getHeight();
         }
         void setRange(Range<double> newRange)
         {
             visibleRange = newRange;
-            scrollbar.setRangeLimits(Range<double>(0, (double)waveDisplay->getBufferSize()));
-            scrollbar.setCurrentRange(visibleRange);
+            hscrollbar.setRangeLimits(Range<double>(0, (double)waveDisplay->getBufferSize()));
+            int bsize = waveDisplay->getBufferSize();
+            hscrollbar.setCurrentRange(visibleRange);
+
             //updateCursorPosition();
             repaint();
         }
         void timerCallback() override
         {
-            updateTimecodeDisplay (getProcessor().lastPosInfo.get());
-            
-            if (!getProcessor().isUsingDoublePrecision())
+            if (getProcessor().isRecording())
             {
-                waveDisplay->addAmps(getProcessor().lastAmps.getFloat());
-                getProcessor().lastAmps.init(12000, false);
+                if (!getProcessor().isUsingDoublePrecision())
+                {
+                    waveDisplay->addAmps(getProcessor().lastAmps.getFloat());
+                    getProcessor().lastAmps.init(12000, false);
+                }
+                else
+                {
+                    waveDisplay->addAmps(getProcessor().lastAmps.getDouble());
+                    getProcessor().lastAmps.init(12000, true);
+                }
+
+                waveDisplay->repaint();
+                setRange(waveDisplay->getViewRange());
             }
-            else
-            {
-                waveDisplay->addAmps(getProcessor().lastAmps.getDouble());
-                getProcessor().lastAmps.init(12000, true);
-            }
-            waveDisplay->repaint();
-            setRange(waveDisplay->getViewRange());
         }
 
-        int getControlParameterIndex (Component& control) override
+        int getControlParameterIndex(Component& control) override
         {
             if (&control == &gainSlider)
                 return 0;
@@ -731,27 +781,52 @@ private:
             auto trackColour = getProcessor().getTrackProperties().colour;
             auto& lf = getLookAndFeel();
 
-            backgroundColour = (trackColour == Colour() ? lf.findColour (ResizableWindow::backgroundColourId)
-                                                        : trackColour.withAlpha (1.0f).withBrightness (0.266f));
+            backgroundColour = (trackColour == Colour() ? lf.findColour(ResizableWindow::backgroundColourId)
+                : trackColour.withAlpha(1.0f).withBrightness(0.266f));
             repaint();
         }
         void scrollBarMoved(ScrollBar* scrollBarThatHasMoved, double newRangeStart) override
         {
-            //if (scrollBarThatHasMoved == &scrollbar)
-            //    if (!(isFollowingTransport && transportSource.isPlaying()))
+            if (scrollBarThatHasMoved == &hscrollbar)
+                waveDisplay->setStartSample((int)hscrollbar.getCurrentRangeStart());
             //        setRange(visibleRange.movedToStartAt(newRangeStart));
+            if (scrollBarThatHasMoved == &vscrollbar)
+                waveDisplay->setVerticalScale(vscrollbar.getCurrentRangeStart());
+        }
+        void buttonClicked(Button* button) override
+        {
+            if (button == &recordbutton)
+            {
+
+            }
+        }
+        void buttonStateChanged(Button* button) override 
+        {
+            if (button == &recordbutton)
+            {
+                if (recordbutton.getToggleState() && !getProcessor().isRecording())
+                {
+                    getProcessor().setRecording(true);
+                    waveDisplay->restartBuffer();
+                }
+                else if (!recordbutton.getToggleState() && getProcessor().isRecording())
+                {
+                    getProcessor().setRecording(false);
+                }
+            }
         }
     private:
 
         std::unique_ptr<WaveDisplayComponent> waveDisplay;
-        Label timecodeDisplayLabel,
-              gainLabel  { {}, "Throughput level:" },
-              delayLabel { {}, "Delay:" };
+        Label gainLabel{ {}, "Throughput level:" },
+            delayLabel{ {}, "Delay:" };
 
         Slider gainSlider, delaySlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment, delayAttachment;
         Colour backgroundColour;
-        ScrollBar scrollbar{ false };
+        ScrollBar hscrollbar{ false };
+        ScrollBar vscrollbar{ true };
+        ShapeButton recordbutton{ "Rec",Colours::darkred, Colours::darkred, Colours::darkred  };
         Range<double> visibleRange;
 
         // these are used to persist the UI's size - the values are stored along with the
@@ -765,61 +840,6 @@ private:
             return static_cast<JuceDemoPluginAudioProcessor&> (processor);
         }
 
-        //==============================================================================
-        // quick-and-dirty function to format a timecode string
-        static String timeToTimecodeString (double seconds)
-        {
-            auto millisecs = roundToInt (seconds * 1000.0);
-            auto absMillisecs = std::abs (millisecs);
-
-            return String::formatted ("%02d:%02d:%02d.%03d",
-                                      millisecs / 3600000,
-                                      (absMillisecs / 60000) % 60,
-                                      (absMillisecs / 1000)  % 60,
-                                      absMillisecs % 1000);
-        }
-
-        // quick-and-dirty function to format a bars/beats string
-        static String quarterNotePositionToBarsBeatsString (double quarterNotes, AudioPlayHead::TimeSignature sig)
-        {
-            if (sig.numerator == 0 || sig.denominator == 0)
-                return "1|1|000";
-
-            auto quarterNotesPerBar = (sig.numerator * 4 / sig.denominator);
-            auto beats  = (fmod (quarterNotes, quarterNotesPerBar) / quarterNotesPerBar) * sig.numerator;
-
-            auto bar    = ((int) quarterNotes) / quarterNotesPerBar + 1;
-            auto beat   = ((int) beats) + 1;
-            auto ticks  = ((int) (fmod (beats, 1.0) * 960.0 + 0.5));
-
-            return String::formatted ("%d|%d|%03d", bar, beat, ticks);
-        }
-
-        // Updates the text in our position label.
-        void updateTimecodeDisplay (const AudioPlayHead::PositionInfo& pos)
-        {
-            MemoryOutputStream displayText;
-
-            const auto sig = pos.getTimeSignature().orFallback (AudioPlayHead::TimeSignature{});
-
-            displayText << "[" << SystemStats::getJUCEVersion() << "]   "
-                        << String (pos.getBpm().orFallback (120.0), 2) << " bpm, "
-                        << sig.numerator << '/' << sig.denominator
-                        << "  -  " << timeToTimecodeString (pos.getTimeInSeconds().orFallback (0.0))
-                        << "  -  " << quarterNotePositionToBarsBeatsString (pos.getPpqPosition().orFallback (0.0), sig);
-
-            if (pos.getIsRecording())
-                displayText << "  (recording)";
-            else if (pos.getIsPlaying())
-                displayText << "  (playing)";
-
-            timecodeDisplayLabel.setText (displayText.toString(), dontSendNotification);
-        }
-
-        void updateWaveDisplay(const AudioBuffer<float>& amps)
-        {
-
-        }
         // called when the stored window size changes
         void valueChanged (Value&) override
         {
@@ -856,7 +876,7 @@ private:
         // Now ask the host for the current time so we can store it to be displayed later...
         updateCurrentTimeInfoFromHost();   
 
-        lastAmps.add(buffer);
+        if (isRecording()) lastAmps.add(buffer);
     }
 
     template <typename FloatType>
@@ -894,7 +914,9 @@ private:
 
         delayPosition = delayPos;
     }
+    juce::SpinLock mutex;
 
+    bool _recording = false;
     AudioBuffer<float> delayBufferFloat;
     AudioBuffer<double> delayBufferDouble;
 
