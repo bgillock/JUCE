@@ -117,7 +117,7 @@ public:
             JUCE_CATCH_EXCEPTION
 
             // avoid getting stuck in a loop if a timer callback repeatedly takes too long
-            if (Time::getMillisecondCounter() > timeout)
+             if (Time::getMillisecondCounter() > timeout)
                 break;
         }
 

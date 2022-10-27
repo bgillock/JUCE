@@ -53,25 +53,32 @@
 #pragma once
 #include <stdio.h>
 
-class SpinLockedAmps
+static PerformanceCounter spinlockedampsadd("SpinLockedAmps.add");
+static PerformanceCounter spinlockedampsget("SpinLockedAmps.get");
+static PerformanceCounter drawampsanno("DrawAmpsAnno");
+static PerformanceCounter drawtimeanno("DrawTimeAnno");
+static PerformanceCounter drawamps("DrawAmps");
+
+class SpinLockedAmps 
 {
 public:
-    void init(const int size, const bool isUsingDoublePrecision)
+    void init(const int size, const bool isUsingDoublePrecision, int nchannels)
     {
         if (isUsingDoublePrecision)
         {
-            _doubleAmps.setSize(2, size);
+            _doubleAmps.setSize(nchannels, size);
             _floatAmps.setSize(1, 1);
         }
         else
         {
-            _floatAmps.setSize(2, size);
+            _floatAmps.setSize(nchannels, size);
             _doubleAmps.setSize(1, 1);
         }
         _nSamples = 0;
         _startIndex = 0;
         _isFloat = !isUsingDoublePrecision;
         _bufferSize = size;
+        _nChannels = nchannels;
     }
     // Wait-free, but setting new info may fail if the main thread is currently
     // calling `get`. This is unlikely to matter in practice because
@@ -99,6 +106,8 @@ public:
     template <typename FloatType>
     void add(AudioBuffer<FloatType>& newAmps)
     {
+        spinlockedampsadd.start();
+
         const juce::SpinLock::ScopedTryLockType lock(mutex);
 
         if (lock.isLocked() && (_isFloat))
@@ -173,9 +182,11 @@ public:
             _nSamples = newNSamples;
             if (_nSamples > _maxNSamples) _maxNSamples = _nSamples;
         }
+        spinlockedampsadd.stop();
     }
     AudioBuffer<float> getFloat() noexcept
     {
+        spinlockedampsget.start();
         const juce::SpinLock::ScopedLockType lock(mutex);
         AudioBuffer<float> _returnAmps(_floatAmps.getNumChannels(), _nSamples);
         jassert(_isFloat);
@@ -198,6 +209,7 @@ public:
         }
         //_startIndex = 0;
         //_nSamples = 0;
+        spinlockedampsget.stop();
         return _returnAmps;
     }
 
@@ -239,12 +251,17 @@ public:
     {
         return _bufferSize;
     }
+    int getNChannels()
+    {
+        return _nChannels;
+    }
 private:
     juce::SpinLock mutex;
     bool _isFloat;
     int _nSamples;
     int _startIndex;
     int _maxNSamples = 0;
+    int _nChannels = 0;
     int _bufferSize = 0;
     AudioBuffer<float> _floatAmps;
     AudioBuffer<double> _doubleAmps;
@@ -255,22 +272,29 @@ class WaveDisplayComponent : public Component
 public:
     WaveDisplayComponent(bool isUsingDoublePrecision) {
         setSize(400, 100);
-        _amps.init(48000.0*5.0, isUsingDoublePrecision);
+        _amps.init(48000.0*5.0, isUsingDoublePrecision, 4);
         _startSample = 0;
-        _samplesPerPixel = 20.0;
+        _samplesPerPixel = 1.0;
         _viewSizePixels = 400;
         _vscale = 0.5;
     }
     void restartBuffer()
     {
-        _amps.init(_amps.getMaxSize(), !_amps.isFloat());
+        _amps.init(_amps.getMaxSize(), !_amps.isFloat(), _amps.getNChannels());
     }
+
+    void setSamplesPerPixel(double spp)
+    {
+        _samplesPerPixel = std::min<double>(spp, 100.0);
+        _samplesPerPixel = std::max<double>(_samplesPerPixel, 0.1);
+    }
+
     void setStartSample(int startSample)
     {
         jassert(startSample >= 0.0);
         Range<double> sampleRange = getViewRange();
-        if (startSample > getBufferSize() - sampleRange.getLength())
-            startSample = getBufferSize() - sampleRange.getLength();
+        if (startSample > getBufferSize() - sampleRange.getLength() - 1)
+            startSample = std::max<int>(getBufferSize() - sampleRange.getLength() - 1,0);
         _startSample = startSample;
         repaint();
     }
@@ -293,14 +317,15 @@ public:
         return Range<double>(_startSample, endSample);
     }
     // enum { height = 30 };
-    void addAmps(AudioBuffer<float>& newBuffer)
+    void addAmps(AudioBuffer<float>& buffer)
     {
-        _amps.add(newBuffer);
+        _amps.add(buffer);
     }
-    void addAmps(AudioBuffer<double>& newBuffer)
+    void addAmps(AudioBuffer<double>& buffer)
     {
-        _amps.add(newBuffer);
+        _amps.add(buffer);
     }
+    
     void addPair(StringPairArray& pairs, String format, float v, float pixel)
     {
         char buffer[50];
@@ -355,7 +380,7 @@ public:
         float textWidth = 40.0;
         float textHeight = 11.0;
         float tickLength = 5.0;
-
+        drawampsanno.start();
         // Draw float amp annotiation
         StringPairArray ampAnnoPos = get_anno_pairs(0.0, (1.0-_vscale), middleY, topY, 0.1, "%-.1f");
         for (auto& key : ampAnnoPos.getAllKeys())
@@ -370,6 +395,7 @@ public:
             g.drawText(key, leftX - textWidth - tickLength, ampAnnoNeg[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredRight);
             g.drawLine(leftX - tickLength, ampAnnoNeg[key].getFloatValue(), rightX, ampAnnoNeg[key].getFloatValue(),1.0);
         }
+        drawampsanno.stop();
 
         int startSample = _startSample;
         float samplesPerPixel = _samplesPerPixel;
@@ -379,6 +405,7 @@ public:
         _viewSizePixels = rightX - leftX + 1;
         int numSamples = (rightX - leftX) * samplesPerPixel;
 
+        drawtimeanno.start();
         // Draw sample numbers
         StringPairArray sampleNumAnno = get_anno_pairs(startSample, startSample+numSamples, leftX, rightX, 1000.0, "%5.f");
         for (auto& key : sampleNumAnno.getAllKeys())
@@ -396,13 +423,15 @@ public:
             g.drawText(key, secondsAnno[key].getFloatValue() - textWidth / 2.0, bottomY + tickLength + textHeight + 2.0, textWidth, textHeight, Justification::centredRight);
             g.drawLine(secondsAnno[key].getFloatValue(), topY, secondsAnno[key].getFloatValue(), bottomY + textHeight + 2.0 + tickLength, 1.0);
         }
+        drawtimeanno.stop();
 
-
+        drawamps.start();
+        // display pre (channel 0)
         if ((_amps.getCurrentSize() > 0) && (_amps.isFloat()))
         {
             AudioBuffer<float> floatAmps = _amps.getFloat();
             float lastAmp = floatAmps.getSample(0, startSample) * scale;
-            g.setColour(Colours::white);
+            g.setColour(Colours::red);
             for (int i = startSample; i < std::min(floatAmps.getNumSamples(),startSample + numSamples); i++)
             {
                 // just do left for now
@@ -415,7 +444,7 @@ public:
         {
             AudioBuffer<float> doubleAmps = _amps.getFloat();
             double lastAmp = doubleAmps.getSample(0, startSample) * scale;
-            g.setColour(Colours::white);
+            g.setColour(Colours::red);
             for (int i = startSample; i < std::min(doubleAmps.getNumSamples(), startSample + numSamples); i++)
             {
                 auto thisAmp = doubleAmps.getSample(0, i) * scale;
@@ -423,6 +452,34 @@ public:
                 lastAmp = thisAmp;
             }
         }
+
+        // display post (channel 2)
+        if ((_amps.getCurrentSize() > 0) && (_amps.isFloat()))
+        {
+            AudioBuffer<float> floatAmps = _amps.getFloat();
+            float lastAmp = floatAmps.getSample(2, startSample) * scale;
+            g.setColour(Colours::white);
+            for (int i = startSample; i < std::min(floatAmps.getNumSamples(), startSample + numSamples); i++)
+            {
+                // just do left for now
+                auto thisAmp = floatAmps.getSample(2, i) * scale;
+                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
+                lastAmp = thisAmp;
+            }
+        }
+        if ((_amps.getCurrentSize() > 0) && (!_amps.isFloat()))
+        {
+            AudioBuffer<float> doubleAmps = _amps.getFloat();
+            double lastAmp = doubleAmps.getSample(2, startSample) * scale;
+            g.setColour(Colours::white);
+            for (int i = startSample; i < std::min(doubleAmps.getNumSamples(), startSample + numSamples); i++)
+            {
+                auto thisAmp = doubleAmps.getSample(2, i) * scale;
+                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
+                lastAmp = thisAmp;
+            }
+        }
+        drawamps.stop();
     }
 
     void resized() override
@@ -436,6 +493,7 @@ private:
     double _samplesPerPixel;
     int _viewSizePixels;
     double _vscale;
+
 };
 
 //==============================================================================
@@ -478,15 +536,20 @@ public:
     {
         if (isUsingDoublePrecision())
         {
-            delayBufferDouble.setSize(2, 12000);
+            delayBufferDouble.setSize(2, 12000); 
             delayBufferFloat.setSize(1, 1);
+            captureBufferDouble.setSize(4, 12000);
+            captureBufferFloat.setSize(1, 1);
         }
         else
         {
             delayBufferFloat.setSize(2, 12000);
             delayBufferDouble.setSize(1, 1);
+            captureBufferFloat.setSize(4, 12000);            
+            captureBufferDouble.setSize(1, 1);
         }
-        lastAmps.init(12000, isUsingDoublePrecision());
+
+        amps.init(12000, isUsingDoublePrecision(), 4);
 
         reset();
     }
@@ -504,6 +567,8 @@ public:
         // means there's been a break in the audio's continuity.
         delayBufferFloat .clear();
         delayBufferDouble.clear();
+        captureBufferFloat.clear();
+        captureBufferDouble.clear();
     }
 
     //==============================================================================
@@ -612,7 +677,6 @@ public:
     bool isRecording()
     {
         const juce::SpinLock::ScopedTryLockType lock(mutex);
-
         return _recording;
     }
 
@@ -625,8 +689,7 @@ public:
     // callback - the UI component will read this and display it.
     SpinLockedPosInfo lastPosInfo;
 
-    // this keeps a copy of the last set of amplitudes after processing
-    SpinLockedAmps lastAmps;
+    SpinLockedAmps amps;
 
     // Our plug-in's current state
     AudioProcessorValueTreeState state;
@@ -751,13 +814,13 @@ private:
             {
                 if (!getProcessor().isUsingDoublePrecision())
                 {
-                    waveDisplay->addAmps(getProcessor().lastAmps.getFloat());
-                    getProcessor().lastAmps.init(12000, false);
+                    waveDisplay->addAmps(getProcessor().amps.getFloat());
+                    getProcessor().amps.init(12000, false, 4);
                 }
                 else
                 {
-                    waveDisplay->addAmps(getProcessor().lastAmps.getDouble());
-                    getProcessor().lastAmps.init(12000, true);
+                    waveDisplay->addAmps(getProcessor().amps.getDouble());
+                    getProcessor().amps.init(12000, true, 4);
                 }
 
                 waveDisplay->repaint();
@@ -812,6 +875,11 @@ private:
                 else if (!recordbutton.getToggleState() && getProcessor().isRecording())
                 {
                     getProcessor().setRecording(false);
+                    spinlockedampsadd.printStatistics();
+                    spinlockedampsget.printStatistics();
+                    drawampsanno.printStatistics();
+                    drawtimeanno.printStatistics();
+                    drawamps.printStatistics();
                 }
             }
         }
@@ -854,8 +922,13 @@ private:
         auto gainParamValue  = state.getParameter ("gain") ->getValue();
         auto delayParamValue = state.getParameter ("delay")->getValue();
         auto numSamples = buffer.getNumSamples();
-
+        auto numChannels = buffer.getNumChannels();
         if (buffer.hasBeenCleared()) return;
+        captureBufferFloat.clear();
+        for (int i = 0; i < numChannels; i++)
+        {
+            captureBufferFloat.copyFrom(i, 0, (float *)buffer.getReadPointer(i), numSamples);
+        }
 
         // In case we have more outputs than inputs, we'll clear any output
         // channels that didn't contain input data, (because these aren't
@@ -872,11 +945,12 @@ private:
         // Apply our gain change to the outgoing data..
         applyGain (buffer, delayBuffer, gainParamValue);
 
-
-        // Now ask the host for the current time so we can store it to be displayed later...
-        updateCurrentTimeInfoFromHost();   
-
-        if (isRecording()) lastAmps.add(buffer);
+        for (int i = 0; i < numChannels; i++)
+        {
+            captureBufferFloat.copyFrom(numChannels + i, 0, (float *)buffer.getReadPointer(i), numSamples);
+        }
+        captureBufferFloat.setSize(4, numSamples, true);
+        amps.add(captureBufferFloat);
     }
 
     template <typename FloatType>
@@ -919,26 +993,14 @@ private:
     bool _recording = false;
     AudioBuffer<float> delayBufferFloat;
     AudioBuffer<double> delayBufferDouble;
+    AudioBuffer<float> captureBufferFloat;
+    AudioBuffer<double> captureBufferDouble;
+
 
     int delayPosition = 0;
 
     CriticalSection trackPropertiesLock;
     TrackProperties trackProperties;
-
-    void updateCurrentTimeInfoFromHost()
-    {
-        const auto newInfo = [&]
-        {
-            if (auto* ph = getPlayHead())
-                if (auto result = ph->getPosition())
-                    return *result;
-
-            // If the host fails to provide the current time, we'll just use default values
-            return AudioPlayHead::PositionInfo{};
-        }();
-
-        lastPosInfo.set (newInfo);
-    }
 
     static BusesProperties getBusesProperties()
     {

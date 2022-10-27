@@ -3189,6 +3189,9 @@
   <ItemGroup>
     <ResourceCompile Include=".\resources.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="RecordButton.bmp" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
 </Project>

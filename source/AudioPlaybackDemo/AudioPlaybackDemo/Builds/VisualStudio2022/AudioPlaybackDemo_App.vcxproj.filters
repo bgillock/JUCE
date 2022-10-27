@@ -5473,4 +5473,9 @@
       <Filter>JUCE Library Code</Filter>
     </ResourceCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="RecordButton.bmp">
+      <Filter>AudioPlaybackDemo\Assets</Filter>
+    </Image>
+  </ItemGroup>
 </Project>
