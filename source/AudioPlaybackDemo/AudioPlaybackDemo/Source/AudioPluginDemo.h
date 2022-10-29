@@ -272,9 +272,9 @@ class WaveDisplayComponent : public Component
 public:
     WaveDisplayComponent(bool isUsingDoublePrecision) {
         setSize(400, 100);
-        _amps.init(48000.0*5.0, isUsingDoublePrecision, 4);
+        _amps.init(48000.0 * 5.0, isUsingDoublePrecision, 4);
         _startSample = 0;
-        _samplesPerPixel = 1.0;
+        _samplesPerPixel = 10.0;
         _viewSizePixels = 400;
         _vscale = 0.5;
     }
@@ -294,14 +294,14 @@ public:
         jassert(startSample >= 0.0);
         Range<double> sampleRange = getViewRange();
         if (startSample > getBufferSize() - sampleRange.getLength() - 1)
-            startSample = std::max<int>(getBufferSize() - sampleRange.getLength() - 1,0);
+            startSample = std::max<int>(getBufferSize() - sampleRange.getLength() - 1, 0);
         _startSample = startSample;
         repaint();
     }
 
     void setVerticalScale(double scale)
     {
-        _vscale = std::max(scale,0.1);
+        _vscale = std::max(scale, 0.1);
         repaint();
     }
 
@@ -325,7 +325,7 @@ public:
     {
         _amps.add(buffer);
     }
-    
+
     void addPair(StringPairArray& pairs, String format, float v, float pixel)
     {
         char buffer[50];
@@ -362,6 +362,90 @@ public:
         return pairs;
     }
 
+    void drawFloatAmps(Graphics& g, int startSample, double scale, int numSamples, int channel,
+                       int leftX, int middleY, double samplesPerPixel, Colour color, bool minmax = false) // avg = !minmax
+    {
+        if ((_amps.getCurrentSize() > 0) && (_amps.isFloat()))
+        {
+            AudioBuffer<float> floatAmps = _amps.getFloat();
+            float lastAmp = floatAmps.getSample(channel, startSample) * scale;
+            int n = std::min(floatAmps.getNumSamples(), startSample + numSamples);
+            g.setColour(color);
+
+            if (samplesPerPixel < 1.5)
+            {
+                // draw lines from sample to sample
+                for (int i = startSample; i < n; i++)
+                {
+                    // just do left for now
+                    auto thisAmp = floatAmps.getSample(channel, i) * scale;
+                    g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
+                    lastAmp = thisAmp;
+                }
+            }
+            else
+            {
+                // draw 1 pix wide vertical rectangles from min-max within pixel
+                int thisX = leftX; 
+                int endX = leftX + (int)((double)n / samplesPerPixel) + 1;
+
+                if (minmax)
+                {
+                    Range<int> mm = Range<int>((int)lastAmp, (int)lastAmp);
+                    for (int i = startSample + 1; i < n; i++)
+                    {
+                        int x = leftX + ((float)(i - startSample - 1.0) / samplesPerPixel);
+                        auto thisAmp = floatAmps.getSample(channel, i) * scale;
+                        if (x > thisX)
+                        {
+                            g.drawRect(Rectangle<float>(thisX, middleY + mm.getStart(), 1, mm.getLength()));
+                            thisX = x;
+                            mm = Range<int>((int)lastAmp, (int)lastAmp);
+                        }
+                        mm = mm.getUnionWith((int)thisAmp);
+                        lastAmp = thisAmp;
+                    }
+                    g.drawRect(Rectangle<float>(thisX, middleY + mm.getStart(), 1, std::max(mm.getLength(), 1)));
+                }
+                else
+                {
+                    StatisticsAccumulator<float> avg = StatisticsAccumulator<float>();
+                    avg.addValue(lastAmp);
+                    const double pps = 1.0 / samplesPerPixel;
+                    int i = startSample + 1;
+                    double s = 0.0;
+                    int x = leftX + s;
+                    while ((x == thisX) && (i < n))
+                    {
+                        auto thisAmp = floatAmps.getSample(channel, i) * scale;
+                        avg.addValue(thisAmp);
+                        i++;
+                        s += pps;
+                        x = leftX + s;
+                    };
+                    auto lastAvg = avg.getAverage();
+                    avg.reset();
+                    thisX = x;
+                    while (i < n)
+                    {
+                        int x = leftX + s;
+                        auto thisAmp = floatAmps.getSample(channel, i) * scale;
+                        if (x > thisX)
+                        {
+                            g.drawLine(thisX-1, middleY + (int)lastAvg, thisX, middleY + (int)avg.getAverage());
+                            thisX = x;
+                            lastAvg = avg.getAverage();
+                            avg.reset();
+                        }
+                        avg.addValue(thisAmp);
+                        i++;
+                        s += pps;
+                    }
+                    if (avg.getCount() > 0) g.drawLine(thisX - 1, middleY + (int)lastAvg, thisX, middleY + (int)avg.getAverage());
+                }
+            }
+        }
+    }
     void paint(Graphics& g) override
     {
         
@@ -427,58 +511,11 @@ public:
 
         drawamps.start();
         // display pre (channel 0)
-        if ((_amps.getCurrentSize() > 0) && (_amps.isFloat()))
-        {
-            AudioBuffer<float> floatAmps = _amps.getFloat();
-            float lastAmp = floatAmps.getSample(0, startSample) * scale;
-            g.setColour(Colours::red);
-            for (int i = startSample; i < std::min(floatAmps.getNumSamples(),startSample + numSamples); i++)
-            {
-                // just do left for now
-                auto thisAmp = floatAmps.getSample(0, i) * scale;
-                g.drawLine(leftX + ((float)(i - startSample - 1.0)/samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
-                lastAmp = thisAmp;
-            }
-        }
-        if ((_amps.getCurrentSize() > 0) && (!_amps.isFloat()))
-        {
-            AudioBuffer<float> doubleAmps = _amps.getFloat();
-            double lastAmp = doubleAmps.getSample(0, startSample) * scale;
-            g.setColour(Colours::red);
-            for (int i = startSample; i < std::min(doubleAmps.getNumSamples(), startSample + numSamples); i++)
-            {
-                auto thisAmp = doubleAmps.getSample(0, i) * scale;
-                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
-                lastAmp = thisAmp;
-            }
-        }
+        drawFloatAmps(g, startSample, scale, numSamples, 0, leftX, middleY, samplesPerPixel, Colours::red);
 
         // display post (channel 2)
-        if ((_amps.getCurrentSize() > 0) && (_amps.isFloat()))
-        {
-            AudioBuffer<float> floatAmps = _amps.getFloat();
-            float lastAmp = floatAmps.getSample(2, startSample) * scale;
-            g.setColour(Colours::white);
-            for (int i = startSample; i < std::min(floatAmps.getNumSamples(), startSample + numSamples); i++)
-            {
-                // just do left for now
-                auto thisAmp = floatAmps.getSample(2, i) * scale;
-                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
-                lastAmp = thisAmp;
-            }
-        }
-        if ((_amps.getCurrentSize() > 0) && (!_amps.isFloat()))
-        {
-            AudioBuffer<float> doubleAmps = _amps.getFloat();
-            double lastAmp = doubleAmps.getSample(2, startSample) * scale;
-            g.setColour(Colours::white);
-            for (int i = startSample; i < std::min(doubleAmps.getNumSamples(), startSample + numSamples); i++)
-            {
-                auto thisAmp = doubleAmps.getSample(2, i) * scale;
-                g.drawLine(leftX + ((float)(i - startSample - 1.0) / samplesPerPixel), middleY + (lastAmp), leftX + ((float)(i - startSample) / samplesPerPixel), middleY + (thisAmp), 1.0);
-                lastAmp = thisAmp;
-            }
-        }
+        drawFloatAmps(g, startSample, scale, numSamples, 2, leftX, middleY, samplesPerPixel, Colours::white);
+
         drawamps.stop();
     }
 
