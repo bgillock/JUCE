@@ -543,10 +543,10 @@ public:
     JuceDemoPluginAudioProcessor()
         : AudioProcessor (getBusesProperties()),
           state (*this, nullptr, "state",
-                 { std::make_unique<AudioParameterFloat> (ParameterID { "gain",  1 }, "Gain",           NormalisableRange<float> (0.0f, 10.0f), 0.9f),
-                   std::make_unique<AudioParameterFloat> (ParameterID { "delay", 1 }, "Delay Feedback", NormalisableRange<float> (0.0f, 1.0f), 0.5f),
-                   std::make_unique<AudioParameterFloat>(ParameterID { "vscale",  1 }, "Vertical Scale",NormalisableRange<float>(0.1f, 1.0f), 0.5f),
-                   std::make_unique<AudioParameterFloat>(ParameterID { "hscale",  1 }, "Horizontal Scale",NormalisableRange<float>(0.1f, 100.0f), 2.0f) })
+                 { std::make_unique<AudioParameterFloat> (ParameterID { "threshold",  1 }, "Threshold",     NormalisableRange<float> (0.0f, 1.0f), 0.6f),
+                   std::make_unique<AudioParameterFloat> (ParameterID { "release", 1 }, "Release",          NormalisableRange<float> (0.0f, 250.0f), 25.0f),
+                   std::make_unique<AudioParameterFloat> (ParameterID { "vscale",  1 }, "Vertical Scale",    NormalisableRange<float>(0.1f, 1.0f), 0.5f),
+                   std::make_unique<AudioParameterFloat> (ParameterID { "hscale",  1 }, "Horizontal Scale",  NormalisableRange<float>(0.1f, 100.0f), 2.0f) })
     {
         // Add a sub-tree to store the state of our UI
         state.state.addChild ({ "uiState", { { "width",  400 }, { "height", 500 } }, {} }, -1, nullptr);
@@ -576,15 +576,11 @@ public:
     {
         if (isUsingDoublePrecision())
         {
-            delayBufferDouble.setSize(2, 12000); 
-            delayBufferFloat.setSize(1, 1);
             captureBufferDouble.setSize(4, 12000);
             captureBufferFloat.setSize(1, 1);
         }
         else
         {
-            delayBufferFloat.setSize(2, 12000);
-            delayBufferDouble.setSize(1, 1);
             captureBufferFloat.setSize(4, 12000);            
             captureBufferDouble.setSize(1, 1);
         }
@@ -605,8 +601,6 @@ public:
     {
         // Use this method as the place to clear any delay lines, buffers, etc, as it
         // means there's been a break in the audio's continuity.
-        delayBufferFloat .clear();
-        delayBufferDouble.clear();
         captureBufferFloat.clear();
         captureBufferDouble.clear();
     }
@@ -615,13 +609,13 @@ public:
     void processBlock (AudioBuffer<float>& buffer, MidiBuffer& midiMessages) override
     {
         jassert (! isUsingDoublePrecision());
-        process (buffer, midiMessages, delayBufferFloat);
+        process (buffer, midiMessages);
     }
 
     void processBlock (AudioBuffer<double>& buffer, MidiBuffer& midiMessages) override
     {
         jassert (isUsingDoublePrecision());
-        process (buffer, midiMessages, delayBufferDouble);
+        process (buffer, midiMessages);
     }
 
     //==============================================================================
@@ -747,24 +741,24 @@ private:
     public:
         JuceDemoPluginAudioProcessorEditor(JuceDemoPluginAudioProcessor& owner)
             : AudioProcessorEditor(owner),
-            gainAttachment(owner.state, "gain", gainSlider),
-            delayAttachment(owner.state, "delay", delaySlider),
+            thresholdAttachment(owner.state, "threshold", thresholdSlider),
+            releaseAttachment(owner.state, "release", releaseSlider),
             vscaleAttachment(owner.state, "vscale", vscaleSlider),
             hscaleAttachment(owner.state, "hscale", hscaleSlider)
         {
             // add some sliders..
-            addAndMakeVisible(gainSlider);
-            gainSlider.setSliderStyle(Slider::Rotary);
+            addAndMakeVisible(thresholdSlider);
+            thresholdSlider.setSliderStyle(Slider::Rotary);
 
-            addAndMakeVisible(delaySlider);
-            delaySlider.setSliderStyle(Slider::Rotary);
+            addAndMakeVisible(releaseSlider);
+            releaseSlider.setSliderStyle(Slider::Rotary);
 
             // add some labels for the sliders..
-            gainLabel.attachToComponent(&gainSlider, false);
-            gainLabel.setFont(Font(11.0f));
+            thresholdLabel.attachToComponent(&thresholdSlider, false);
+            thresholdLabel.setFont(Font(11.0f));
 
-            delayLabel.attachToComponent(&delaySlider, false);
-            delayLabel.setFont(Font(11.0f));
+            releaseLabel.attachToComponent(&releaseSlider, false);
+            releaseLabel.setFont(Font(11.0f));
 
             waveDisplay = std::make_unique<WaveDisplayComponent>(&getProcessor().state,getProcessor().isUsingDoublePrecision());
             addAndMakeVisible(*waveDisplay);
@@ -823,10 +817,10 @@ private:
 
             r.removeFromTop(20);
             auto sliderArea = r.removeFromTop(60);
-            gainSlider.setBounds(sliderArea.removeFromLeft(jmin(180, sliderArea.getWidth() / 2)));
-            delaySlider.setBounds(sliderArea.removeFromLeft(jmin(180, sliderArea.getWidth())));
+            thresholdSlider.setBounds(sliderArea.removeFromLeft(jmin(180, sliderArea.getWidth() / 2)));
+            releaseSlider.setBounds(sliderArea.removeFromLeft(jmin(180, sliderArea.getWidth())));
 
-            auto sliderv = gainSlider.getBounds();
+            auto sliderv = thresholdSlider.getBounds();
             r.setTop(sliderv.getBottom() + 10);
             
             auto harea = r.removeFromBottom(20);
@@ -874,10 +868,10 @@ private:
 
         int getControlParameterIndex(Component& control) override
         {
-            if (&control == &gainSlider)
+            if (&control == &thresholdSlider)
                 return 0;
 
-            if (&control == &delaySlider)
+            if (&control == &releaseSlider)
                 return 1;
 
             if (&control == &vscaleSlider)
@@ -940,11 +934,11 @@ private:
     private:
 
         std::unique_ptr<WaveDisplayComponent> waveDisplay;
-        Label gainLabel{ {}, "Throughput level:" },
-            delayLabel{ {}, "Delay:" };
+        Label thresholdLabel{ {}, "Threshold level:" },
+            releaseLabel{ {}, "Release Time:" };
 
-        Slider gainSlider, delaySlider, vscaleSlider, hscaleSlider;
-        AudioProcessorValueTreeState::SliderAttachment gainAttachment, delayAttachment, vscaleAttachment, hscaleAttachment;
+        Slider thresholdSlider, releaseSlider, vscaleSlider, hscaleSlider;
+        AudioProcessorValueTreeState::SliderAttachment thresholdAttachment, releaseAttachment, vscaleAttachment, hscaleAttachment;
         Colour backgroundColour;
         ScrollBar hscrollbar{ false };
         ShapeButton recordbutton{ "Rec",Colours::darkred, Colours::darkred, Colours::darkred  };
@@ -970,10 +964,10 @@ private:
 
     //==============================================================================
     template <typename FloatType>
-    void process (AudioBuffer<FloatType>& buffer, MidiBuffer& midiMessages, AudioBuffer<FloatType>& delayBuffer)
+    void process (AudioBuffer<FloatType>& buffer, MidiBuffer& midiMessages)
     {
-        auto gainParamValue  = state.getParameter ("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
-        auto delayParamValue = state.getParameter ("delay")->getValue();
+        auto thresholdParamValue  = state.getParameter ("threshold")->getNormalisableRange().convertFrom0to1(state.getParameter("threshold")->getValue());
+        auto releaseParamValue = state.getParameter("release")->getNormalisableRange().convertFrom0to1(state.getParameter("release")->getValue());
         auto numSamples = buffer.getNumSamples();
         auto numChannels = buffer.getNumChannels();
         if (buffer.hasBeenCleared()) return;
@@ -993,10 +987,8 @@ private:
         // synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
 
         // Apply our delay effect to the new output..
-        applyDelay (buffer, delayBuffer, delayParamValue);
+        applyCompression (buffer, thresholdParamValue, releaseParamValue);
 
-        // Apply our gain change to the outgoing data..
-        applyGain (buffer, delayBuffer, gainParamValue);
 
         for (int i = 0; i < numChannels; i++)
         {
@@ -1007,16 +999,7 @@ private:
     }
 
     template <typename FloatType>
-    void applyGain (AudioBuffer<FloatType>& buffer, AudioBuffer<FloatType>& delayBuffer, float gainLevel)
-    {
-        ignoreUnused (delayBuffer);
-
-        for (auto channel = 0; channel < getTotalNumOutputChannels(); ++channel)
-            buffer.applyGain (channel, 0, buffer.getNumSamples(), gainLevel);
-    }
-
-    template <typename FloatType>
-    void applyDelay (AudioBuffer<FloatType>& buffer, AudioBuffer<FloatType>& delayBuffer, float delayLevel)
+    void applyCompression (AudioBuffer<FloatType>& buffer, float thresholdLevel, float releaseTime)
     {
         auto numSamples = buffer.getNumSamples();
 
@@ -1025,32 +1008,20 @@ private:
         for (auto channel = 0; channel < getTotalNumOutputChannels(); ++channel)
         {
             auto channelData = buffer.getWritePointer (channel);
-            auto delayData = delayBuffer.getWritePointer (jmin (channel, delayBuffer.getNumChannels() - 1));
-            delayPos = delayPosition;
-
+            
             for (auto i = 0; i < numSamples; ++i)
             {
                 auto in = channelData[i];
-                channelData[i] += delayData[delayPos];
-                delayData[delayPos] = (delayData[delayPos] + in) * delayLevel;
 
-                if (++delayPos >= delayBuffer.getNumSamples())
-                    delayPos = 0;
             }
         }
-
-        delayPosition = delayPos;
     }
     juce::SpinLock mutex;
 
     bool _recording = false;
-    AudioBuffer<float> delayBufferFloat;
-    AudioBuffer<double> delayBufferDouble;
+
     AudioBuffer<float> captureBufferFloat;
     AudioBuffer<double> captureBufferDouble;
-
-
-    int delayPosition = 0;
 
     CriticalSection trackPropertiesLock;
     TrackProperties trackProperties;
