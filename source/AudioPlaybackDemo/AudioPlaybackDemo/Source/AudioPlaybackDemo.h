@@ -90,6 +90,9 @@ public:
 
         currentPositionMarker.setFill (Colours::white.withAlpha (0.85f));
         addAndMakeVisible (currentPositionMarker);
+
+        loopRangeArea.setFill(Colours::blue.withAlpha(0.25f));
+        addAndMakeVisible(loopRangeArea);
     }
 
     ~DemoThumbnailComp() override
@@ -182,17 +185,23 @@ public:
 
     void mouseDown (const MouseEvent& e) override
     {
-        mouseDrag (e);
+        loopRangeArea.setVisible(true);
+        startLoopX = e.x;
+
+        loopRangeArea.setRectangle(Rectangle<float>(startLoopX, 0,
+            1.5f, (float)(getHeight() - scrollbar.getHeight())));
     }
 
     void mouseDrag (const MouseEvent& e) override
     {
-        if (canMoveTransport())
-            transportSource.setPosition (jmax (0.0, xToTime ((float) e.x)));
+        loopRangeArea.setRectangle(Rectangle<float>(startLoopX, 0,
+            e.x-startLoopX, (float)(getHeight() - scrollbar.getHeight())));
     }
 
-    void mouseUp (const MouseEvent&) override
+    void mouseUp (const MouseEvent& e) override
     {
+        endLoopX = e.x;
+        transportSource.setPosition(jmax(0.0, xToTime((float)startLoopX)));
         transportSource.start();
     }
 
@@ -223,8 +232,11 @@ private:
     Range<double> visibleRange;
     bool isFollowingTransport = false;
     URL lastFileDropped;
+    int startLoopX;
+    int endLoopX;
 
     DrawableRectangle currentPositionMarker;
+    DrawableRectangle loopRangeArea;
 
     float timeToX (const double time) const
     {
@@ -265,6 +277,12 @@ private:
 
         currentPositionMarker.setRectangle (Rectangle<float> (timeToX (transportSource.getCurrentPosition()) - 0.75f, 0,
                                                               1.5f, (float) (getHeight() - scrollbar.getHeight())));
+
+        if ((endLoopX > startLoopX) && (timeToX(transportSource.getCurrentPosition()) > endLoopX))
+        {
+            transportSource.setPosition(jmax(0.0, xToTime((float)startLoopX)));
+            transportSource.start();
+        }
     }
 };
 
