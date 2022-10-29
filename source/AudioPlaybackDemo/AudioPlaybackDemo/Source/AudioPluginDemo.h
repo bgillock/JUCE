@@ -270,8 +270,9 @@ private:
 class WaveDisplayComponent : public Component
 {
 public:
-    WaveDisplayComponent(bool isUsingDoublePrecision) {
+    WaveDisplayComponent(AudioProcessorValueTreeState *state, bool isUsingDoublePrecision) {
         setSize(400, 100);
+        _state = state;
         _amps.init(48000.0 * 5.0, isUsingDoublePrecision, 4);
         _startSample = 0;
         _samplesPerPixel = 10.0;
@@ -448,7 +449,7 @@ public:
     }
     void paint(Graphics& g) override
     {
-        
+        _vscale = _state->getParameter("vscale")->getNormalisableRange().convertFrom0to1(_state->getParameter("vscale")->getValue());
         auto r = getLocalBounds();
 
         g.setColour(Colours::black);
@@ -466,14 +467,14 @@ public:
         float tickLength = 5.0;
         drawampsanno.start();
         // Draw float amp annotiation
-        StringPairArray ampAnnoPos = get_anno_pairs(0.0, (1.0-_vscale), middleY, topY, 0.1, "%-.1f");
+        StringPairArray ampAnnoPos = get_anno_pairs(0.0, _vscale, middleY, topY, 0.1, "%-.1f");
         for (auto& key : ampAnnoPos.getAllKeys())
         {
             g.drawText(key, leftX - textWidth - tickLength, ampAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredRight);
             g.drawLine(leftX - tickLength, ampAnnoPos[key].getFloatValue()  , rightX, ampAnnoPos[key].getFloatValue(),1.0);
         }
 
-        StringPairArray ampAnnoNeg = get_anno_pairs(0.0, -(1.0-_vscale), middleY, bottomY, -0.1, "%-.1f");
+        StringPairArray ampAnnoNeg = get_anno_pairs(0.0, -_vscale, middleY, bottomY, -0.1, "%-.1f");
         for (auto& key : ampAnnoNeg.getAllKeys())
         {
             g.drawText(key, leftX - textWidth - tickLength, ampAnnoNeg[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredRight);
@@ -485,7 +486,7 @@ public:
         float samplesPerPixel = _samplesPerPixel;
 
         
-        double scale = (double)(middleY-topY)/(1.0-_vscale);
+        double scale = (double)(middleY-topY)/(_vscale);
         _viewSizePixels = rightX - leftX + 1;
         int numSamples = (rightX - leftX) * samplesPerPixel;
 
@@ -530,7 +531,7 @@ private:
     double _samplesPerPixel;
     int _viewSizePixels;
     double _vscale;
-
+    AudioProcessorValueTreeState *_state;
 };
 
 //==============================================================================
@@ -543,7 +544,9 @@ public:
         : AudioProcessor (getBusesProperties()),
           state (*this, nullptr, "state",
                  { std::make_unique<AudioParameterFloat> (ParameterID { "gain",  1 }, "Gain",           NormalisableRange<float> (0.0f, 10.0f), 0.9f),
-                   std::make_unique<AudioParameterFloat> (ParameterID { "delay", 1 }, "Delay Feedback", NormalisableRange<float> (0.0f, 1.0f), 0.5f) })
+                   std::make_unique<AudioParameterFloat> (ParameterID { "delay", 1 }, "Delay Feedback", NormalisableRange<float> (0.0f, 1.0f), 0.5f),
+                   std::make_unique<AudioParameterFloat>(ParameterID { "vscale",  1 }, "Vertical Scale",NormalisableRange<float>(0.1f, 1.0f), 0.5f),
+                   std::make_unique<AudioParameterFloat>(ParameterID { "hscale",  1 }, "Horizontal Scale",NormalisableRange<float>(0.1f, 100.0f), 2.0f) })
     {
         // Add a sub-tree to store the state of our UI
         state.state.addChild ({ "uiState", { { "width",  400 }, { "height", 500 } }, {} }, -1, nullptr);
@@ -737,6 +740,7 @@ private:
     class JuceDemoPluginAudioProcessorEditor : public AudioProcessorEditor,
         private Timer,
         private ScrollBar::Listener,
+        private Slider::Listener,
         private Button::Listener,
         private Value::Listener
     {
@@ -744,7 +748,9 @@ private:
         JuceDemoPluginAudioProcessorEditor(JuceDemoPluginAudioProcessor& owner)
             : AudioProcessorEditor(owner),
             gainAttachment(owner.state, "gain", gainSlider),
-            delayAttachment(owner.state, "delay", delaySlider)
+            delayAttachment(owner.state, "delay", delaySlider),
+            vscaleAttachment(owner.state, "vscale", vscaleSlider),
+            hscaleAttachment(owner.state, "hscale", hscaleSlider)
         {
             // add some sliders..
             addAndMakeVisible(gainSlider);
@@ -760,7 +766,7 @@ private:
             delayLabel.attachToComponent(&delaySlider, false);
             delayLabel.setFont(Font(11.0f));
 
-            waveDisplay = std::make_unique<WaveDisplayComponent>(owner.isUsingDoublePrecision());
+            waveDisplay = std::make_unique<WaveDisplayComponent>(&getProcessor().state,getProcessor().isUsingDoublePrecision());
             addAndMakeVisible(*waveDisplay);
 
             addAndMakeVisible(hscrollbar);
@@ -768,11 +774,12 @@ private:
             hscrollbar.setAutoHide(false);
             hscrollbar.addListener(this);
 
-            addAndMakeVisible(vscrollbar);
-            vscrollbar.setRangeLimits(Range<double>(0.0, 1.0));
-            vscrollbar.setAutoHide(false);
-            vscrollbar.addListener(this);
-            vscrollbar.setCurrentRange(Range<double>(0.5, 0.6));
+            addAndMakeVisible(vscaleSlider);
+            vscaleSlider.setSliderStyle(Slider::SliderStyle::LinearVertical);
+            vscaleSlider.setValue(0.5);
+            vscaleSlider.setTextBoxStyle(Slider::TextEntryBoxPosition::TextBoxBelow, false, 50, 15);
+            vscaleSlider.setNumDecimalPlacesToDisplay(1);
+            vscaleSlider.addListener(this);
 
             addAndMakeVisible(recordbutton);
             recordbutton.setOnColours(Colours::red, Colours::red, Colours::red);
@@ -829,7 +836,7 @@ private:
             recordbutton.setShape(p, true, true, true);
 
             hscrollbar.setBounds(harea.reduced(3));
-            vscrollbar.setBounds(r.removeFromRight(20).reduced(3));
+            vscaleSlider.setBounds(r.removeFromRight(50).reduced(3));
             waveDisplay->setBounds(r.reduced(3));
 
             lastUIWidth = getWidth();
@@ -873,6 +880,11 @@ private:
             if (&control == &delaySlider)
                 return 1;
 
+            if (&control == &vscaleSlider)
+                return 2;
+
+            if (&control == &hscaleSlider)
+                return 3;
             return -1;
         }
 
@@ -890,9 +902,14 @@ private:
             if (scrollBarThatHasMoved == &hscrollbar)
                 waveDisplay->setStartSample((int)hscrollbar.getCurrentRangeStart());
             //        setRange(visibleRange.movedToStartAt(newRangeStart));
-            if (scrollBarThatHasMoved == &vscrollbar)
-                waveDisplay->setVerticalScale(vscrollbar.getCurrentRangeStart());
+            //if (scrollBarThatHasMoved == &vscrollbar)
+            //    waveDisplay->setVerticalScale(vscrollbar.getCurrentRangeStart());
         }
+        void sliderValueChanged(Slider *sliderThatHasChanged) override
+        {
+            repaint();
+        }
+
         void buttonClicked(Button* button) override
         {
             if (button == &recordbutton)
@@ -926,11 +943,10 @@ private:
         Label gainLabel{ {}, "Throughput level:" },
             delayLabel{ {}, "Delay:" };
 
-        Slider gainSlider, delaySlider;
-        AudioProcessorValueTreeState::SliderAttachment gainAttachment, delayAttachment;
+        Slider gainSlider, delaySlider, vscaleSlider, hscaleSlider;
+        AudioProcessorValueTreeState::SliderAttachment gainAttachment, delayAttachment, vscaleAttachment, hscaleAttachment;
         Colour backgroundColour;
         ScrollBar hscrollbar{ false };
-        ScrollBar vscrollbar{ true };
         ShapeButton recordbutton{ "Rec",Colours::darkred, Colours::darkred, Colours::darkred  };
         Range<double> visibleRange;
 
@@ -956,7 +972,7 @@ private:
     template <typename FloatType>
     void process (AudioBuffer<FloatType>& buffer, MidiBuffer& midiMessages, AudioBuffer<FloatType>& delayBuffer)
     {
-        auto gainParamValue  = state.getParameter ("gain") ->getValue();
+        auto gainParamValue  = state.getParameter ("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
         auto delayParamValue = state.getParameter ("delay")->getValue();
         auto numSamples = buffer.getNumSamples();
         auto numChannels = buffer.getNumChannels();
