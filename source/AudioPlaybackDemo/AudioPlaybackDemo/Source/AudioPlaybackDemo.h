@@ -372,6 +372,8 @@ public:
 
         setOpaque (true);
         setSize (500, 500);
+
+        showAudioResource(URL("file:///C%3A/Users/bgill/Desktop/BigDrum.wav"));
     }
 
     ~AudioPlaybackDemo() override
