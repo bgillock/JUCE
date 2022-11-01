@@ -59,6 +59,17 @@ static PerformanceCounter drawampsanno("DrawAmpsAnno");
 static PerformanceCounter drawtimeanno("DrawTimeAnno");
 static PerformanceCounter drawamps("DrawAmps");
 
+float LinearToDecibel(float linear)
+{
+    float db;
+
+    if (linear != 0.0f)
+        db = 20.0f * log10(linear);
+    else
+        db = -144.0f;  // effectively minus infinity
+
+    return db;
+}
 class SpinLockedAmps 
 {
 public:
@@ -278,16 +289,11 @@ public:
         _samplesPerPixel = 10.0;
         _viewSizePixels = 400;
         _vscale = 0.5;
+        _leftX = 100;
     }
     void restartBuffer()
     {
         _amps.init(_amps.getMaxSize(), !_amps.isFloat(), _amps.getNChannels());
-    }
-
-    void setSamplesPerPixel(double spp)
-    {
-        _samplesPerPixel = std::min<double>(spp, 100.0);
-        _samplesPerPixel = std::max<double>(_samplesPerPixel, 0.1);
     }
 
     void setStartSample(int startSample)
@@ -309,6 +315,10 @@ public:
     int getBufferSize()
     {
         return _amps.getCurrentSize();
+    }
+    int getSampleAtX(int x)
+    {
+        return _startSample + ((double)(x - _leftX) * _samplesPerPixel);
     }
 
     Range<double> getViewRange()
@@ -450,18 +460,19 @@ public:
     void paint(Graphics& g) override
     {
         _vscale = _state->getParameter("vscale")->getNormalisableRange().convertFrom0to1(_state->getParameter("vscale")->getValue());
+        _samplesPerPixel = _state->getParameter("hscale")->getNormalisableRange().convertFrom0to1(_state->getParameter("hscale")->getValue());
         auto r = getLocalBounds();
 
         g.setColour(Colours::black);
         g.fillRect(r);
 
         float topY = r.getY() + 15.0; 
-        float leftX = r.getX() + 40.0;
+        _leftX = r.getX() + 40.0;
         float middleY = r.getY() + (r.getHeight() / 2.0);
         float bottomY = r.getY() + r.getHeight() - 35.0;
         float rightX = r.getX() + r.getWidth() - 40.0;
         g.setColour(Colours::grey);
-        g.drawRect(leftX, topY, rightX - leftX + 1, bottomY - topY + 1);
+        g.drawRect(_leftX, topY, rightX - _leftX + 1, bottomY - topY + 1);
         float textWidth = 40.0;
         float textHeight = 11.0;
         float tickLength = 5.0;
@@ -470,15 +481,15 @@ public:
         StringPairArray ampAnnoPos = get_anno_pairs(0.0, _vscale, middleY, topY, 0.1, "%-.1f");
         for (auto& key : ampAnnoPos.getAllKeys())
         {
-            g.drawText(key, leftX - textWidth - tickLength, ampAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredRight);
-            g.drawLine(leftX - tickLength, ampAnnoPos[key].getFloatValue()  , rightX, ampAnnoPos[key].getFloatValue(),1.0);
+            g.drawText(key, _leftX - textWidth - tickLength, ampAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredRight);
+            g.drawLine(_leftX - tickLength, ampAnnoPos[key].getFloatValue()  , rightX, ampAnnoPos[key].getFloatValue(),1.0);
         }
 
         StringPairArray ampAnnoNeg = get_anno_pairs(0.0, -_vscale, middleY, bottomY, -0.1, "%-.1f");
         for (auto& key : ampAnnoNeg.getAllKeys())
         {
-            g.drawText(key, leftX - textWidth - tickLength, ampAnnoNeg[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredRight);
-            g.drawLine(leftX - tickLength, ampAnnoNeg[key].getFloatValue(), rightX, ampAnnoNeg[key].getFloatValue(),1.0);
+            g.drawText(key, _leftX - textWidth - tickLength, ampAnnoNeg[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredRight);
+            g.drawLine(_leftX - tickLength, ampAnnoNeg[key].getFloatValue(), rightX, ampAnnoNeg[key].getFloatValue(),1.0);
         }
         drawampsanno.stop();
 
@@ -487,12 +498,12 @@ public:
 
         
         double scale = (double)(middleY-topY)/(_vscale);
-        _viewSizePixels = rightX - leftX + 1;
-        int numSamples = (rightX - leftX) * samplesPerPixel;
+        _viewSizePixels = rightX - _leftX + 1;
+        int numSamples = (rightX - _leftX) * samplesPerPixel;
 
         drawtimeanno.start();
         // Draw sample numbers
-        StringPairArray sampleNumAnno = get_anno_pairs(startSample, startSample+numSamples, leftX, rightX, 1000.0, "%5.f");
+        StringPairArray sampleNumAnno = get_anno_pairs(startSample, startSample+numSamples, _leftX, rightX, 1000.0, "%5.f");
         for (auto& key : sampleNumAnno.getAllKeys())
         {
             g.drawText(key, sampleNumAnno[key].getFloatValue() - textWidth/2.0, bottomY + tickLength, textWidth, textHeight, Justification::centredRight);
@@ -502,7 +513,7 @@ public:
         int sampleRate = 48000.0;
 
         // Draw time scale
-        StringPairArray secondsAnno = get_anno_pairs((double)startSample/(double)sampleRate, (double)(startSample+numSamples)/(double)sampleRate, leftX, rightX, 0.01, "%.2f");
+        StringPairArray secondsAnno = get_anno_pairs((double)startSample/(double)sampleRate, (double)(startSample+numSamples)/(double)sampleRate, _leftX, rightX, 0.01, "%.2f");
         for (auto& key : secondsAnno.getAllKeys())
         {
             g.drawText(key, secondsAnno[key].getFloatValue() - textWidth / 2.0, bottomY + tickLength + textHeight + 2.0, textWidth, textHeight, Justification::centredRight);
@@ -512,10 +523,10 @@ public:
 
         drawamps.start();
         // display pre (channel 0)
-        drawFloatAmps(g, startSample, scale, numSamples, 0, leftX, middleY, samplesPerPixel, Colours::red);
+        drawFloatAmps(g, startSample, scale, numSamples, 0, _leftX, middleY, samplesPerPixel, Colours::red);
 
         // display post (channel 2)
-        drawFloatAmps(g, startSample, scale, numSamples, 2, leftX, middleY, samplesPerPixel, Colours::white);
+        drawFloatAmps(g, startSample, scale, numSamples, 2, _leftX, middleY, samplesPerPixel, Colours::white);
 
         drawamps.stop();
     }
@@ -531,6 +542,7 @@ private:
     double _samplesPerPixel;
     int _viewSizePixels;
     double _vscale;
+    float _leftX;
     AudioProcessorValueTreeState *_state;
 };
 
@@ -848,13 +860,29 @@ private:
             lastUIWidth = getWidth();
             lastUIHeight = getHeight();
         }
+        void mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel) override
+        {
+            auto norRange = getProcessor().state.getParameter("hscale")->getNormalisableRange();
+            auto hscale = norRange.convertFrom0to1(getProcessor().state.getParameter("hscale")->getValue());
+
+            float dx = wheel.deltaX;
+            float dy = wheel.deltaY;
+            float newScale = norRange.snapToLegalValue(hscale + (hscale * dy));
+
+            auto vr = waveDisplay->getViewRange();
+            auto sampleZoom = waveDisplay->getSampleAtX(event.x);
+            double newStart = std::max(0,(int)(vr.getStart() + ((newScale / hscale) * (sampleZoom - vr.getStart()))));
+            double newEnd = std::min(waveDisplay->getBufferSize()-1, (int)(vr.getEnd() - ((newScale / hscale) * (vr.getEnd() - sampleZoom))));
+
+            getProcessor().state.getParameter("hscale")->setValueNotifyingHost(norRange.convertTo0to1(newScale));
+            setRange(Range<double>(newStart,newEnd));
+        }
         void setRange(Range<double> newRange)
         {
             visibleRange = newRange;
             hscrollbar.setRangeLimits(Range<double>(0, (double)waveDisplay->getBufferSize()));
-            int bsize = waveDisplay->getBufferSize();
             hscrollbar.setCurrentRange(visibleRange);
-
+            waveDisplay->setStartSample((int)newRange.getStart());
             //updateCursorPosition();
             repaint();
         }
@@ -1034,17 +1062,9 @@ private:
                 }
 
                 if ((tripped) && (abs(in) > threshold) && (thisTime < releaseTime))
-                {
-                    if (in > 0.0)
-                    {
-                        double relper = 1.0 - ((thisTime - tripTime) / release);
-                        channelData[i] = threshold + ((in - threshold) * reduceRat) * relper;
-                    }
-                    else if (in < 0.0)
-                    {
-                        double relper = 1.0 - ((thisTime - tripTime) / release);
-                        channelData[i] = -threshold + ((in + threshold) * reduceRat) * relper;
-                    }
+                {     
+                    double relper = 1.0 + (reduceRat * ((thisTime - tripTime) / release));
+                    channelData[i] = in * (reduceRat * relper);
                 }
                 
                 thisTime += timeInc;
