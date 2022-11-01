@@ -381,7 +381,7 @@ public:
                                          audioDeviceManager.initialise (numInputChannels, 2, nullptr, true, {}, nullptr);
                                      });
        #endif
-
+        audioProcessor.setSource(&transportSource);
         audioSourcePlayer.setProcessor(&audioProcessor);
         audioSourcePlayer.setSource (&transportSource);
         audioDeviceManager.addAudioCallback (&audioSourcePlayer);    
@@ -552,7 +552,7 @@ private:
             {
                 audioProcessorEditor = audioProcessor.createEditor();
                 const auto bg = getLookAndFeel().findColour(ResizableWindow::backgroundColourId).darker();
-                auto window = std::make_unique<BasicWindow>("Editor", bg, DocumentWindow::TitleBarButtons::allButtons);
+                auto window = std::make_unique<BasicWindow>("Home Made Compressor", bg, DocumentWindow::TitleBarButtons::allButtons);
                 window->setAlwaysOnTop(true);
                 window->setContentOwned(audioProcessorEditor, true);
                 window->centreAroundComponent(this, window->getWidth(), window->getHeight());

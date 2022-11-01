@@ -534,6 +534,7 @@ private:
     AudioProcessorValueTreeState *_state;
 };
 
+
 //==============================================================================
 /** As the name suggest, this class does the actual audio processing. */
 class JuceDemoPluginAudioProcessor  : public AudioProcessor
@@ -553,7 +554,7 @@ public:
     }
 
     ~JuceDemoPluginAudioProcessor() override = default;
-
+    void setSource(AudioTransportSource* src) { transportSource = src; };
     //==============================================================================
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override
     {
@@ -586,7 +587,7 @@ public:
         }
 
         amps.init(12000, isUsingDoublePrecision(), 4);
-
+        sampleRate = newSampleRate;
         reset();
     }
 
@@ -676,29 +677,33 @@ public:
         return trackProperties;
     }
 
-    class SpinLockedPosInfo
+    class SpinLockedTime
     {
     public:
+        SpinLockedTime() :
+            _time(0.0)
+        {};
+
         // Wait-free, but setting new info may fail if the main thread is currently
         // calling `get`. This is unlikely to matter in practice because
         // we'll be calling `set` much more frequently than `get`.
-        void set (const AudioPlayHead::PositionInfo& newInfo)
+        void set (const double newTime)
         {
             const juce::SpinLock::ScopedTryLockType lock (mutex);
 
             if (lock.isLocked())
-                info = newInfo;
+                _time = newTime;
         }
 
-        AudioPlayHead::PositionInfo get() const noexcept
+       double get() const noexcept
         {
             const juce::SpinLock::ScopedLockType lock (mutex);
-            return info;
+            return _time;
         }
 
     private:
         juce::SpinLock mutex;
-        AudioPlayHead::PositionInfo info;
+        double _time;
     };
 
     void setRecording(bool recording)
@@ -721,8 +726,15 @@ public:
 
     // this keeps a copy of the last set of time info that was acquired during an audio
     // callback - the UI component will read this and display it.
-    SpinLockedPosInfo lastPosInfo;
+    SpinLockedTime tripTimeUI;
 
+
+    // Compressor state
+    double tripTime = 0.0;
+    double releaseTime = 0.0;
+    bool tripped = false;
+
+    // Amps for UI (before and after)
     SpinLockedAmps amps;
 
     // Our plug-in's current state
@@ -987,7 +999,7 @@ private:
         // synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
 
         // Apply our delay effect to the new output..
-        applyCompression (buffer, thresholdParamValue, releaseParamValue);
+        applyCompression (buffer, thresholdParamValue, releaseParamValue * 0.001);
 
 
         for (int i = 0; i < numChannels; i++)
@@ -999,27 +1011,58 @@ private:
     }
 
     template <typename FloatType>
-    void applyCompression (AudioBuffer<FloatType>& buffer, float thresholdLevel, float releaseTime)
-    {
+    void applyCompression (AudioBuffer<FloatType>& buffer, float threshold, float release)
+    {   
+        double startTime = transportSource->getCurrentPosition();
+        double timeInc = 1.0 / sampleRate;
         auto numSamples = buffer.getNumSamples();
-
-        auto delayPos = 0;
+        double reduceRat = 1.0 / 10.0;
 
         for (auto channel = 0; channel < getTotalNumOutputChannels(); ++channel)
         {
             auto channelData = buffer.getWritePointer (channel);
-            
+            auto thisTime = startTime;
             for (auto i = 0; i < numSamples; ++i)
             {
                 auto in = channelData[i];
+                if ((!tripped) && (abs(in) > threshold))
+                {
+                    tripTimeUI.set(thisTime);
+                    tripTime = thisTime;
+                    releaseTime = thisTime + release;
+                    tripped = true;
+                }
 
+                if ((tripped) && (abs(in) > threshold) && (thisTime < releaseTime))
+                {
+                    if (in > 0.0)
+                    {
+                        double relper = 1.0 - ((thisTime - tripTime) / release);
+                        channelData[i] = threshold + ((in - threshold) * reduceRat) * relper;
+                    }
+                    else if (in < 0.0)
+                    {
+                        double relper = 1.0 - ((thisTime - tripTime) / release);
+                        channelData[i] = -threshold + ((in + threshold) * reduceRat) * relper;
+                    }
+                }
+                
+                thisTime += timeInc;
             }
+        }
+        if ((tripped) && (startTime + ((double)numSamples * timeInc) >= releaseTime))
+        {
+            tripped = false;
+            tripTime = 0.0;
+            releaseTime = 0.0;
+            tripTimeUI.set(0.0);
         }
     }
     juce::SpinLock mutex;
 
     bool _recording = false;
-
+    double sampleRate;
+    AudioTransportSource *transportSource;
     AudioBuffer<float> captureBufferFloat;
     AudioBuffer<double> captureBufferDouble;
 
