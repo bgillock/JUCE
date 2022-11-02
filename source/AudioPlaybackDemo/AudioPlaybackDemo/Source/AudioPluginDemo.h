@@ -871,18 +871,18 @@ private:
 
             auto vr = waveDisplay->getViewRange();
             auto sampleZoom = waveDisplay->getSampleAtX(event.x);
-            double newStart = std::max(0,(int)(vr.getStart() + ((newScale / hscale) * (sampleZoom - vr.getStart()))));
-            double newEnd = std::min(waveDisplay->getBufferSize()-1, (int)(vr.getEnd() - ((newScale / hscale) * (vr.getEnd() - sampleZoom))));
+            double newSize = vr.getLength() + (((newScale / hscale)-1.0) * vr.getLength());
+            double newStart = std::max(0,(int)(sampleZoom - ((sampleZoom - vr.getStart()) * (newSize/vr.getLength()))));
+            double newEnd = std::min(waveDisplay->getBufferSize()-1, (int)(sampleZoom + (vr.getEnd() - sampleZoom) * (newSize / vr.getLength())));
 
             getProcessor().state.getParameter("hscale")->setValueNotifyingHost(norRange.convertTo0to1(newScale));
-            setRange(Range<double>(newStart,newEnd));
+            setRange(Range<double>(newStart,newEnd),newSize);
         }
-        void setRange(Range<double> newRange)
+        void setRange(Range<double> newRange, double newSize)
         {
-            visibleRange = newRange;
             hscrollbar.setRangeLimits(Range<double>(0, (double)waveDisplay->getBufferSize()));
-            hscrollbar.setCurrentRange(visibleRange);
-            waveDisplay->setStartSample((int)newRange.getStart());
+            hscrollbar.setCurrentRange(newRange.getStart(),newSize);
+            waveDisplay->setStartSample((int)hscrollbar.getCurrentRangeStart());
             //updateCursorPosition();
             repaint();
         }
@@ -902,7 +902,7 @@ private:
                 }
 
                 waveDisplay->repaint();
-                setRange(waveDisplay->getViewRange());
+                setRange(waveDisplay->getViewRange(),waveDisplay->getViewRange().getLength());
             }
         }
 
@@ -982,7 +982,6 @@ private:
         Colour backgroundColour;
         ScrollBar hscrollbar{ false };
         ShapeButton recordbutton{ "Rec",Colours::darkred, Colours::darkred, Colours::darkred  };
-        Range<double> visibleRange;
 
         // these are used to persist the UI's size - the values are stored along with the
         // filter's other parameters, and the UI component will update them when it gets
