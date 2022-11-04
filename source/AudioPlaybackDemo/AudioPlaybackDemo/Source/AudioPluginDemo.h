@@ -281,7 +281,7 @@ private:
 class WaveDisplayComponent : public Component
 {
 public:
-    WaveDisplayComponent(AudioProcessorValueTreeState *state, bool isUsingDoublePrecision) {
+    WaveDisplayComponent(AudioProcessorValueTreeState* state, bool isUsingDoublePrecision) {
         setSize(400, 100);
         _state = state;
         _amps.init(48000.0 * 5.0, isUsingDoublePrecision, 4);
@@ -320,7 +320,22 @@ public:
     {
         return _startSample + ((double)(x - _leftX) * _samplesPerPixel);
     }
-
+    double getTime(int x)
+    {
+        return (_startSample + ((x - _leftX) * _samplesPerPixel)) / _sampleRate;
+    }
+    double getdB(int y)
+    {
+        if (y < _middleY)
+        {
+            return Decibels::gainToDecibels((_middleY - y) * (_vscale / (_middleY - _topY)));
+        }
+        else if (y > _middleY)
+        {
+            return Decibels::gainToDecibels((y - _middleY) * (_vscale / (_bottomY - _middleY)));
+        }
+        return -144.0;
+    }
     Range<double> getViewRange()
     {
         double endSample = _startSample + ((double)_viewSizePixels * _samplesPerPixel);
@@ -373,6 +388,25 @@ public:
         return pairs;
     }
 
+    StringPairArray get_db_pairs(double minVal, double maxVal, double increment, double minPixel, double maxPixel)
+    {
+        StringPairArray pairs;
+        double scale = (maxPixel - minPixel) / (maxVal - minVal);
+
+        double startdBAnno = -30.0;
+        double enddBAnno = 12.0;
+            
+        for (double v = startdBAnno; v <= enddBAnno; v += increment)
+        {
+            float val = Decibels::decibelsToGain(v);
+            if (val <= maxVal)
+            {
+                addPair(pairs, "%-2.0f", (float)v, minPixel + (scale * (val - minVal)));
+            }
+        }
+      
+        return pairs;
+    }
     void drawFloatAmps(Graphics& g, int startSample, double scale, int numSamples, int channel,
                        int leftX, int middleY, double samplesPerPixel, Colour color, bool minmax = false) // avg = !minmax
     {
@@ -466,30 +500,30 @@ public:
         g.setColour(Colours::black);
         g.fillRect(r);
 
-        float topY = r.getY() + 15.0; 
+        _topY = r.getY() + 15.0; 
         _leftX = r.getX() + 40.0;
-        float middleY = r.getY() + (r.getHeight() / 2.0);
-        float bottomY = r.getY() + r.getHeight() - 35.0;
-        float rightX = r.getX() + r.getWidth() - 40.0;
-        g.setColour(Colours::grey);
-        g.drawRect(_leftX, topY, rightX - _leftX + 1, bottomY - topY + 1);
+        _middleY = r.getY() + (r.getHeight() / 2.0);
+        _bottomY = r.getY() + r.getHeight() - 35.0;
+        _rightX = r.getX() + r.getWidth() - 40.0;
+        g.setColour(Colours::darkgrey);
+        g.drawRect(_leftX, _topY, _rightX - _leftX + 1, _bottomY - _topY + 1);
         float textWidth = 40.0;
         float textHeight = 11.0;
         float tickLength = 5.0;
         drawampsanno.start();
-        // Draw float amp annotiation
-        StringPairArray ampAnnoPos = get_anno_pairs(0.0, _vscale, middleY, topY, 0.1, "%-.1f");
-        for (auto& key : ampAnnoPos.getAllKeys())
+        // Draw float db annotiation
+        StringPairArray dbAnnoPos = get_db_pairs(0.0, _vscale, 6.0, _middleY, _topY);
+        for (auto& key : dbAnnoPos.getAllKeys())
         {
-            g.drawText(key, _leftX - textWidth - tickLength, ampAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredRight);
-            g.drawLine(_leftX - tickLength, ampAnnoPos[key].getFloatValue()  , rightX, ampAnnoPos[key].getFloatValue(),1.0);
+            g.drawText(key, _leftX - textWidth - tickLength, dbAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredRight);
+            g.drawLine(_leftX - tickLength, dbAnnoPos[key].getFloatValue()  , _rightX, dbAnnoPos[key].getFloatValue(),1.0);
         }
 
-        StringPairArray ampAnnoNeg = get_anno_pairs(0.0, -_vscale, middleY, bottomY, -0.1, "%-.1f");
-        for (auto& key : ampAnnoNeg.getAllKeys())
+        StringPairArray dbAnnoNeg = get_db_pairs(0.0, _vscale, 6.0, _middleY, _bottomY);
+        for (auto& key : dbAnnoNeg.getAllKeys())
         {
-            g.drawText(key, _leftX - textWidth - tickLength, ampAnnoNeg[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredRight);
-            g.drawLine(_leftX - tickLength, ampAnnoNeg[key].getFloatValue(), rightX, ampAnnoNeg[key].getFloatValue(),1.0);
+            g.drawText(key, _leftX - textWidth - tickLength, dbAnnoNeg[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredRight);
+            g.drawLine(_leftX - tickLength, dbAnnoNeg[key].getFloatValue(), _rightX, dbAnnoNeg[key].getFloatValue(),1.0);
         }
         drawampsanno.stop();
 
@@ -497,36 +531,36 @@ public:
         float samplesPerPixel = _samplesPerPixel;
 
         
-        double scale = (double)(middleY-topY)/(_vscale);
-        _viewSizePixels = rightX - _leftX + 1;
-        int numSamples = (rightX - _leftX) * samplesPerPixel;
+        double scale = (double)(_middleY-_topY)/(_vscale);
+        _viewSizePixels = _rightX - _leftX + 1;
+        int numSamples = (_rightX - _leftX) * samplesPerPixel;
 
         drawtimeanno.start();
         // Draw sample numbers
-        StringPairArray sampleNumAnno = get_anno_pairs(startSample, startSample+numSamples, _leftX, rightX, 1000.0, "%5.f");
+        StringPairArray sampleNumAnno = get_anno_pairs(startSample, startSample+numSamples, _leftX, _rightX, 1000.0, "%5.f");
         for (auto& key : sampleNumAnno.getAllKeys())
         {
-            g.drawText(key, sampleNumAnno[key].getFloatValue() - textWidth/2.0, bottomY + tickLength, textWidth, textHeight, Justification::centredRight);
-            g.drawLine(sampleNumAnno[key].getFloatValue(), bottomY, sampleNumAnno[key].getFloatValue(), bottomY + tickLength,1.0);
+            g.drawText(key, sampleNumAnno[key].getFloatValue() - textWidth/2.0, _bottomY + tickLength, textWidth, textHeight, Justification::centredRight);
+            g.drawLine(sampleNumAnno[key].getFloatValue(), _bottomY, sampleNumAnno[key].getFloatValue(), _bottomY + tickLength,1.0);
         }
         
         int sampleRate = 48000.0;
 
         // Draw time scale
-        StringPairArray secondsAnno = get_anno_pairs((double)startSample/(double)sampleRate, (double)(startSample+numSamples)/(double)sampleRate, _leftX, rightX, 0.01, "%.2f");
+        StringPairArray secondsAnno = get_anno_pairs((double)startSample/(double)sampleRate, (double)(startSample+numSamples)/(double)sampleRate, _leftX, _rightX, 0.01, "%.2f");
         for (auto& key : secondsAnno.getAllKeys())
         {
-            g.drawText(key, secondsAnno[key].getFloatValue() - textWidth / 2.0, bottomY + tickLength + textHeight + 2.0, textWidth, textHeight, Justification::centredRight);
-            g.drawLine(secondsAnno[key].getFloatValue(), topY, secondsAnno[key].getFloatValue(), bottomY + textHeight + 2.0 + tickLength, 1.0);
+            g.drawText(key, secondsAnno[key].getFloatValue() - textWidth / 2.0, _bottomY + tickLength + textHeight + 2.0, textWidth, textHeight, Justification::centredRight);
+            g.drawLine(secondsAnno[key].getFloatValue(), _topY, secondsAnno[key].getFloatValue(), _bottomY + textHeight + 2.0 + tickLength, 1.0);
         }
         drawtimeanno.stop();
 
         drawamps.start();
         // display pre (channel 0)
-        drawFloatAmps(g, startSample, scale, numSamples, 0, _leftX, middleY, samplesPerPixel, Colours::red);
+        drawFloatAmps(g, startSample, scale, numSamples, 0, _leftX, _middleY, samplesPerPixel, Colours::red);
 
         // display post (channel 2)
-        drawFloatAmps(g, startSample, scale, numSamples, 2, _leftX, middleY, samplesPerPixel, Colours::white);
+        drawFloatAmps(g, startSample, scale, numSamples, 2, _leftX, _middleY, samplesPerPixel, Colours::white);
 
         drawamps.stop();
     }
@@ -542,7 +576,12 @@ private:
     double _samplesPerPixel;
     int _viewSizePixels;
     double _vscale;
+    float _topY;
+    float _middleY;
+    float _bottomY;
+    float _rightX;
     float _leftX;
+    double _sampleRate = 48000.0;
     AudioProcessorValueTreeState *_state;
 };
 
@@ -556,7 +595,7 @@ public:
     JuceDemoPluginAudioProcessor()
         : AudioProcessor (getBusesProperties()),
           state (*this, nullptr, "state",
-                 { std::make_unique<AudioParameterFloat> (ParameterID { "threshold",  1 }, "Threshold",     NormalisableRange<float> (0.0f, 1.0f), 0.6f),
+                 { std::make_unique<AudioParameterFloat> (ParameterID { "threshold",  1 }, "Threshold",     NormalisableRange<float> (-30.0f, 10.0f), 18.0f),
                    std::make_unique<AudioParameterFloat> (ParameterID { "release", 1 }, "Release",          NormalisableRange<float> (0.0f, 250.0f), 25.0f),
                    std::make_unique<AudioParameterFloat> (ParameterID { "vscale",  1 }, "Vertical Scale",    NormalisableRange<float>(0.1f, 1.0f), 0.5f),
                    std::make_unique<AudioParameterFloat> (ParameterID { "hscale",  1 }, "Horizontal Scale",  NormalisableRange<float>(0.1f, 100.0f), 2.0f) })
@@ -1026,7 +1065,7 @@ private:
         // synth.renderNextBlock (buffer, midiMessages, 0, numSamples);
 
         // Apply our delay effect to the new output..
-        applyCompression (buffer, thresholdParamValue, releaseParamValue * 0.001);
+        applyCompression (buffer, Decibels::decibelsToGain(thresholdParamValue), releaseParamValue * 0.001);
 
 
         for (int i = 0; i < numChannels; i++)
@@ -1077,6 +1116,8 @@ private:
             tripTimeUI.set(0.0);
         }
     }
+
+
     juce::SpinLock mutex;
 
     bool _recording = false;
