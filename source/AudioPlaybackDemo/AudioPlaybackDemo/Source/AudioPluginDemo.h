@@ -70,6 +70,69 @@ float LinearToDecibel(float linear)
 
     return db;
 }
+
+class VUHistogram
+{
+public:
+    VUHistogram(int nBins, int nBuffs, double minBin, double maxBin)   
+    {
+        _nBins = nBins;
+        _nBuffs = nBuffs;
+        _minBin = minBin;
+        _maxBin = maxBin;
+        int** x = new int*[_nBuffs];
+        for(int i = 0; i < _nBuffs; i++)
+        {
+            _hist[i] = new int[_nBins+2]; // for min/max
+            clearBuff(_hist[i]);
+        }
+        _currentBuff = 0;
+    }
+    void addAmps(AudioBuffer<float>& amps, int channel)
+    {
+        clearBuff(_hist[_currentBuff]);
+        auto channelData = amps.getReadPointer(channel);
+        for (int a=0;a<amps.getNumSamples();a++)
+        {
+            _hist[_currentBuff][getBin(channelData[a],_minBin,_maxBin,_nBins)]++;
+        }
+    }
+    void getHistTotal(int *tot)
+    {
+        for (int i=0;i<=_nBins+1;i++)
+        {
+            tot[i] = 0;
+            for (int b=0; b<_nBuffs; b++)
+            {
+                tot[i] += _hist[b][i];
+            }
+        }
+        return;
+    }
+
+private:
+    void clearBuff(int *buff)
+    {
+        for (int i = 0; i < _nBins+2; i++)
+        {
+            buff[i] = 0;
+        }
+        return;
+    }
+    int getBin(double amp, double min, double max, int nBins)
+    {
+        if (amp < min) return 0;
+        if (amp > max) return nBins+1;
+        int bin = (int)(((amp - min)/(max-min))*(double)nBins);
+    }
+    int _nBins;
+    int _nBuffs;
+    double _minBin;
+    double _maxBin;
+    int** _hist;
+    int _currentBuff;
+};
+
 class SpinLockedAmps 
 {
 public:
