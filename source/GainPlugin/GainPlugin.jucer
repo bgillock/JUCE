@@ -11,6 +11,8 @@
       <FILE id="PgRwbY" name="GainPluginDemo.h" compile="0" resource="0"
             file="Source/GainPluginDemo.h"/>
     </GROUP>
+    <FILE id="QwbeFi" name="output-onlinepngtools.png" compile="0" resource="1"
+          file="Source/output-onlinepngtools.png"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>

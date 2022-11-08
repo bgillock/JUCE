@@ -130,7 +130,7 @@ public:
             {
                 if (abs(channelData[a]) > maxAmp) maxAmp = channelData[a];
             }
-            maxAmp = channel;
+            // maxAmp = channel;
         }
     }
     double getMax()
@@ -181,6 +181,7 @@ public:
     void paint(Graphics& g) override
     {
         auto maxAmpDisplay = maxAmp->getMax();
+        maxAmp->setMax(0.0);
         auto area = getBounds().reduced(2);
         int minX = 1;
         int minY = 20;    
@@ -238,8 +239,8 @@ public:
     void processBlock (AudioBuffer<float>& buffer, MidiBuffer&) override
     {
         auto gain = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
-        //inputMaxLeft.capture(buffer, 0);
-        //inputMaxRight.capture(buffer, 1);
+        inputMaxLeft.capture(buffer, 0);
+        inputMaxRight.capture(buffer, 1);
 
         buffer.applyGain (gain);       
         outputMaxLeft.capture(buffer, 0);
@@ -319,7 +320,7 @@ private:
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, 60, 15);
             gainSlider.setNumDecimalPlacesToDisplay(1);
             gainSlider.addListener(this);
-
+            // Image myImage = ImageFileFormat::loadFrom(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
             //addAndMakeVisible(outVUMeter);
 
             setResizeLimits(200, 400, 200, 1000);
@@ -399,9 +400,9 @@ private:
         void sliderValueChanged(Slider* sliderThatHasChanged) override
         {
             
-            getProcessor().inputMaxLeft.setMax(gainSlider.getValue());
-            getProcessor().inputMaxRight.setMax(gainSlider.getValue() * 0.9f);
-            repaint();
+            //getProcessor().inputMaxLeft.setMax(gainSlider.getValue());
+            //getProcessor().inputMaxRight.setMax(gainSlider.getValue() * 0.9f);
+            //repaint();
         }
 
     private:
