@@ -169,7 +169,7 @@ class LevelMeter : public Component,
 public:
     LevelMeter(MaximumAmp &max) 
     {
-        startTimerHz(20);
+        startTimerHz(100);
         maxAmp = &max;
     }
 
@@ -182,6 +182,19 @@ public:
     {
         auto maxAmpDisplay = maxAmp->getMax();
         maxAmp->setMax(0.0);
+
+        if (++peakTimes > peakholdTimes)
+        {
+            peakTimes = 0;
+            peakhold = 0.0;
+        }
+        
+        if (maxAmpDisplay > peakhold)
+        {
+            peakhold = maxAmpDisplay;
+            peakTimes = 0;
+        }
+
         auto area = getBounds().reduced(2);
         int minX = 1;
         int minY = 20;    
@@ -191,12 +204,16 @@ public:
         int orangelight = (int)((float)nlights * 0.4f);
         int y = minY;
         int thislight = (int)((1.0 - maxAmpDisplay) * (float)nlights);
+        int peaklight = (int)((1.0 - peakhold) * (float)nlights);
+
+       // if (thislight == lastlight) return;
+
         for (int l = 0; l < nlights; l++)
         {
             g.setColour(Colours::white);
             g.drawRoundedRectangle(minX, y+1, ysize-4, ysize - 4, 5.0, 1.5);
             Colour thiscolor = Colours::black;
-            if (l >= thislight)
+            if ((l >= thislight) || (l == peaklight))
             {
                 if (l <= orangelight) thiscolor = Colours::orange;
                 else thiscolor = Colour::fromRGB(0, 255, 0);
@@ -205,10 +222,16 @@ public:
             g.fillRoundedRectangle(minX, y+1, ysize-4, ysize - 4,5.0);
             y += ysize;
         }
+        lastlight = thislight;
+        return;
     }
 
 private:
     MaximumAmp* maxAmp;
+    int lastlight = 0;
+    double peakhold = 0.0;
+    const int peakholdTimes = 30; // number of times to leave peak 
+    int peakTimes = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
 };
@@ -254,7 +277,7 @@ public:
     }
 
     //==============================================================================
-    AudioProcessorEditor* createEditor() override          { return new GainAudioProcessorEditor (*this,inputMaxLeft,inputMaxRight); }
+    AudioProcessorEditor* createEditor() override          { return new GainAudioProcessorEditor (*this,inputMaxLeft,inputMaxRight, outputMaxLeft, outputMaxRight); }
     bool hasEditor() const override                        { return true;   }
 
     //==============================================================================
@@ -305,15 +328,19 @@ private:
         private Value::Listener
     {
     public:
-        GainAudioProcessorEditor(GainProcessor& owner, MaximumAmp &leftMaxAmp, MaximumAmp& rightMaxAmp )
+        GainAudioProcessorEditor(GainProcessor& owner, MaximumAmp &inLeftMaxAmp, MaximumAmp& inRightMaxAmp, MaximumAmp& outLeftMaxAmp, MaximumAmp& outRightMaxAmp)
             : AudioProcessorEditor(owner),
-            inputLevelMeterLeft(leftMaxAmp),
-            inputLevelMeterRight(rightMaxAmp),
+            inputLevelMeterLeft(inLeftMaxAmp),
+            inputLevelMeterRight(inRightMaxAmp),
+            outputLevelMeterLeft(outLeftMaxAmp),
+            outputLevelMeterRight(outRightMaxAmp),
             gainAttachment(owner.state, "gain", gainSlider)
         {
            
             addAndMakeVisible(inputLevelMeterLeft);
             addAndMakeVisible(inputLevelMeterRight);
+            addAndMakeVisible(outputLevelMeterLeft);
+            addAndMakeVisible(outputLevelMeterRight);
 
             addAndMakeVisible(gainSlider);
             gainSlider.setSliderStyle(Slider::LinearVertical);
@@ -344,8 +371,8 @@ private:
         //==============================================================================
         void paint(Graphics& g) override
         {
-            g.setColour(backgroundColour);
-            g.fillAll();
+            //g.setColour(backgroundColour);
+            //g.fillAll();
         }
 
         void resized() override
@@ -353,14 +380,16 @@ private:
             // This lays out our child components...
 
             auto r = getLocalBounds().reduced(4);
-            auto leftMeterArea = r.removeFromLeft(20);
-            inputLevelMeterLeft.setBounds(leftMeterArea);
-           
-            auto rightMeterArea = r.removeFromLeft(20);
-            inputLevelMeterRight.setBounds(rightMeterArea);
+            auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
+            inputLevelMeterRight.setBounds(leftMeterArea.removeFromRight(20));
+            inputLevelMeterLeft.setBounds(leftMeterArea.removeFromRight(20));
 
-            auto sliderArea = r.removeFromLeft(60);
+            auto sliderArea = r.removeFromLeft(r.getWidth()/2);
             gainSlider.setBounds(sliderArea);
+
+            auto rightMeterArea = r;
+            outputLevelMeterLeft.setBounds(rightMeterArea.removeFromLeft(20));            
+            outputLevelMeterRight.setBounds(rightMeterArea.removeFromLeft(20));
 
             lastUIWidth = getWidth();
             lastUIHeight = getHeight();
@@ -369,11 +398,7 @@ private:
         {
          
         }
-        void setRange(Range<double> newRange, double newSize)
-        {
-            //updateCursorPosition();
-            repaint();
-        }
+
         void timerCallback() override
         {
                 if (!getProcessor().isUsingDoublePrecision())
@@ -411,6 +436,8 @@ private:
         Label gainLabel{ {}, "Gain" };
         LevelMeter inputLevelMeterLeft;
         LevelMeter inputLevelMeterRight;
+        LevelMeter outputLevelMeterLeft;
+        LevelMeter outputLevelMeterRight;
         Slider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
         Colour backgroundColour;
