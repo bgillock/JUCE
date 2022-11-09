@@ -119,7 +119,7 @@ private:
 class MaximumAmp
 {
 public:
-    MaximumAmp() { maxAmp = 0.0; };
+    MaximumAmp() { maxAmp = -144.0; };
     void capture(AudioBuffer<float> amps, int channel)
     {
         const juce::SpinLock::ScopedTryLockType lock(mutex);
@@ -128,7 +128,8 @@ public:
             auto channelData = amps.getReadPointer(channel);
             for (int a = 0; a < amps.getNumSamples(); a++)
             {
-                if (abs(channelData[a]) > maxAmp) maxAmp = channelData[a];
+                float db = Decibels::gainToDecibels(channelData[a]);
+                if (db > maxAmp) maxAmp = db;
             }
             // maxAmp = channel;
         }
@@ -151,7 +152,7 @@ public:
         const juce::SpinLock::ScopedTryLockType lock(mutex);
         if (lock.isLocked())
         {
-            maxAmp = 0.0;
+            maxAmp = -144.0;
         }
     }
 private:
@@ -169,7 +170,7 @@ class LevelMeter : public Component,
 public:
     LevelMeter(MaximumAmp &max) 
     {
-        startTimerHz(100);
+        //startTimerHz(100);
         maxAmp = &max;
     }
 
@@ -181,12 +182,12 @@ public:
     void paint(Graphics& g) override
     {
         auto maxAmpDisplay = maxAmp->getMax();
-        maxAmp->setMax(0.0);
+        maxAmp->setMax(-144.0);
 
         if (++peakTimes > peakholdTimes)
         {
             peakTimes = 0;
-            peakhold = 0.0;
+            peakhold = -144.0;
         }
         
         if (maxAmpDisplay > peakhold)
@@ -246,7 +247,7 @@ public:
         : AudioProcessor (BusesProperties().withInput  ("Input",  AudioChannelSet::stereo())
                                            .withOutput ("Output", AudioChannelSet::stereo())),
         state(*this, nullptr, "state",
-            { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     NormalisableRange<float>(0.0f, 1.0f), 0.5f)})
+            { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     NormalisableRange<float>(-40.0f, +40.0f), 0.0f)})
     {
         state.state.addChild({ "uiState", { { "width",  200 }, { "height", 400 } }, {} }, -1, nullptr);
         outputMaxLeft.init();
@@ -261,7 +262,8 @@ public:
 
     void processBlock (AudioBuffer<float>& buffer, MidiBuffer&) override
     {
-        auto gain = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
+        auto gaindb = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
+        float gain = Decibels::decibelsToGain(gaindb);
         inputMaxLeft.capture(buffer, 0);
         inputMaxRight.capture(buffer, 1);
 
@@ -272,8 +274,8 @@ public:
 
     void processBlock (AudioBuffer<double>& buffer, MidiBuffer&) override
     {
-        auto gain = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
-        buffer.applyGain(gain);
+        auto gaindb = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
+        buffer.applyGain(gaindb);
     }
 
     //==============================================================================
@@ -363,7 +365,7 @@ private:
             lastUIHeight.addListener(this);
 
             // start a timer which will keep our timecode display updated
-            startTimerHz(30);
+            startTimerHz(100);
         }
 
         ~GainAudioProcessorEditor() override {}
@@ -371,6 +373,7 @@ private:
         //==============================================================================
         void paint(Graphics& g) override
         {
+
             //g.setColour(backgroundColour);
             //g.fillAll();
         }
@@ -401,17 +404,10 @@ private:
 
         void timerCallback() override
         {
-                if (!getProcessor().isUsingDoublePrecision())
-                {
-                    //waveDisplay->addAmps(getProcessor().amps.getFloat());
-                    //getProcessor().amps.init(12000, false, 4);
-                }
-                else
-                {
-                    //waveDisplay->addAmps(getProcessor().amps.getDouble());
-                    //getProcessor().amps.init(12000, true, 4);
-                }
-
+            inputLevelMeterLeft.repaint();
+            inputLevelMeterRight.repaint();
+            outputLevelMeterLeft.repaint();
+            outputLevelMeterRight.repaint();
         }
 
         int getControlParameterIndex(Component& control) override
