@@ -245,7 +245,7 @@ private:
     MaximumAmp* maxAmp;
     int lastlight = 0;
     double peakhold = 0.0;
-    const int peakholdTimes = 30; // number of times to leave peak 
+    const int peakholdTimes = 10; // number of times to leave peak 
     int peakTimes = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
@@ -263,11 +263,11 @@ public:
     void paint(Graphics& g) override
     {
         auto area = getBounds().reduced(2);
-        int minX = 1;
+        int minX = 0;
         int minY = 20;
         int maxY = area.getHeight()-6;
-        float textWidth = 40.0;
-        float textHeight = 11.0;
+        float textWidth = 30.0;
+        float textHeight = 10.0;
         g.setColour(Colours::grey);
         StringPairArray dbAnnoPos = get_db_pairs(dbmin, dbmax, dbinc, maxY, minY);
         for (auto& key : dbAnnoPos.getAllKeys())
@@ -462,7 +462,7 @@ private:
             // This lays out our child components...
 
             auto r = getLocalBounds().reduced(4);
-            auto annoAreaOut = r.removeFromRight(20);
+            auto annoAreaOut = r.removeFromRight(40);
             dbAnnoOut.setBounds(annoAreaOut);
             
             auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
