@@ -242,6 +242,7 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
 };
+
 class dbAnnoComponent : public Component
 {
 public:
@@ -313,7 +314,10 @@ public:
         : AudioProcessor (BusesProperties().withInput  ("Input",  AudioChannelSet::stereo())
                                            .withOutput ("Output", AudioChannelSet::stereo())),
         state(*this, nullptr, "state",
-            { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     NormalisableRange<float>(-40.0f, +40.0f), 0.0f)})
+            { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     
+                                                    NormalisableRange<float>(-40.0f, +40.0f), 0.0f),
+              std::make_unique<AudioParameterFloat>(ParameterID { "target",  1 }, "Target",
+                                                    NormalisableRange<float>(-54.0f, 0.0f), -12.0f)})
     {
         state.state.addChild({ "uiState", { { "width",  200 }, { "height", 400 } }, {} }, -1, nullptr);
         outputMaxLeft.init();
@@ -409,27 +413,36 @@ private:
             outputLevelMeterLeft(outLeftMaxAmp),
             outputLevelMeterRight(outRightMaxAmp),
             dbAnnoOut(-54.0,0.0,6.0),
-            gainAttachment(owner.state, "gain", gainSlider)
+            gainAttachment(owner.state, "gain", gainSlider),
+            targetAttachment(owner.state, "target", targetButton)
         {
            // raise(SIGINT);
             inputLevelMeterLabel.setSize(40,10);
             addAndMakeVisible(inputLevelMeterLabel);
             addAndMakeVisible(inputLevelMeterLeft);
             addAndMakeVisible(inputLevelMeterRight);
-            outputLevelMeterLabel.setSize(40,10);
-            addAndMakeVisible(outputLevelMeterLabel);
-            addAndMakeVisible(outputLevelMeterLeft);
-            addAndMakeVisible(outputLevelMeterRight);
-            targetLabel.setSize(40,10);
-            addAndMakeVisible(targetLabel);
-            addAndMakeVisible(dbAnnoOut);
-            addAndMakeVisible(gainSlider);
 
+            addAndMakeVisible(gainSlider);  
             gainSlider.setSliderStyle(Slider::LinearVertical);
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, 60, 15);
             gainSlider.setColour(Slider::ColourIds::backgroundColourId,Colours::darkgrey);
             gainSlider.setNumDecimalPlacesToDisplay(1);
             gainSlider.addListener(this);
+
+            outputLevelMeterLabel.setSize(40,10);
+            addAndMakeVisible(outputLevelMeterLabel);
+            addAndMakeVisible(outputLevelMeterLeft);
+            addAndMakeVisible(outputLevelMeterRight);
+
+            targetLabel.setSize(40,10);
+            addAndMakeVisible(targetLabel);
+            addAndMakeVisible(dbAnnoOut);
+
+            targetButton.setTitle("Target");
+            targetButton.setColour(targetButton.buttonColourId,Colour::fromRGBA(255,0,0,50));
+            addAndMakeVisible(targetButton);
+
+
             // Image myImage = ImageFileFormat::loadFrom(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
             //addAndMakeVisible(outVUMeter);
 
@@ -467,7 +480,7 @@ private:
             auto annoAreaOut = r.removeFromRight(40);
             targetLabel.setBounds(annoAreaOut.removeFromTop(15));
             dbAnnoOut.setBounds(annoAreaOut);
-            
+            targetButton.setBounds(annoAreaOut.removeFromBottom(15));
             auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
             inputLevelMeterLabel.setBounds(leftMeterArea.removeFromTop(15));
             inputLevelMeterRight.setBounds(leftMeterArea.removeFromRight(leftMeterArea.getWidth()/2));
@@ -520,7 +533,7 @@ private:
         Label inputLevelMeterLabel{ {}, "Input"};
         Label outputLevelMeterLabel{{}, "Output"};
         Label targetLabel{ {}, "Target"};
-
+        TextButton targetButton{ {}, "0 db"};
 
         LevelMeter inputLevelMeterLeft;
         LevelMeter inputLevelMeterRight;
@@ -529,6 +542,7 @@ private:
         dbAnnoComponent dbAnnoOut;
         Slider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
+        AudioProcessorValueTreeState::ButtonAttachment targetAttachment;
         Colour backgroundColour;
 
         // these are used to persist the UI's size - the values are stored along with the
