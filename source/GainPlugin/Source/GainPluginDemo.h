@@ -47,7 +47,7 @@
 *******************************************************************************/
 
 #pragma once
-
+#include <csignal>
 class VUHistogram
 {
 public:
@@ -105,7 +105,7 @@ private:
     {
         if (amp < min) return 0;
         if (amp > max) return nBins + 1;
-        int bin = (int)(((amp - min) / (max - min)) * (double)nBins);
+        return (int)(((amp - min) / (max - min)) * (double)nBins);
     }
     juce::SpinLock mutex;
     int _nBins;
@@ -129,6 +129,20 @@ public:
             for (int a = 0; a < amps.getNumSamples(); a++)
             {
                 float db = Decibels::gainToDecibels(channelData[a]);
+                if (db > maxAmp) maxAmp = db;
+            }
+            // maxAmp = channel;
+        }
+    }
+    void capture(AudioBuffer<double> amps, int channel)
+    {
+        const juce::SpinLock::ScopedTryLockType lock(mutex);
+        if (lock.isLocked())
+        {
+            auto channelData = amps.getReadPointer(channel);
+            for (int a = 0; a < amps.getNumSamples(); a++)
+            {
+                double db = Decibels::gainToDecibels(channelData[a]);
                 if (db > maxAmp) maxAmp = db;
             }
             // maxAmp = channel;
@@ -164,6 +178,7 @@ class VUComponent : public Component
 
 };
 
+
 class LevelMeter : public Component,
     public Timer
 {
@@ -181,7 +196,7 @@ public:
 
     void paint(Graphics& g) override
     {
-        auto maxAmpDisplay = maxAmp->getMax();
+        auto maxAmpDisplay = std::max(maxAmp->getMax(),-54.0);
         maxAmp->setMax(-144.0);
 
         if (++peakTimes > peakholdTimes)
@@ -204,10 +219,8 @@ public:
         int nlights = (maxY - minY) / ysize;
         int orangelight = (int)((float)nlights * 0.4f);
         int y = minY;
-        int thislight = (int)((1.0 - maxAmpDisplay) * (float)nlights);
-        int peaklight = (int)((1.0 - peakhold) * (float)nlights);
-
-       // if (thislight == lastlight) return;
+        int thislight = (int)((maxAmpDisplay/-54.0) * (float)nlights);
+        int peaklight = (int)((peakhold/-54.0) * (float)nlights);
 
         for (int l = 0; l < nlights; l++)
         {
@@ -216,7 +229,8 @@ public:
             Colour thiscolor = Colours::black;
             if ((l >= thislight) || (l == peaklight))
             {
-                if (l <= orangelight) thiscolor = Colours::orange;
+                if (l == 0) thiscolor = Colour::fromRGB(255,0,0);
+                else if (l <= orangelight) thiscolor = Colours::orange;
                 else thiscolor = Colour::fromRGB(0, 255, 0);
             }
             g.setColour(thiscolor);
@@ -236,7 +250,65 @@ private:
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
 };
+class dbAnnoComponent : public Component
+{
+public:
+    dbAnnoComponent(double min, double max, double inc)
+    {
+        dbmin = min;
+        dbmax = max;
+        dbinc = inc;
+    }
 
+    void paint(Graphics& g) override
+    {
+        auto area = getBounds().reduced(2);
+        int minX = 1;
+        int minY = 20;
+        int maxY = area.getHeight()-6;
+        float textWidth = 40.0;
+        float textHeight = 11.0;
+        g.setColour(Colours::grey);
+        StringPairArray dbAnnoPos = get_db_pairs(dbmin, dbmax, dbinc, maxY, minY);
+        for (auto& key : dbAnnoPos.getAllKeys())
+        {
+            g.drawText(key, minX, dbAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredLeft);
+            // g.drawLine(_leftX - tickLength, dbAnnoPos[key].getFloatValue()  , _rightX, dbAnnoPos[key].getFloatValue(),1.0);
+        }
+    }
+
+private:
+    double dbmin;
+    double dbmax;
+    double dbinc;
+    
+    void addPair(StringPairArray& pairs, String format, float v, float pixel)
+    {
+        char buffer[50];
+        int n = sprintf(buffer, format.getCharPointer(), (float)v);
+        String annoString = buffer;
+        n = sprintf(buffer, "%f", pixel);
+        String pixelString = buffer;
+        pairs.set(annoString, pixelString);
+    };
+    
+    StringPairArray get_db_pairs(double minVal, double maxVal, double increment, double minPixel, double maxPixel)
+    {
+        StringPairArray pairs;
+        double scale = (maxPixel - minPixel) / (maxVal - minVal);
+
+        for (double v = minVal; v <= maxVal; v += increment)
+        {
+            if (v <= maxVal)
+            {
+                addPair(pairs, "%-2.0f", (float)v, minPixel + (scale * (v - minVal)));
+            }
+        }
+      
+        return pairs;
+    }
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(dbAnnoComponent)
+};
 //==============================================================================
 class GainProcessor  : public AudioProcessor
 {
@@ -275,7 +347,13 @@ public:
     void processBlock (AudioBuffer<double>& buffer, MidiBuffer&) override
     {
         auto gaindb = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
-        buffer.applyGain(gaindb);
+        double gain = Decibels::decibelsToGain(gaindb);
+        inputMaxLeft.capture(buffer, 0);
+        inputMaxRight.capture(buffer, 1);
+
+        buffer.applyGain (gain);       
+        outputMaxLeft.capture(buffer, 0);
+        outputMaxRight.capture(buffer, 1);
     }
 
     //==============================================================================
@@ -336,14 +414,15 @@ private:
             inputLevelMeterRight(inRightMaxAmp),
             outputLevelMeterLeft(outLeftMaxAmp),
             outputLevelMeterRight(outRightMaxAmp),
+            dbAnnoOut(-54.0,0.0,6.0),
             gainAttachment(owner.state, "gain", gainSlider)
         {
-           
+           // raise(SIGINT);
             addAndMakeVisible(inputLevelMeterLeft);
             addAndMakeVisible(inputLevelMeterRight);
             addAndMakeVisible(outputLevelMeterLeft);
             addAndMakeVisible(outputLevelMeterRight);
-
+            addAndMakeVisible(dbAnnoOut);
             addAndMakeVisible(gainSlider);
             gainSlider.setSliderStyle(Slider::LinearVertical);
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, 60, 15);
@@ -365,7 +444,7 @@ private:
             lastUIHeight.addListener(this);
 
             // start a timer which will keep our timecode display updated
-            startTimerHz(100);
+            startTimerHz(10);
         }
 
         ~GainAudioProcessorEditor() override {}
@@ -383,6 +462,9 @@ private:
             // This lays out our child components...
 
             auto r = getLocalBounds().reduced(4);
+            auto annoAreaOut = r.removeFromRight(20);
+            dbAnnoOut.setBounds(annoAreaOut);
+            
             auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
             inputLevelMeterRight.setBounds(leftMeterArea.removeFromRight(20));
             inputLevelMeterLeft.setBounds(leftMeterArea.removeFromRight(20));
@@ -434,6 +516,7 @@ private:
         LevelMeter inputLevelMeterRight;
         LevelMeter outputLevelMeterLeft;
         LevelMeter outputLevelMeterRight;
+        dbAnnoComponent dbAnnoOut;
         Slider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
         Colour backgroundColour;
