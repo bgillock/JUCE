@@ -125,13 +125,8 @@ public:
         const juce::SpinLock::ScopedTryLockType lock(mutex);
         if (lock.isLocked())
         {
-            auto channelData = amps.getReadPointer(channel);
-            for (int a = 0; a < amps.getNumSamples(); a++)
-            {
-                float db = Decibels::gainToDecibels(channelData[a]);
-                if (db > maxAmp) maxAmp = db;
-            }
-            // maxAmp = channel;
+            float db = Decibels::gainToDecibels(amps.getRMSLevel(channel,0,amps.getNumSamples()));
+            if (db > maxAmp) maxAmp = db;
         }
     }
     void capture(AudioBuffer<double> amps, int channel)
@@ -139,13 +134,8 @@ public:
         const juce::SpinLock::ScopedTryLockType lock(mutex);
         if (lock.isLocked())
         {
-            auto channelData = amps.getReadPointer(channel);
-            for (int a = 0; a < amps.getNumSamples(); a++)
-            {
-                double db = Decibels::gainToDecibels(channelData[a]);
-                if (db > maxAmp) maxAmp = db;
-            }
-            // maxAmp = channel;
+            float db = Decibels::gainToDecibels(amps.getRMSLevel(channel,0,amps.getNumSamples()));
+            if (db > maxAmp) maxAmp = db;
         }
     }
     double getMax()
@@ -196,6 +186,8 @@ public:
 
     void paint(Graphics& g) override
     {
+        g.setColour(Colours::white);
+        //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
         auto maxAmpDisplay = std::max(maxAmp->getMax(),-54.0);
         maxAmp->setMax(-144.0);
 
@@ -212,7 +204,7 @@ public:
         }
 
         auto area = getBounds().reduced(2);
-        int minX = 1;
+        int minX = (getBounds().getWidth()/2-6);
         int minY = 20;    
         int maxY = area.getHeight()-6;
         int ysize = 15;
@@ -262,6 +254,8 @@ public:
 
     void paint(Graphics& g) override
     {
+        g.setColour(Colours::white);
+        //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
         auto area = getBounds().reduced(2);
         int minX = 0;
         int minY = 20;
@@ -418,14 +412,22 @@ private:
             gainAttachment(owner.state, "gain", gainSlider)
         {
            // raise(SIGINT);
+            inputLevelMeterLabel.setSize(40,10);
+            addAndMakeVisible(inputLevelMeterLabel);
             addAndMakeVisible(inputLevelMeterLeft);
             addAndMakeVisible(inputLevelMeterRight);
+            outputLevelMeterLabel.setSize(40,10);
+            addAndMakeVisible(outputLevelMeterLabel);
             addAndMakeVisible(outputLevelMeterLeft);
             addAndMakeVisible(outputLevelMeterRight);
+            targetLabel.setSize(40,10);
+            addAndMakeVisible(targetLabel);
             addAndMakeVisible(dbAnnoOut);
             addAndMakeVisible(gainSlider);
+
             gainSlider.setSliderStyle(Slider::LinearVertical);
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, 60, 15);
+            gainSlider.setColour(Slider::ColourIds::backgroundColourId,Colours::darkgrey);
             gainSlider.setNumDecimalPlacesToDisplay(1);
             gainSlider.addListener(this);
             // Image myImage = ImageFileFormat::loadFrom(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
@@ -463,18 +465,21 @@ private:
 
             auto r = getLocalBounds().reduced(4);
             auto annoAreaOut = r.removeFromRight(40);
+            targetLabel.setBounds(annoAreaOut.removeFromTop(15));
             dbAnnoOut.setBounds(annoAreaOut);
             
             auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
-            inputLevelMeterRight.setBounds(leftMeterArea.removeFromRight(20));
-            inputLevelMeterLeft.setBounds(leftMeterArea.removeFromRight(20));
+            inputLevelMeterLabel.setBounds(leftMeterArea.removeFromTop(15));
+            inputLevelMeterRight.setBounds(leftMeterArea.removeFromRight(leftMeterArea.getWidth()/2));
+            inputLevelMeterLeft.setBounds(leftMeterArea);
 
             auto sliderArea = r.removeFromLeft(r.getWidth()/2);
             gainSlider.setBounds(sliderArea);
 
             auto rightMeterArea = r;
-            outputLevelMeterLeft.setBounds(rightMeterArea.removeFromLeft(20));            
-            outputLevelMeterRight.setBounds(rightMeterArea.removeFromLeft(20));
+            outputLevelMeterLabel.setBounds(rightMeterArea.removeFromTop(15));
+            outputLevelMeterLeft.setBounds(rightMeterArea.removeFromLeft(rightMeterArea.getWidth()/2));            
+            outputLevelMeterRight.setBounds(rightMeterArea);
 
             lastUIWidth = getWidth();
             lastUIHeight = getHeight();
@@ -512,6 +517,11 @@ private:
 
         //std::unique_ptr<WaveDisplayComponent> waveDisplay;
         Label gainLabel{ {}, "Gain" };
+        Label inputLevelMeterLabel{ {}, "Input"};
+        Label outputLevelMeterLabel{{}, "Output"};
+        Label targetLabel{ {}, "Target"};
+
+
         LevelMeter inputLevelMeterLeft;
         LevelMeter inputLevelMeterRight;
         LevelMeter outputLevelMeterLeft;
