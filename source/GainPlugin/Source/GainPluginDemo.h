@@ -416,7 +416,7 @@ private:
             gainAttachment(owner.state, "gain", gainSlider),
             targetAttachment(owner.state, "target", targetButton)
         {
-           // raise(SIGINT);
+            //raise(SIGINT);
             inputLevelMeterLabel.setSize(40,10);
             addAndMakeVisible(inputLevelMeterLabel);
             addAndMakeVisible(inputLevelMeterLeft);
@@ -439,8 +439,9 @@ private:
             addAndMakeVisible(dbAnnoOut);
 
             targetButton.setTitle("Target");
-            targetButton.setColour(targetButton.buttonColourId,Colour::fromRGBA(255,0,0,50));
+            targetButton.setColour(targetButton.buttonColourId,Colour::fromRGBA(255,0,0,100));
             addAndMakeVisible(targetButton);
+            targetButton.addMouseListener(this,true);
 
 
             // Image myImage = ImageFileFormat::loadFrom(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
@@ -501,7 +502,22 @@ private:
         {
          
         }
-
+        void mouseDrag (const MouseEvent& e) override
+        {
+            int i = 0;
+            if (!e.mouseWasDraggedSinceMouseDown())
+            {
+                startTargetDragY = e.y;
+            }
+            else
+            {
+                auto current = targetButton.getBounds();
+                auto annoarea = dbAnnoOut.getBounds();
+                current.setY(jlimit(annoarea.getY(),annoarea.getY()+annoarea.getHeight(),startTargetDragY+e.getDistanceFromDragStartY()));
+                targetButton.setBounds(current);
+                targetButton.repaint();
+            }
+        }
         void timerCallback() override
         {
             inputLevelMeterLeft.repaint();
@@ -544,7 +560,7 @@ private:
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
         AudioProcessorValueTreeState::ButtonAttachment targetAttachment;
         Colour backgroundColour;
-
+        int startTargetDragY = -1;
         // these are used to persist the UI's size - the values are stored along with the
         // filter's other parameters, and the UI component will update them when it gets
         // resized.
