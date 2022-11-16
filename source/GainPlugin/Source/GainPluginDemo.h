@@ -243,40 +243,70 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
 };
 
-class dbAnnoComponent : public Component
+class dbAnnoComponent : public Component, private MouseListener
 {
 public:
-    dbAnnoComponent(double min, double max, double inc)
+    dbAnnoComponent(double min, double max, double inc, Value& tmin, Value& tmax)
     {
         dbmin = min;
         dbmax = max;
         dbinc = inc;
+        targetmin = &tmin;
+        targetmax = &tmax;
     }
 
     void paint(Graphics& g) override
     {
         g.setColour(Colours::white);
         //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
-        auto area = getBounds().reduced(2);
-        int minX = 0;
-        int minY = 20;
-        int maxY = area.getHeight()-6;
         float textWidth = 30.0;
         float textHeight = 10.0;
-        g.setColour(Colours::grey);
+        g.setColour(Colours::white);
         StringPairArray dbAnnoPos = get_db_pairs(dbmin, dbmax, dbinc, maxY, minY);
         for (auto& key : dbAnnoPos.getAllKeys())
         {
             g.drawText(key, minX, dbAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredLeft);
             // g.drawLine(_leftX - tickLength, dbAnnoPos[key].getFloatValue()  , _rightX, dbAnnoPos[key].getFloatValue(),1.0);
         }
-    }
 
+        int tminY = getYFromDb(targetmin->getValue());
+        int tmaxY = getYFromDb(targetmax->getValue());
+        g.setColour(Colour::fromRGBA(255, 0, 0, 100));
+        g.fillRoundedRectangle( minX, tminY, width, tmaxY - tminY, 3.0);
+
+    }
+    void resized() override
+    {
+        auto area = getBounds().reduced(2);
+        minX = 0;
+        maxY = 20;
+        width = area.getWidth();
+        minY = area.getHeight() - 6;
+    }
+    void mouseDown(const MouseEvent& e) override
+    {
+
+    }
+    void mouseDrag(const MouseEvent& e) override
+    {
+    }
 private:
     double dbmin;
     double dbmax;
     double dbinc;
-    
+    int minY;
+    int maxY;
+    int width;
+    int minX;
+
+    Value *targetmin;
+    Value *targetmax;
+
+    int getYFromDb(double db)
+    {
+        if (dbmax != dbmin) return minY + (int)((db - dbmin) * ((double)(maxY - minY) / (dbmax - dbmin)));
+        return minY;
+    }
     void addPair(StringPairArray& pairs, String format, float v, float pixel)
     {
         char buffer[50];
@@ -290,13 +320,12 @@ private:
     StringPairArray get_db_pairs(double minVal, double maxVal, double increment, double minPixel, double maxPixel)
     {
         StringPairArray pairs;
-        double scale = (maxPixel - minPixel) / (maxVal - minVal);
 
         for (double v = minVal; v <= maxVal; v += increment)
         {
             if (v <= maxVal)
             {
-                addPair(pairs, "%-2.0f", (float)v, minPixel + (scale * (v - minVal)));
+                addPair(pairs, "%-2.0f", (float)v, (float)getYFromDb(v));
             }
         }
       
@@ -316,8 +345,10 @@ public:
         state(*this, nullptr, "state",
             { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     
                                                     NormalisableRange<float>(-40.0f, +40.0f), 0.0f),
-              std::make_unique<AudioParameterFloat>(ParameterID { "target",  1 }, "Target",
-                                                    NormalisableRange<float>(-54.0f, 0.0f), -12.0f)})
+              std::make_unique<AudioParameterFloat>(ParameterID { "targetmin",  1 }, "Target Min",
+                                                    NormalisableRange<float>(-54.0f, 0.0f), -12.0f),
+              std::make_unique<AudioParameterFloat>(ParameterID { "targetmax",  1 }, "Target Max",
+                                                    NormalisableRange<float>(-54.0f, 0.0f), -12.0f) })
     {
         state.state.addChild({ "uiState", { { "width",  200 }, { "height", 400 } }, {} }, -1, nullptr);
         outputMaxLeft.init();
@@ -412,9 +443,8 @@ private:
             inputLevelMeterRight(inRightMaxAmp),
             outputLevelMeterLeft(outLeftMaxAmp),
             outputLevelMeterRight(outRightMaxAmp),
-            dbAnnoOut(-54.0,0.0,6.0),
-            gainAttachment(owner.state, "gain", gainSlider),
-            targetAttachment(owner.state, "target", targetButton)
+            dbAnnoOut(-54.0,0.0,6.0,targetMin,targetMax),
+            gainAttachment(owner.state, "gain", gainSlider)
         {
             //raise(SIGINT);
             inputLevelMeterLabel.setSize(40,10);
@@ -438,11 +468,14 @@ private:
             addAndMakeVisible(targetLabel);
             addAndMakeVisible(dbAnnoOut);
 
-            targetButton.setTitle("Target");
-            targetButton.setColour(targetButton.buttonColourId,Colour::fromRGBA(255,0,0,100));
-            addAndMakeVisible(targetButton);
-            targetButton.addMouseListener(this,true);
+            targetMin.referTo(owner.state.state.getChildWithName("state").getPropertyAsValue("targetmin", nullptr));
+            targetMax.referTo(owner.state.state.getChildWithName("state").getPropertyAsValue("targetmax", nullptr));
 
+            targetMin.addListener(this);
+            targetMax.addListener(this);
+
+            targetMin = -21.0;
+            targetMax = -16.0;
 
             // Image myImage = ImageFileFormat::loadFrom(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
             //addAndMakeVisible(outVUMeter);
@@ -468,9 +501,6 @@ private:
         //==============================================================================
         void paint(Graphics& g) override
         {
-
-            //g.setColour(backgroundColour);
-            //g.fillAll();
         }
 
         void resized() override
@@ -498,26 +528,7 @@ private:
             lastUIWidth = getWidth();
             lastUIHeight = getHeight();
         }
-        void mouseWheelMove(const MouseEvent& event, const MouseWheelDetails& wheel) override
-        {
-         
-        }
-        void mouseDrag (const MouseEvent& e) override
-        {
-            int i = 0;
-            if (!e.mouseWasDraggedSinceMouseDown())
-            {
-                startTargetDragY = e.y;
-            }
-            else
-            {
-                auto current = targetButton.getBounds();
-                auto annoarea = dbAnnoOut.getBounds();
-                current.setY(jlimit(annoarea.getY(),annoarea.getY()+annoarea.getHeight(),startTargetDragY+e.getDistanceFromDragStartY()));
-                targetButton.setBounds(current);
-                targetButton.repaint();
-            }
-        }
+        
         void timerCallback() override
         {
             inputLevelMeterLeft.repaint();
@@ -526,20 +537,8 @@ private:
             outputLevelMeterRight.repaint();
         }
 
-        int getControlParameterIndex(Component& control) override
-        {
-            if (&control == &gainSlider)
-                return 0;
-
-            return -1;
-        }
-
         void sliderValueChanged(Slider* sliderThatHasChanged) override
         {
-            
-            //getProcessor().inputMaxLeft.setMax(gainSlider.getValue());
-            //getProcessor().inputMaxRight.setMax(gainSlider.getValue() * 0.9f);
-            //repaint();
         }
 
     private:
@@ -558,7 +557,9 @@ private:
         dbAnnoComponent dbAnnoOut;
         Slider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
-        AudioProcessorValueTreeState::ButtonAttachment targetAttachment;
+        Value targetMin;
+        Value targetMax;
+
         Colour backgroundColour;
         int startTargetDragY = -1;
         // these are used to persist the UI's size - the values are stored along with the
@@ -573,9 +574,18 @@ private:
         }
 
         // called when the stored window size changes
-        void valueChanged(Value&) override
+        void valueChanged(Value& v) override
         {
-            setSize(lastUIWidth.getValue(), lastUIHeight.getValue());
+            if (v.refersToSameSourceAs(lastUIHeight) ||
+                v.refersToSameSourceAs(lastUIWidth))
+            {
+                setSize(lastUIWidth.getValue(), lastUIHeight.getValue());
+            }
+            if (v.refersToSameSourceAs(targetMin) ||
+                v.refersToSameSourceAs(targetMax))
+            {
+
+            }
         }
     };
     //==============================================================================
