@@ -162,6 +162,44 @@ private:
     bool ignoreCallbacks = false;
 };
 
+class TwoValueSliderParameterAttachment : private Slider::Listener
+{
+public:    
+    enum ValueType {
+        MinValue,
+        MaxValue
+    };
+    /** Creates a connection between a plug-in parameters and a Two Value Slider.
+
+        @param parameter     The parameter to use attachment
+        @param slider        The Slider to use
+        @param undoManager   An optional UndoManager
+    */
+    TwoValueSliderParameterAttachment(RangedAudioParameter& parameter, 
+        ValueType v,
+        Slider& slider,
+        UndoManager* undoManager = nullptr);
+
+    /** Destructor. */
+    ~TwoValueSliderParameterAttachment() override;
+
+    /** Call this after setting up your slider in the case where you need to do
+        extra setup after constructing this attachment.
+    */
+    void sendInitialUpdate();
+
+private:
+    void setValue(float newValue);
+    void sliderValueChanged(Slider*) override;
+
+    void sliderDragStarted(Slider*) override { attachment.beginGesture(); }
+    void sliderDragEnded(Slider*) override { attachment.endGesture(); }
+    ValueType valueType;
+    Slider& slider;
+    ParameterAttachment attachment;
+    bool ignoreCallbacks = false;
+};
+
 //==============================================================================
 /** An object of this class maintains a connection between a ComboBox and a
     plug-in parameter.

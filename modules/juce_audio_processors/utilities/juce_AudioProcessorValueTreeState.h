@@ -548,6 +548,28 @@ public:
     };
 
     //==============================================================================
+    /** An object of this class maintains a connection between a Slider and two parameters
+        in an AudioProcessorValueTreeState.
+
+        During the lifetime of this TwoValueSliderAttachment object, it keeps the two things in
+        sync, making it easy to connect a slider to a parameter. When this object is
+        deleted, the connection is broken. Make sure that your AudioProcessorValueTreeState
+        and Slider aren't deleted before this object!
+    */
+    class JUCE_API  TwoValueSliderAttachment
+    {
+    public:
+        TwoValueSliderAttachment(AudioProcessorValueTreeState& stateToUse,
+            const String& parameterID1,
+            const String& parameterID2,
+            Slider& slider);
+
+    private:
+        std::unique_ptr<TwoValueSliderParameterAttachment> attachment1;
+        std::unique_ptr<TwoValueSliderParameterAttachment> attachment2;
+        JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(TwoValueSliderAttachment)
+    };
+    //==============================================================================
     /** An object of this class maintains a connection between a ComboBox and a parameter
         in an AudioProcessorValueTreeState.
 

@@ -484,11 +484,31 @@ std::unique_ptr<Attachment> makeAttachment (const AudioProcessorValueTreeState& 
     jassertfalse;
     return nullptr;
 }
+template <typename Attachment, typename Control>
+std::unique_ptr<Attachment> makeTwoAttachment (const AudioProcessorValueTreeState& stateToUse,
+                                            TwoValueSliderParameterAttachment::ValueType v,
+                                            const String& parameterID,
+                                            Control& control)
+{
+    if (auto* parameter = stateToUse.getParameter (parameterID))
+        return std::make_unique<Attachment> (*parameter, v, control, stateToUse.undoManager);
 
+    jassertfalse;
+    return nullptr;
+}
 AudioProcessorValueTreeState::SliderAttachment::SliderAttachment (AudioProcessorValueTreeState& stateToUse,
                                                                   const String& parameterID,
                                                                   Slider& slider)
     : attachment (makeAttachment<SliderParameterAttachment> (stateToUse, parameterID, slider))
+{
+}
+
+AudioProcessorValueTreeState::TwoValueSliderAttachment::TwoValueSliderAttachment(AudioProcessorValueTreeState& stateToUse,
+    const String& parameterID1,
+    const String& parameterID2,
+    Slider& slider)
+    : attachment1(makeTwoAttachment<TwoValueSliderParameterAttachment>(stateToUse, TwoValueSliderParameterAttachment::ValueType::MinValue, parameterID1, slider)),
+      attachment2(makeTwoAttachment<TwoValueSliderParameterAttachment>(stateToUse, TwoValueSliderParameterAttachment::ValueType::MaxValue, parameterID2, slider))
 {
 }
 
@@ -505,6 +525,7 @@ AudioProcessorValueTreeState::ButtonAttachment::ButtonAttachment (AudioProcessor
     : attachment (makeAttachment<ButtonParameterAttachment> (stateToUse, parameterID, button))
 {
 }
+
 
 //==============================================================================
 //==============================================================================

@@ -48,6 +48,7 @@
 
 #pragma once
 #include <csignal>
+
 class VUHistogram
 {
 public:
@@ -246,13 +247,11 @@ private:
 class dbAnnoComponent : public Component, private MouseListener
 {
 public:
-    dbAnnoComponent(double min, double max, double inc, Value& tmin, Value& tmax)
+    dbAnnoComponent(double min, double max, double inc)
     {
         dbmin = min;
         dbmax = max;
         dbinc = inc;
-        targetmin = &tmin;
-        targetmax = &tmax;
     }
 
     void paint(Graphics& g) override
@@ -268,12 +267,6 @@ public:
             g.drawText(key, minX, dbAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredLeft);
             // g.drawLine(_leftX - tickLength, dbAnnoPos[key].getFloatValue()  , _rightX, dbAnnoPos[key].getFloatValue(),1.0);
         }
-
-        int tminY = getYFromDb(targetmin->getValue());
-        int tmaxY = getYFromDb(targetmax->getValue());
-        g.setColour(Colour::fromRGBA(255, 0, 0, 100));
-        g.fillRoundedRectangle( minX, tminY, width, tmaxY - tminY, 3.0);
-
     }
     void resized() override
     {
@@ -298,9 +291,6 @@ private:
     int maxY;
     int width;
     int minX;
-
-    Value *targetmin;
-    Value *targetmax;
 
     int getYFromDb(double db)
     {
@@ -345,10 +335,10 @@ public:
         state(*this, nullptr, "state",
             { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     
                                                     NormalisableRange<float>(-40.0f, +40.0f), 0.0f),
-              std::make_unique<AudioParameterFloat>(ParameterID { "targetmin",  1 }, "Target Min",
-                                                    NormalisableRange<float>(-54.0f, 0.0f), -12.0f),
-              std::make_unique<AudioParameterFloat>(ParameterID { "targetmax",  1 }, "Target Max",
-                                                    NormalisableRange<float>(-54.0f, 0.0f), -12.0f) })
+              std::make_unique<AudioParameterFloat>(ParameterID { "targetmin",  1 }, "targetmin",
+                                                    NormalisableRange<float>(-54.0f, 0.0f), -15.0f),
+              std::make_unique<AudioParameterFloat>(ParameterID { "targetmax",  1 }, "targetmax",
+                                                    NormalisableRange<float>(-54.0f, 0.0f), -9.0f) })
     {
         state.state.addChild({ "uiState", { { "width",  200 }, { "height", 400 } }, {} }, -1, nullptr);
         outputMaxLeft.init();
@@ -437,16 +427,18 @@ private:
         private Value::Listener
     {
     public:
-        GainAudioProcessorEditor(GainProcessor& owner, MaximumAmp &inLeftMaxAmp, MaximumAmp& inRightMaxAmp, MaximumAmp& outLeftMaxAmp, MaximumAmp& outRightMaxAmp)
+        GainAudioProcessorEditor(GainProcessor& owner, MaximumAmp& inLeftMaxAmp, MaximumAmp& inRightMaxAmp, MaximumAmp& outLeftMaxAmp, MaximumAmp& outRightMaxAmp)
             : AudioProcessorEditor(owner),
             inputLevelMeterLeft(inLeftMaxAmp),
             inputLevelMeterRight(inRightMaxAmp),
             outputLevelMeterLeft(outLeftMaxAmp),
             outputLevelMeterRight(outRightMaxAmp),
-            dbAnnoOut(-54.0,0.0,6.0,targetMin,targetMax),
-            gainAttachment(owner.state, "gain", gainSlider)
+            targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
+            dbAnnoOut(-54.0,0.0,6.0),
+            gainAttachment(owner.state, "gain", gainSlider),
+            targetAttachment(owner.state, "targetmin", "targetmax", targetSlider)
         {
-            //raise(SIGINT);
+            //raise(SIGINT); 
             inputLevelMeterLabel.setSize(40,10);
             addAndMakeVisible(inputLevelMeterLabel);
             addAndMakeVisible(inputLevelMeterLeft);
@@ -454,6 +446,7 @@ private:
 
             addAndMakeVisible(gainSlider);  
             gainSlider.setSliderStyle(Slider::LinearVertical);
+
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, 60, 15);
             gainSlider.setColour(Slider::ColourIds::backgroundColourId,Colours::darkgrey);
             gainSlider.setNumDecimalPlacesToDisplay(1);
@@ -468,14 +461,12 @@ private:
             addAndMakeVisible(targetLabel);
             addAndMakeVisible(dbAnnoOut);
 
-            targetMin.referTo(owner.state.state.getChildWithName("state").getPropertyAsValue("targetmin", nullptr));
-            targetMax.referTo(owner.state.state.getChildWithName("state").getPropertyAsValue("targetmax", nullptr));
+            addAndMakeVisible(targetSlider);
 
-            targetMin.addListener(this);
-            targetMax.addListener(this);
-
-            targetMin = -21.0;
-            targetMax = -16.0;
+            targetSlider.setColour(Slider::ColourIds::backgroundColourId, Colour::fromRGBA(0,0,0,0));
+            targetSlider.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(255, 0, 0, 100));
+            targetSlider.setColour(Slider::ColourIds::trackColourId, Colour::fromRGBA(255, 0, 0, 100));
+            targetSlider.addListener(this);
 
             // Image myImage = ImageFileFormat::loadFrom(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
             //addAndMakeVisible(outVUMeter);
@@ -510,7 +501,9 @@ private:
             auto r = getLocalBounds().reduced(4);
             auto annoAreaOut = r.removeFromRight(40);
             targetLabel.setBounds(annoAreaOut.removeFromTop(15));
+            targetSlider.setBounds(annoAreaOut);
             dbAnnoOut.setBounds(annoAreaOut);
+
             targetButton.setBounds(annoAreaOut.removeFromBottom(15));
             auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
             inputLevelMeterLabel.setBounds(leftMeterArea.removeFromTop(15));
@@ -527,6 +520,7 @@ private:
 
             lastUIWidth = getWidth();
             lastUIHeight = getHeight();
+
         }
         
         void timerCallback() override
@@ -557,11 +551,10 @@ private:
         dbAnnoComponent dbAnnoOut;
         Slider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
-        Value targetMin;
-        Value targetMax;
-
+        Slider targetSlider;
+        AudioProcessorValueTreeState::TwoValueSliderAttachment targetAttachment;
         Colour backgroundColour;
-        int startTargetDragY = -1;
+
         // these are used to persist the UI's size - the values are stored along with the
         // filter's other parameters, and the UI component will update them when it gets
         // resized.
@@ -581,15 +574,10 @@ private:
             {
                 setSize(lastUIWidth.getValue(), lastUIHeight.getValue());
             }
-            if (v.refersToSameSourceAs(targetMin) ||
-                v.refersToSameSourceAs(targetMax))
-            {
-
-            }
         }
     };
     //==============================================================================
-    AudioParameterFloat* gain;
+    //AudioParameterFloat* gain;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GainProcessor)
