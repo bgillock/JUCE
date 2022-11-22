@@ -48,6 +48,7 @@
 
 #pragma once
 #include <csignal>
+#include "FaderSlider.h"
 
 class VUHistogram
 {
@@ -449,7 +450,6 @@ private:
 
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, 60, 15);
             gainSlider.setColour(Slider::ColourIds::backgroundColourId,Colours::darkgrey);
-            gainSlider.setNumDecimalPlacesToDisplay(1);
             gainSlider.addListener(this);
 
             outputLevelMeterLabel.setSize(40,10);
@@ -511,7 +511,9 @@ private:
             inputLevelMeterLeft.setBounds(leftMeterArea);
 
             auto sliderArea = r.removeFromLeft(r.getWidth()/2);
+            sliderArea.removeFromBottom(5); 
             gainSlider.setBounds(sliderArea);
+            gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, sliderArea.getWidth(), 30);
 
             auto rightMeterArea = r;
             outputLevelMeterLabel.setBounds(rightMeterArea.removeFromTop(15));
@@ -549,7 +551,7 @@ private:
         LevelMeter outputLevelMeterLeft;
         LevelMeter outputLevelMeterRight;
         dbAnnoComponent dbAnnoOut;
-        Slider gainSlider;
+        FaderSlider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
         Slider targetSlider;
         AudioProcessorValueTreeState::TwoValueSliderAttachment targetAttachment;
