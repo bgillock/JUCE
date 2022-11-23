@@ -49,7 +49,7 @@
 #pragma once
 #include <csignal>
 #include "FaderSlider.h"
-
+#include "TwoValueSlider.h"
 class VUHistogram
 {
 public:
@@ -553,7 +553,7 @@ private:
         dbAnnoComponent dbAnnoOut;
         FaderSlider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
-        Slider targetSlider;
+        TwoValueSlider targetSlider;
         AudioProcessorValueTreeState::TwoValueSliderAttachment targetAttachment;
         Colour backgroundColour;
 

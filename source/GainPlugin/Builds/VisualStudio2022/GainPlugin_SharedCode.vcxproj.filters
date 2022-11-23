@@ -604,7 +604,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\FaderSliderLookAndFeel.cpp">
+    <ClCompile Include="..\..\Source\TwoValueSlider.cpp">
       <Filter>GainPlugin\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\FaderSlider.cpp">
@@ -3033,7 +3033,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\FaderSliderLookAndFeel.h">
+    <ClInclude Include="..\..\Source\TwoValueSlider.h">
       <Filter>GainPlugin\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\FaderSlider.h">

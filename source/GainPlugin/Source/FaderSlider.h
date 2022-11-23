@@ -11,21 +11,33 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "FaderSliderLookAndFeel.h"
 
-//==============================================================================
-/*
-*/
+class FaderSliderLookAndFeel : public LookAndFeel_V4
+{
+public:
+    FaderSliderLookAndFeel();
+    ~FaderSliderLookAndFeel();
+    void drawLinearSliderBackground(Graphics&, int x, int y, int width, int height,
+        float sliderPos, float minSliderPos, float maxSliderPos,
+        const Slider::SliderStyle, Slider&) override;
+    void drawLinearSlider(Graphics&, int x, int y, int width, int height,
+        float sliderPos, float minSliderPos, float maxSliderPos,
+        const Slider::SliderStyle, Slider&) override;
+    void drawLabel(Graphics& g, Label& label);
+
+
+private:
+    Image thumbImage;
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaderSliderLookAndFeel)
+};
+
 class FaderSlider  : public juce::Slider
 {
 public:
     FaderSlider();
     ~FaderSlider() override;
-  //  void mouseDown(const MouseEvent& event) override;
-  //  void mouseUp(const MouseEvent& event) override;
 
 private:
     FaderSliderLookAndFeel faderSliderLookAndFeel;
-    Point<int> mousePosition;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (FaderSlider)
 };

@@ -139,7 +139,7 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\FaderSliderLookAndFeel.cpp"/>
+    <ClCompile Include="..\..\Source\TwoValueSlider.cpp"/>
     <ClCompile Include="..\..\Source\FaderSlider.cpp"/>
     <ClCompile Include="..\..\Source\Main.cpp"/>
     <ClCompile Include="..\..\..\..\modules\juce_audio_basics\buffers\juce_AudioChannelSet.cpp">
@@ -2403,7 +2403,7 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_juce_gui_extra.cpp"/>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\FaderSliderLookAndFeel.h"/>
+    <ClInclude Include="..\..\Source\TwoValueSlider.h"/>
     <ClInclude Include="..\..\Source\FaderSlider.h"/>
     <ClInclude Include="..\..\Source\GainPluginDemo.h"/>
     <ClInclude Include="..\..\..\..\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h"/>

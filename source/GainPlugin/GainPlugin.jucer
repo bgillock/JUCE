@@ -7,10 +7,10 @@
               addUsingNamespaceToJuceHeader="1" id="aZQp2F" jucerFormatVersion="1">
   <MAINGROUP id="mz03RV" name="GainPlugin">
     <GROUP id="{B2707595-8FA8-FCE2-3855-A3603F812C34}" name="Source">
-      <FILE id="UyvXvf" name="FaderSliderLookAndFeel.cpp" compile="1" resource="0"
-            file="Source/FaderSliderLookAndFeel.cpp"/>
-      <FILE id="hDBz3X" name="FaderSliderLookAndFeel.h" compile="0" resource="0"
-            file="Source/FaderSliderLookAndFeel.h"/>
+      <FILE id="R8G1JR" name="TwoValueSlider.cpp" compile="1" resource="0"
+            file="Source/TwoValueSlider.cpp"/>
+      <FILE id="qyPI3G" name="TwoValueSlider.h" compile="0" resource="0"
+            file="Source/TwoValueSlider.h"/>
       <FILE id="zuOt7N" name="FaderSlider.cpp" compile="1" resource="0" file="Source/FaderSlider.cpp"/>
       <FILE id="OWXi6j" name="FaderSlider.h" compile="0" resource="0" file="Source/FaderSlider.h"/>
       <FILE id="M0ZzZr" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
