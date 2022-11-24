@@ -604,6 +604,15 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\MaximumAmp.cpp">
+      <Filter>GainPlugin\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\LevelMeter.cpp">
+      <Filter>GainPlugin\Source</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Source\dbAnnoComponent.cpp">
+      <Filter>GainPlugin\Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\TwoValueSlider.cpp">
       <Filter>GainPlugin\Source</Filter>
     </ClCompile>
@@ -3033,6 +3042,15 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\MaximumAmp.h">
+      <Filter>GainPlugin\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\LevelMeter.h">
+      <Filter>GainPlugin\Source</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\Source\dbAnnoComponent.h">
+      <Filter>GainPlugin\Source</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\TwoValueSlider.h">
       <Filter>GainPlugin\Source</Filter>
     </ClInclude>

@@ -50,6 +50,10 @@
 #include <csignal>
 #include "FaderSlider.h"
 #include "TwoValueSlider.h"
+#include "dbAnnoComponent.h"
+#include "MaximumAmp.h"
+#include "LevelMeter.h"
+
 class VUHistogram
 {
 public:
@@ -118,212 +122,6 @@ private:
     int _currentBuff;
 };
 
-class MaximumAmp
-{
-public:
-    MaximumAmp() { maxAmp = -144.0; };
-    void capture(AudioBuffer<float> amps, int channel)
-    {
-        const juce::SpinLock::ScopedTryLockType lock(mutex);
-        if (lock.isLocked())
-        {
-            float db = Decibels::gainToDecibels(amps.getRMSLevel(channel,0,amps.getNumSamples()));
-            if (db > maxAmp) maxAmp = db;
-        }
-    }
-    void capture(AudioBuffer<double> amps, int channel)
-    {
-        const juce::SpinLock::ScopedTryLockType lock(mutex);
-        if (lock.isLocked())
-        {
-            float db = Decibels::gainToDecibels(amps.getRMSLevel(channel,0,amps.getNumSamples()));
-            if (db > maxAmp) maxAmp = db;
-        }
-    }
-    double getMax()
-    {
-        const juce::SpinLock::ScopedTryLockType lock(mutex);
-        return maxAmp;
-    }
-    void setMax(double max)
-    {
-        const juce::SpinLock::ScopedTryLockType lock(mutex);
-        if (lock.isLocked())
-        {
-            maxAmp = max;
-        }
-    }
-    void init()
-    {
-        const juce::SpinLock::ScopedTryLockType lock(mutex);
-        if (lock.isLocked())
-        {
-            maxAmp = -144.0;
-        }
-    }
-private:
-    juce::SpinLock mutex;
-    double maxAmp;
-};
-class VUComponent : public Component
-{
-
-};
-
-
-class LevelMeter : public Component,
-    public Timer
-{
-public:
-    LevelMeter(MaximumAmp &max) 
-    {
-        //startTimerHz(100);
-        maxAmp = &max;
-    }
-
-    void timerCallback() override
-    {
-        repaint();
-    }
-
-    void paint(Graphics& g) override
-    {
-        g.setColour(Colours::white);
-        //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
-        auto maxAmpDisplay = std::max(maxAmp->getMax(),-54.0);
-        maxAmp->setMax(-144.0);
-
-        if (++peakTimes > peakholdTimes)
-        {
-            peakTimes = 0;
-            peakhold = -144.0;
-        }
-        
-        if (maxAmpDisplay > peakhold)
-        {
-            peakhold = maxAmpDisplay;
-            peakTimes = 0;
-        }
-
-        auto area = getBounds().reduced(2);
-        int minX = (getBounds().getWidth()/2-6);
-        int minY = 20;    
-        int maxY = area.getHeight()-6;
-        int ysize = 15;
-        int nlights = (maxY - minY) / ysize;
-        int orangelight = (int)((float)nlights * 0.4f);
-        int y = minY;
-        int thislight = (int)((maxAmpDisplay/-54.0) * (float)nlights);
-        int peaklight = (int)((peakhold/-54.0) * (float)nlights);
-
-        for (int l = 0; l < nlights; l++)
-        {
-            g.setColour(Colours::white);
-            g.drawRoundedRectangle(minX, y+1, ysize-4, ysize - 4, 5.0, 1.5);
-            Colour thiscolor = Colours::black;
-            if ((l >= thislight) || (l == peaklight))
-            {
-                if (l == 0) thiscolor = Colour::fromRGB(255,0,0);
-                else if (l <= orangelight) thiscolor = Colours::orange;
-                else thiscolor = Colour::fromRGB(0, 255, 0);
-            }
-            g.setColour(thiscolor);
-            g.fillRoundedRectangle(minX, y+1, ysize-4, ysize - 4,5.0);
-            y += ysize;
-        }
-        lastlight = thislight;
-        return;
-    }
-
-private:
-    MaximumAmp* maxAmp;
-    int lastlight = 0;
-    double peakhold = 0.0;
-    const int peakholdTimes = 10; // number of times to leave peak 
-    int peakTimes = 0;
-
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter)
-};
-
-class dbAnnoComponent : public Component, private MouseListener
-{
-public:
-    dbAnnoComponent(double min, double max, double inc)
-    {
-        dbmin = min;
-        dbmax = max;
-        dbinc = inc;
-    }
-
-    void paint(Graphics& g) override
-    {
-        g.setColour(Colours::white);
-        //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
-        float textWidth = 30.0;
-        float textHeight = 10.0;
-        g.setColour(Colours::white);
-        StringPairArray dbAnnoPos = get_db_pairs(dbmin, dbmax, dbinc, maxY, minY);
-        for (auto& key : dbAnnoPos.getAllKeys())
-        {
-            g.drawText(key, minX, dbAnnoPos[key].getFloatValue() - (textHeight/2.0), textWidth, textHeight, Justification::centredLeft);
-            // g.drawLine(_leftX - tickLength, dbAnnoPos[key].getFloatValue()  , _rightX, dbAnnoPos[key].getFloatValue(),1.0);
-        }
-    }
-    void resized() override
-    {
-        auto area = getBounds().reduced(2);
-        minX = 0;
-        maxY = 20;
-        width = area.getWidth();
-        minY = area.getHeight() - 6;
-    }
-    void mouseDown(const MouseEvent& e) override
-    {
-
-    }
-    void mouseDrag(const MouseEvent& e) override
-    {
-    }
-private:
-    double dbmin;
-    double dbmax;
-    double dbinc;
-    int minY;
-    int maxY;
-    int width;
-    int minX;
-
-    int getYFromDb(double db)
-    {
-        if (dbmax != dbmin) return minY + (int)((db - dbmin) * ((double)(maxY - minY) / (dbmax - dbmin)));
-        return minY;
-    }
-    void addPair(StringPairArray& pairs, String format, float v, float pixel)
-    {
-        char buffer[50];
-        int n = sprintf(buffer, format.getCharPointer(), (float)v);
-        String annoString = buffer;
-        n = sprintf(buffer, "%f", pixel);
-        String pixelString = buffer;
-        pairs.set(annoString, pixelString);
-    };
-    
-    StringPairArray get_db_pairs(double minVal, double maxVal, double increment, double minPixel, double maxPixel)
-    {
-        StringPairArray pairs;
-
-        for (double v = minVal; v <= maxVal; v += increment)
-        {
-            if (v <= maxVal)
-            {
-                addPair(pairs, "%-2.0f", (float)v, (float)getYFromDb(v));
-            }
-        }
-      
-        return pairs;
-    }
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(dbAnnoComponent)
-};
 //==============================================================================
 class GainProcessor  : public AudioProcessor
 {
@@ -464,7 +262,7 @@ private:
             addAndMakeVisible(targetSlider);
 
             targetSlider.setColour(Slider::ColourIds::backgroundColourId, Colour::fromRGBA(0,0,0,0));
-            targetSlider.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(255, 0, 0, 100));
+            targetSlider.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(255, 127, 39, 100));
             targetSlider.setColour(Slider::ColourIds::trackColourId, Colour::fromRGBA(255, 0, 0, 100));
             targetSlider.addListener(this);
 

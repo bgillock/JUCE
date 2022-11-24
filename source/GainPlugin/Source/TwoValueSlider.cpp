@@ -74,8 +74,9 @@ void TwoValueSliderLookAndFeel::drawLinearSliderThumb(Graphics& g, int x, int y,
         width, sliderRadius * 2.0,
         sliderRadius, knobColour, outlineThickness, false, false, false, false);
 
-    g.setColour(Colour::fromRGBA(255, 127, 39, 100));
-    g.fillRect(sliderRadius, maxSliderPos + sr, width - (sr * 2.0), minSliderPos - maxSliderPos - sr);
+    g.setColour(knobColour);
+    g.fillRect(sliderRadius, maxSliderPos + sr, width - (sr * 2.0), jmax(0.0,minSliderPos - maxSliderPos - (sr * 2.0)));
+
     drawShinyButtonShape(g, 0, maxSliderPos - sr,
         width, sliderRadius * 2.0,
         sliderRadius, knobColour, outlineThickness, false, false, false, false);
