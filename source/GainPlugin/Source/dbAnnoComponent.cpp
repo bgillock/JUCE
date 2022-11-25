@@ -12,16 +12,19 @@
 #include "dbAnnoComponent.h"
 
 //==============================================================================
-dbAnnoComponent::dbAnnoComponent(double min, double max, double inc) :
+
+dbAnnoComponent::dbAnnoComponent(int min, int max, int inc, Justification s) :
     minX(0),
     maxY(0),
     minY(0),
-    width(0)
+    width(0),
+    style(s)
 {
     dbmin = min;
     dbmax = max;
     dbinc = inc;
 };
+
 
 void dbAnnoComponent::paint(Graphics& g) 
 {
@@ -31,10 +34,18 @@ void dbAnnoComponent::paint(Graphics& g)
     float textHeight = 10.0;
     g.setColour(Colours::white);
     StringPairArray dbAnnoPos = get_db_pairs(dbmin, dbmax, dbinc, maxY, minY);
+    g.setFont(Font("Lucinda Sans Typewriter", "Regular", 11.0));
+    auto font = g.getCurrentFont();
     for (auto& key : dbAnnoPos.getAllKeys())
     {
-        g.drawText(key, minX, dbAnnoPos[key].getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredLeft);
-        // g.drawLine(_leftX - tickLength, dbAnnoPos[key].getFloatValue()  , _rightX, dbAnnoPos[key].getFloatValue(),1.0);
+        if (dbAnnoPos[key] != "")
+        {
+            g.drawText(dbAnnoPos[key], minX, key.getFloatValue() - (textHeight / 2.0), textWidth, textHeight, Justification::centredLeft);
+            int strWidth = font.getStringWidth(dbAnnoPos[key]);
+            g.drawRect((float)strWidth, key.getFloatValue(), (float)width-strWidth, 1.0, 1.0);
+        }
+        else
+            g.drawRect( 0.0, key.getFloatValue(), (float)width,0.5,0.5);
     }
 }
 void dbAnnoComponent::resized()
@@ -54,22 +65,31 @@ int dbAnnoComponent::getYFromDb(double db)
 void dbAnnoComponent::addPair(StringPairArray& pairs, String format, float v, float pixel)
 {
     char buffer[50];
-    int n = sprintf(buffer, format.getCharPointer(), (float)v);
-    String annoString = buffer;
-    n = sprintf(buffer, "%f", pixel);
+    String annoString = "";
+    if (format != "")
+    {
+        int n = sprintf(buffer, format.getCharPointer(), (float)v);
+        annoString = buffer;
+    }
+    int n = sprintf(buffer, "%f", pixel);
     String pixelString = buffer;
-    pairs.set(annoString, pixelString);
+    pairs.set(pixelString, annoString);
 };
 
-StringPairArray dbAnnoComponent::get_db_pairs(double minVal, double maxVal, double increment, double minPixel, double maxPixel)
+StringPairArray dbAnnoComponent::get_db_pairs(int minVal, int maxVal, int increment, double minPixel, double maxPixel)
 {
     StringPairArray pairs;
 
-    for (double v = minVal; v <= maxVal; v += increment)
+    for (int v = minVal; v <= maxVal; v++)
     {
-        if (v <= maxVal)
+
+        if (v % increment == 0)
         {
             addPair(pairs, "%-2.0f", (float)v, (float)getYFromDb(v));
+        }
+        else
+        {
+            addPair(pairs, "", (float)v, (float)getYFromDb(v));
         }
     }
 

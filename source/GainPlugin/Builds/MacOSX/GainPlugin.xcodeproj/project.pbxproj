@@ -59,6 +59,7 @@
 		A8571F926C2E1ED0FE022BA9 /* include_juce_audio_plugin_client_AU_2.mm */ = {isa = PBXBuildFile; fileRef = D64023C53E82EBC614D8BD6D; };
 		A9B59D12A80FF680708287EB /* WebKit.framework */ = {isa = PBXBuildFile; fileRef = 897CDAAF847F2BE08E948E77; };
 		B090C09F12ADADAD3241C6EB /* BinaryData.cpp */ = {isa = PBXBuildFile; fileRef = 2FE7496D65CCA4C7E3FC44DF; };
+		B2A2187CCC4CB74C7DCB7F21 /* TwoValueAttachment.cpp */ = {isa = PBXBuildFile; fileRef = 20A1FE6CDA141F543901091E; };
 		B3B6BBE5D5CF136343BBB95E /* IOKit.framework */ = {isa = PBXBuildFile; fileRef = FDC04173AA2C41D9BF3CAA94; };
 		B7A2F7123AAFE3AEF9F03158 /* TwoValueSlider.cpp */ = {isa = PBXBuildFile; fileRef = B9619F09FB70A09A4D1AAF39; };
 		BAA0E0AD3678DEB6CAF58F95 /* include_juce_audio_plugin_client_ARA.cpp */ = {isa = PBXBuildFile; fileRef = E7BC684A6EBDC154D335DDAC; };
@@ -81,6 +82,7 @@
 		1A2046A3F25A6B5C65EF26C5 /* GainPluginDemo.h */ /* GainPluginDemo.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = GainPluginDemo.h; path = ../../Source/GainPluginDemo.h; sourceTree = SOURCE_ROOT; };
 		1C9FB0858FF9CDFAA5296B44 /* MaximumAmp.h */ /* MaximumAmp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = MaximumAmp.h; path = ../../Source/MaximumAmp.h; sourceTree = SOURCE_ROOT; };
 		1F67EB79CD9B9EDFC2666A08 /* Cocoa.framework */ /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
+		20A1FE6CDA141F543901091E /* TwoValueAttachment.cpp */ /* TwoValueAttachment.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = TwoValueAttachment.cpp; path = ../../Source/TwoValueAttachment.cpp; sourceTree = SOURCE_ROOT; };
 		20C9D25D8E7DE6B4A939E0C6 /* include_juce_audio_formats.mm */ /* include_juce_audio_formats.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_formats.mm; path = ../../JuceLibraryCode/include_juce_audio_formats.mm; sourceTree = SOURCE_ROOT; };
 		217DE0F56F085F7EFE2BE61B /* TwoValueSlider.h */ /* TwoValueSlider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TwoValueSlider.h; path = ../../Source/TwoValueSlider.h; sourceTree = SOURCE_ROOT; };
 		231FC443D2DC951FAEBD5845 /* juce_events */ /* juce_events */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_events; path = "~/JUCE/modules/juce_events"; sourceTree = "<absolute>"; };
@@ -102,6 +104,7 @@
 		6D867C615D450C5623A84273 /* juce_graphics */ /* juce_graphics */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_graphics; path = "~/JUCE/modules/juce_graphics"; sourceTree = "<absolute>"; };
 		7171150F1C38E24F02CBFCDF /* VST3 */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GainPlugin.vst3; sourceTree = BUILT_PRODUCTS_DIR; };
 		75D1AB14E1784E74D8872DEA /* include_juce_audio_plugin_client_VST3.cpp */ /* include_juce_audio_plugin_client_VST3.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = include_juce_audio_plugin_client_VST3.cpp; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_VST3.cpp; sourceTree = SOURCE_ROOT; };
+		7FF941A8FCF0158AA4C13E24 /* TwoValueAttachment.h */ /* TwoValueAttachment.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = TwoValueAttachment.h; path = ../../Source/TwoValueAttachment.h; sourceTree = SOURCE_ROOT; };
 		8018F82092DA7C0A2DC7E5BA /* Info-Standalone_Plugin.plist */ /* Info-Standalone_Plugin.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "Info-Standalone_Plugin.plist"; path = "Info-Standalone_Plugin.plist"; sourceTree = SOURCE_ROOT; };
 		897CDAAF847F2BE08E948E77 /* WebKit.framework */ /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = System/Library/Frameworks/WebKit.framework; sourceTree = SDKROOT; };
 		8AFCBC215312A75F31926EB2 /* LevelMeter.cpp */ /* LevelMeter.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = LevelMeter.cpp; path = ../../Source/LevelMeter.cpp; sourceTree = SOURCE_ROOT; };
@@ -272,6 +275,8 @@
 		D86044EB71545E1389A7CE28 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				20A1FE6CDA141F543901091E,
+				7FF941A8FCF0158AA4C13E24,
 				D98415879F3AED972C1B1FF5,
 				1C9FB0858FF9CDFAA5296B44,
 				8AFCBC215312A75F31926EB2,
@@ -623,6 +628,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B2A2187CCC4CB74C7DCB7F21,
 				889B8515BFD71BD5A4826267,
 				D8FFC6544AD415A5D22FAE26,
 				7D249F38BB9E36DC75D8A9D6,

@@ -71,14 +71,14 @@ void TwoValueSliderLookAndFeel::drawLinearSliderThumb(Graphics& g, int x, int y,
 
     auto sr = jmin(sliderRadius, (float)width * 0.4f);
     drawShinyButtonShape(g, 0, minSliderPos - sr,
-        width, sliderRadius * 2.0,
+        width - (sr * 0.6), sliderRadius * 2.0,
         sliderRadius, knobColour, outlineThickness, false, false, false, false);
 
     g.setColour(knobColour);
-    g.fillRect(sliderRadius, maxSliderPos + sr, width - (sr * 2.0), jmax(0.0,minSliderPos - maxSliderPos - (sr * 2.0)));
+    g.fillRect(sliderRadius, maxSliderPos + sr, width - (sr * 2.6), jmax(0.0,minSliderPos - maxSliderPos - (sr * 2.0)));
 
     drawShinyButtonShape(g, 0, maxSliderPos - sr,
-        width, sliderRadius * 2.0,
+        width - (sr * 0.6), sliderRadius * 2.0,
         sliderRadius, knobColour, outlineThickness, false, false, false, false);
 }
 void TwoValueSliderLookAndFeel::drawShinyButtonShape(Graphics& g, float x, float y, float w, float h,

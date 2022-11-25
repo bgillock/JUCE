@@ -233,7 +233,7 @@ private:
             outputLevelMeterLeft(outLeftMaxAmp),
             outputLevelMeterRight(outRightMaxAmp),
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
-            dbAnnoOut(-54.0,0.0,6.0),
+            dbAnnoOut(-54,0,6,Justification::left),
             gainAttachment(owner.state, "gain", gainSlider),
             targetAttachment(owner.state, "targetmin", "targetmax", targetSlider)
         {

@@ -7,6 +7,10 @@
               addUsingNamespaceToJuceHeader="1" id="aZQp2F" jucerFormatVersion="1">
   <MAINGROUP id="mz03RV" name="GainPlugin">
     <GROUP id="{B2707595-8FA8-FCE2-3855-A3603F812C34}" name="Source">
+      <FILE id="c0OElk" name="TwoValueAttachment.cpp" compile="1" resource="0"
+            file="Source/TwoValueAttachment.cpp"/>
+      <FILE id="zzsrTL" name="TwoValueAttachment.h" compile="0" resource="0"
+            file="Source/TwoValueAttachment.h"/>
       <FILE id="IQlnkm" name="MaximumAmp.cpp" compile="1" resource="0" file="Source/MaximumAmp.cpp"/>
       <FILE id="OBu8u7" name="MaximumAmp.h" compile="0" resource="0" file="Source/MaximumAmp.h"/>
       <FILE id="H8OmiA" name="LevelMeter.cpp" compile="1" resource="0" file="Source/LevelMeter.cpp"/>
