@@ -53,7 +53,7 @@
 #include "dbAnnoComponent.h"
 #include "MaximumAmp.h"
 #include "LevelMeter.h"
-#include "TwoValueAttachment.h"
+#include "punch/punch.h"
 
 class VUHistogram
 {
