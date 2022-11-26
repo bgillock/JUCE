@@ -53,6 +53,7 @@
 #include "dbAnnoComponent.h"
 #include "MaximumAmp.h"
 #include "LevelMeter.h"
+#include "TwoValueAttachment.h"
 
 class VUHistogram
 {
@@ -352,7 +353,7 @@ private:
         FaderSlider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
         TwoValueSlider targetSlider;
-        AudioProcessorValueTreeState::TwoValueSliderAttachment targetAttachment;
+        punch::TwoValueSliderAttachment targetAttachment;
         Colour backgroundColour;
 
         // these are used to persist the UI's size - the values are stored along with the
