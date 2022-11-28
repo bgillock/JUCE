@@ -117,7 +117,7 @@ void FaderSliderLookAndFeel::drawLabel(Graphics& g, Label& label)
     //g.fillRoundedRectangle(label.getLocalBounds().toFloat(), 3.0f);
 }
 //==============================================================================
-FaderSlider::FaderSlider() : Slider()
+FaderSlider::FaderSlider() : punch::SmoothSlider(0.8,0.05)
 {
     setLookAndFeel(&faderSliderLookAndFeel);
 }

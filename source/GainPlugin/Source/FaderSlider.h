@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-
+#include <punch/punch.h>
 class FaderSliderLookAndFeel : public LookAndFeel_V4
 {
 public:
@@ -31,7 +31,7 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(FaderSliderLookAndFeel)
 };
 
-class FaderSlider  : public juce::Slider
+class FaderSlider  : public punch::SmoothSlider
 {
 public:
     FaderSlider();
