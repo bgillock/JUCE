@@ -27,6 +27,8 @@ void FaderSliderLookAndFeel::drawLinearSliderBackground(Graphics& g, int x, int 
     float sliderPos, float minSliderPos, float maxSliderPos,
     const Slider::SliderStyle, Slider& slider)
 {
+    //g.setColour(Colours::red);
+    //g.drawRect(x, y, width, height, 1.0);
     const float sliderRadius = (float)(getSliderThumbRadius(slider) - 2);
 
     const Colour trackColour(slider.findColour(Slider::trackColourId));

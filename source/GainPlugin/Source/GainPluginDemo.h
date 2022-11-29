@@ -134,7 +134,7 @@ public:
                                            .withOutput ("Output", AudioChannelSet::stereo())),
         state(*this, nullptr, "state",
             { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     
-                                                    NormalisableRange<float>(-40.0f, +40.0f), 0.0f),
+                                                    NormalisableRange<float>(-25.0f, +25.0f), 0.0f),
               std::make_unique<AudioParameterFloat>(ParameterID { "targetmin",  1 }, "targetmin",
                                                     NormalisableRange<float>(-54.0f, 0.0f), -15.0f),
               std::make_unique<AudioParameterFloat>(ParameterID { "targetmax",  1 }, "targetmax",
@@ -234,7 +234,9 @@ private:
             outputLevelMeterLeft(outLeftMaxAmp),
             outputLevelMeterRight(outRightMaxAmp),
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
-            dbAnnoOut(-54,0,6,Justification::left),
+            dbAnnoOut(-54,0,6,30,25,Justification::left),
+            faderAnnoLeft(-25, 25, 5, 6,22,Justification::left),
+            faderAnnoRight(-25, 25, 5,6,22, Justification::right),
             gainAttachment(owner.state, "gain", gainSlider),
             targetAttachment(owner.state, "targetmin", "targetmax", targetSlider)
         {
@@ -250,7 +252,9 @@ private:
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, 60, 15);
             gainSlider.setColour(Slider::ColourIds::backgroundColourId,Colours::darkgrey);
             gainSlider.addListener(this);
-
+            gainSlider.setAlwaysOnTop(true);
+            addAndMakeVisible(faderAnnoLeft);
+            addAndMakeVisible(faderAnnoRight);
             outputLevelMeterLabel.setSize(40,10);
             addAndMakeVisible(outputLevelMeterLabel);
             addAndMakeVisible(outputLevelMeterLeft);
@@ -314,6 +318,11 @@ private:
             gainSlider.setBounds(sliderArea);
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, sliderArea.getWidth(), 30);
 
+            sliderArea.removeFromBottom(8);
+            sliderArea.removeFromTop(20);
+            faderAnnoLeft.setBounds(sliderArea.removeFromLeft(20));
+            faderAnnoRight.setBounds(sliderArea.removeFromRight(20));
+
             auto rightMeterArea = r;
             outputLevelMeterLabel.setBounds(rightMeterArea.removeFromTop(15));
             outputLevelMeterLeft.setBounds(rightMeterArea.removeFromLeft(rightMeterArea.getWidth()/2));            
@@ -350,6 +359,8 @@ private:
         LevelMeter outputLevelMeterLeft;
         LevelMeter outputLevelMeterRight;
         dbAnnoComponent dbAnnoOut;
+        dbAnnoComponent faderAnnoLeft;
+        dbAnnoComponent faderAnnoRight;
         FaderSlider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
         TwoValueSlider targetSlider;

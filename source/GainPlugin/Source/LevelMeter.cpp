@@ -25,7 +25,7 @@ void LevelMeter::timerCallback()
 
 void LevelMeter::paint(Graphics& g)
 {
-    g.setColour(Colours::white);
+    //g.setColour(Colours::red);
     //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
     auto maxAmpDisplay = std::max(maxAmp->getMax(), -54.0);
     maxAmp->setMax(-144.0);
@@ -42,11 +42,12 @@ void LevelMeter::paint(Graphics& g)
         peakTimes = 0;
     }
 
+    int ysize = 15;
     auto area = getBounds().reduced(2);
-    int minX = (getBounds().getWidth() / 2 - 6);
+    int minX = (getBounds().getWidth() / 2 - ((ysize - 4)/2));
     int minY = 20;
     int maxY = area.getHeight() - 6;
-    int ysize = 15;
+
     int nlights = (maxY - minY) / ysize;
     int orangelight = (int)((float)nlights * 0.4f);
     int y = minY;

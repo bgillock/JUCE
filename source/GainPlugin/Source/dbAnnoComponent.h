@@ -18,7 +18,7 @@
 class dbAnnoComponent : public Component
 {
 public:
-    dbAnnoComponent(int min, int max, int inc, Justification s);
+    dbAnnoComponent(int min, int max, int inc, int marginminy, int marginmaxy, Justification s);
     void paint(Graphics& g) override;
     void resized() override;
 
@@ -26,10 +26,10 @@ private:
     int dbmin;
     int dbmax;
     int dbinc;
+    int mminY;
+    int mmaxY;
     int minY;
     int maxY;
-    int width;
-    int minX;
     Justification style;
 
     int getYFromDb(double db);
