@@ -1,14 +1,25 @@
 /*
   ==============================================================================
 
-    MaximumAmp.cpp
+    MeterBuffer.cpp
     Created: 24 Nov 2022 9:51:30am
     Author:  bgill
 
   ==============================================================================
 */
 #include <JuceHeader.h>
-#include "MaximumAmp.h"
+#include "MeterBuffer.h"
+void MeterBuffer::capture(AudioBuffer<float> amps, int channel)
+{
+}
+void MeterBuffer::capture(AudioBuffer<double> amps, int channel)
+{
+}
+
+void MeterBuffer::init()
+{
+}
+
 MaximumAmp::MaximumAmp() { maxAmp = -144.0; };
 void MaximumAmp::capture(AudioBuffer<float> amps, int channel)
 {
@@ -33,14 +44,7 @@ double MaximumAmp::getMax()
     const juce::SpinLock::ScopedTryLockType lock(mutex);
     return maxAmp;
 }
-void MaximumAmp::setMax(double max)
-{
-    const juce::SpinLock::ScopedTryLockType lock(mutex);
-    if (lock.isLocked())
-    {
-        maxAmp = max;
-    }
-}
+
 void MaximumAmp::init()
 {
     const juce::SpinLock::ScopedTryLockType lock(mutex);

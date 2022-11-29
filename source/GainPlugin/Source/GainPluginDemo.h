@@ -51,7 +51,7 @@
 #include "FaderSlider.h"
 #include "TwoValueSlider.h"
 #include "dbAnnoComponent.h"
-#include "MaximumAmp.h"
+#include "MeterBuffer.h"
 #include "LevelMeter.h"
 #include "punch/punch.h"
 

@@ -9,7 +9,7 @@
 */
 
 #include <JuceHeader.h>
-#include "MaximumAmp.h"
+#include "MeterBuffer.h"
 #include "LevelMeter.h"
 
 LevelMeter::LevelMeter(MaximumAmp& max)
@@ -28,7 +28,7 @@ void LevelMeter::paint(Graphics& g)
     //g.setColour(Colours::red);
     //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
     auto maxAmpDisplay = std::max(maxAmp->getMax(), -54.0);
-    maxAmp->setMax(-144.0);
+    maxAmp->init();
 
     if (++peakTimes > peakholdTimes)
     {
