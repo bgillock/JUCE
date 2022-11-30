@@ -11,7 +11,7 @@
 #pragma once
 
 #include <JuceHeader.h>
-#include "MeterBuffer.h"
+
 
 //==============================================================================
 /*
@@ -20,12 +20,18 @@ class LevelMeter  : public juce::Component,
     public Timer
 {
 public:
-    LevelMeter(MaximumAmp &);
-
+    LevelMeter();
     void paint (juce::Graphics&) override;
     void LevelMeter::timerCallback() override;
+    void capture(AudioBuffer<float> amps, int channel);
+    void capture(AudioBuffer<double> amps, int channel);
+    void init();
+    double getMax();
 private:
-    MaximumAmp* maxAmp;
+    juce::SpinLock mutex;
+    double maxAmp;
+private:
+ 
     int lastlight = 0;
     double peakhold = 0.0;
     const int peakholdTimes = 10; // number of times to leave peak 

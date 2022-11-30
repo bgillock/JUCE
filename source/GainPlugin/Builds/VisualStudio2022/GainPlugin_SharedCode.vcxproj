@@ -132,7 +132,6 @@
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\MeterBuffer.cpp" />
     <ClCompile Include="..\..\Source\LevelMeter.cpp" />
     <ClCompile Include="..\..\Source\dbAnnoComponent.cpp" />
     <ClCompile Include="..\..\Source\TwoValueSlider.cpp" />
@@ -2409,7 +2408,6 @@
     <ClCompile Include="..\..\JuceLibraryCode\include_punch.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\MeterBuffer.h" />
     <ClInclude Include="..\..\Source\LevelMeter.h" />
     <ClInclude Include="..\..\Source\dbAnnoComponent.h" />
     <ClInclude Include="..\..\Source\TwoValueSlider.h" />

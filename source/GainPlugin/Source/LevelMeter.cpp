@@ -9,13 +9,11 @@
 */
 
 #include <JuceHeader.h>
-#include "MeterBuffer.h"
 #include "LevelMeter.h"
 
-LevelMeter::LevelMeter(MaximumAmp& max)
+LevelMeter::LevelMeter()
 {
-    //startTimerHz(100);
-    maxAmp = &max;
+    maxAmp = -144.0;
 };
 
 void LevelMeter::timerCallback() 
@@ -27,8 +25,8 @@ void LevelMeter::paint(Graphics& g)
 {
     //g.setColour(Colours::red);
     //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
-    auto maxAmpDisplay = std::max(maxAmp->getMax(), -54.0);
-    maxAmp->init();
+    auto maxAmpDisplay = std::max(getMax(), -54.0);
+    init();
 
     if (++peakTimes > peakholdTimes)
     {
@@ -73,3 +71,36 @@ void LevelMeter::paint(Graphics& g)
     return;
 };
 
+void LevelMeter::capture(AudioBuffer<float> amps, int channel)
+{
+    const juce::SpinLock::ScopedTryLockType lock(mutex);
+    if (lock.isLocked())
+    {
+        float db = Decibels::gainToDecibels(amps.getRMSLevel(channel, 0, amps.getNumSamples()));
+        if (db > maxAmp) maxAmp = db;
+    }
+}
+void LevelMeter::capture(AudioBuffer<double> amps, int channel)
+{
+    const juce::SpinLock::ScopedTryLockType lock(mutex);
+    if (lock.isLocked())
+    {
+        float db = Decibels::gainToDecibels(amps.getRMSLevel(channel, 0, amps.getNumSamples()));
+        if (db > maxAmp) maxAmp = db;
+    }
+}
+
+double LevelMeter::getMax()
+{
+    const juce::SpinLock::ScopedTryLockType lock(mutex);
+    return maxAmp;
+}
+
+void LevelMeter::init()
+{
+    const juce::SpinLock::ScopedTryLockType lock(mutex);
+    if (lock.isLocked())
+    {
+        maxAmp = -144.0;
+    }
+}

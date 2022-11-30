@@ -51,7 +51,6 @@
 #include "FaderSlider.h"
 #include "TwoValueSlider.h"
 #include "dbAnnoComponent.h"
-#include "MeterBuffer.h"
 #include "LevelMeter.h"
 #include "punch/punch.h"
 
@@ -141,10 +140,6 @@ public:
                                                     NormalisableRange<float>(-54.0f, 0.0f), -9.0f) })
     {
         state.state.addChild({ "uiState", { { "width",  200 }, { "height", 400 } }, {} }, -1, nullptr);
-        outputMaxLeft.init();
-        outputMaxRight.init();
-        inputMaxLeft.init();
-        inputMaxRight.init();
     }
 
     //==============================================================================
@@ -155,28 +150,46 @@ public:
     {
         auto gaindb = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
         float gain = Decibels::decibelsToGain(gaindb);
-        inputMaxLeft.capture(buffer, 0);
-        inputMaxRight.capture(buffer, 1);
+        if (hasEditor())
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureInputMeter(buffer, 0);
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureInputMeter(buffer, 1);
+        }
 
-        buffer.applyGain (gain);       
-        outputMaxLeft.capture(buffer, 0);
-        outputMaxRight.capture(buffer, 1);
+        buffer.applyGain(gain);
+
+        if (hasEditor())
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureOutputMeter(buffer, 0);
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureOutputMeter(buffer, 1);
+        }
     }
 
     void processBlock (AudioBuffer<double>& buffer, MidiBuffer&) override
     {
         auto gaindb = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
         double gain = Decibels::decibelsToGain(gaindb);
-        inputMaxLeft.capture(buffer, 0);
-        inputMaxRight.capture(buffer, 1);
+
+        if (hasEditor())
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureInputMeter(buffer, 0);
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureInputMeter(buffer, 1);
+        }
 
         buffer.applyGain (gain);       
-        outputMaxLeft.capture(buffer, 0);
-        outputMaxRight.capture(buffer, 1);
+
+        if (hasEditor())
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureOutputMeter(buffer, 0);
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureOutputMeter(buffer, 1);
+        }
     }
 
     //==============================================================================
-    AudioProcessorEditor* createEditor() override          { return new GainAudioProcessorEditor (*this,inputMaxLeft,inputMaxRight, outputMaxLeft, outputMaxRight); }
+    AudioProcessorEditor* createEditor() override          
+    {    
+        return new GainAudioProcessorEditor(*this);
+    }
     bool hasEditor() const override                        { return true;   }
 
     //==============================================================================
@@ -215,10 +228,6 @@ public:
     }
     // Our plug-in's current state
     AudioProcessorValueTreeState state;
-    MaximumAmp inputMaxLeft;
-    MaximumAmp inputMaxRight;
-    MaximumAmp outputMaxLeft;
-    MaximumAmp outputMaxRight;
 
 private:
     class GainAudioProcessorEditor : public AudioProcessorEditor,
@@ -227,12 +236,12 @@ private:
         private Value::Listener
     {
     public:
-        GainAudioProcessorEditor(GainProcessor& owner, MaximumAmp& inLeftMaxAmp, MaximumAmp& inRightMaxAmp, MaximumAmp& outLeftMaxAmp, MaximumAmp& outRightMaxAmp)
+        GainAudioProcessorEditor(GainProcessor& owner)
             : AudioProcessorEditor(owner),
-            inputLevelMeterLeft(inLeftMaxAmp),
-            inputLevelMeterRight(inRightMaxAmp),
-            outputLevelMeterLeft(outLeftMaxAmp),
-            outputLevelMeterRight(outRightMaxAmp),
+            inputLevelMeterLeft(),
+            inputLevelMeterRight(),
+            outputLevelMeterLeft(),
+            outputLevelMeterRight(),
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
             dbAnnoOut(-54,0,6,30,25,Justification::left),
             faderAnnoLeft(-25, 25, 5, 6,22,Justification::left),
@@ -341,6 +350,20 @@ private:
             outputLevelMeterRight.repaint();
         }
 
+        template <typename FloatType>
+        void captureInputMeter(AudioBuffer<FloatType> amps, int channel)
+        {
+            if (channel == 0) inputLevelMeterLeft.capture(amps, channel);
+            else inputLevelMeterRight.capture(amps, channel);
+        }
+
+        template <typename FloatType>
+        void captureOutputMeter(AudioBuffer<FloatType> amps, int channel)
+        {
+            if (channel == 0) outputLevelMeterLeft.capture(amps, channel);
+            else outputLevelMeterRight.capture(amps, channel);
+        }
+
         void sliderValueChanged(Slider* sliderThatHasChanged) override
         {
         }
@@ -388,8 +411,6 @@ private:
             }
         }
     };
-    //==============================================================================
-    //AudioParameterFloat* gain;
 
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GainProcessor)
