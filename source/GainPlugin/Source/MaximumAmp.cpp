@@ -8,17 +8,7 @@
   ==============================================================================
 */
 #include <JuceHeader.h>
-#include "MeterBuffer.h"
-void MeterBuffer::capture(AudioBuffer<float> amps, int channel)
-{
-}
-void MeterBuffer::capture(AudioBuffer<double> amps, int channel)
-{
-}
-
-void MeterBuffer::init()
-{
-}
+#include "MaximumAmp.h"
 
 MaximumAmp::MaximumAmp() { maxAmp = -144.0; };
 void MaximumAmp::capture(AudioBuffer<float> amps, int channel)

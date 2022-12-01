@@ -51,8 +51,7 @@
 #include "FaderSlider.h"
 #include "TwoValueSlider.h"
 #include "dbAnnoComponent.h"
-#include "MeterBuffer.h"
-#include "LevelMeter.h"
+#include "StereoLevelMeter.h"
 #include "punch/punch.h"
 
 class VUHistogram
@@ -141,10 +140,6 @@ public:
                                                     NormalisableRange<float>(-54.0f, 0.0f), -9.0f) })
     {
         state.state.addChild({ "uiState", { { "width",  200 }, { "height", 400 } }, {} }, -1, nullptr);
-        outputMaxLeft.init();
-        outputMaxRight.init();
-        inputMaxLeft.init();
-        inputMaxRight.init();
     }
 
     //==============================================================================
@@ -155,28 +150,36 @@ public:
     {
         auto gaindb = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
         float gain = Decibels::decibelsToGain(gaindb);
-        inputMaxLeft.capture(buffer, 0);
-        inputMaxRight.capture(buffer, 1);
+        if (hasEditor() && getActiveEditor() != nullptr)
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureInputMeter(buffer);
+        }
 
         buffer.applyGain (gain);       
-        outputMaxLeft.capture(buffer, 0);
-        outputMaxRight.capture(buffer, 1);
+        if (hasEditor() && getActiveEditor() != nullptr)
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureOutputMeter(buffer);
+        }
     }
 
     void processBlock (AudioBuffer<double>& buffer, MidiBuffer&) override
     {
         auto gaindb = state.getParameter("gain")->getNormalisableRange().convertFrom0to1(state.getParameter("gain")->getValue());
         double gain = Decibels::decibelsToGain(gaindb);
-        inputMaxLeft.capture(buffer, 0);
-        inputMaxRight.capture(buffer, 1);
+        if (hasEditor() && getActiveEditor() != nullptr)
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureInputMeter(buffer);
+        }
 
-        buffer.applyGain (gain);       
-        outputMaxLeft.capture(buffer, 0);
-        outputMaxRight.capture(buffer, 1);
+        buffer.applyGain(gain);
+        if (hasEditor() && getActiveEditor() != nullptr)
+        {
+            ((GainAudioProcessorEditor*)getActiveEditor())->captureOutputMeter(buffer);
+        }
     }
 
     //==============================================================================
-    AudioProcessorEditor* createEditor() override          { return new GainAudioProcessorEditor (*this,inputMaxLeft,inputMaxRight, outputMaxLeft, outputMaxRight); }
+    AudioProcessorEditor* createEditor() override          { return new GainAudioProcessorEditor (*this); }
     bool hasEditor() const override                        { return true;   }
 
     //==============================================================================
@@ -215,10 +218,6 @@ public:
     }
     // Our plug-in's current state
     AudioProcessorValueTreeState state;
-    MaximumAmp inputMaxLeft;
-    MaximumAmp inputMaxRight;
-    MaximumAmp outputMaxLeft;
-    MaximumAmp outputMaxRight;
 
 private:
     class GainAudioProcessorEditor : public AudioProcessorEditor,
@@ -227,12 +226,8 @@ private:
         private Value::Listener
     {
     public:
-        GainAudioProcessorEditor(GainProcessor& owner, MaximumAmp& inLeftMaxAmp, MaximumAmp& inRightMaxAmp, MaximumAmp& outLeftMaxAmp, MaximumAmp& outRightMaxAmp)
+        GainAudioProcessorEditor(GainProcessor& owner)
             : AudioProcessorEditor(owner),
-            inputLevelMeterLeft(inLeftMaxAmp),
-            inputLevelMeterRight(inRightMaxAmp),
-            outputLevelMeterLeft(outLeftMaxAmp),
-            outputLevelMeterRight(outRightMaxAmp),
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
             dbAnnoOut(-54,0,6,30,25,Justification::left),
             faderAnnoLeft(-25, 25, 5, 6,22,Justification::left),
@@ -243,8 +238,7 @@ private:
             //raise(SIGINT); 
             inputLevelMeterLabel.setSize(40,10);
             addAndMakeVisible(inputLevelMeterLabel);
-            addAndMakeVisible(inputLevelMeterLeft);
-            addAndMakeVisible(inputLevelMeterRight);
+            addAndMakeVisible(inputLevelMeter);
 
             addAndMakeVisible(gainSlider);  
             gainSlider.setSliderStyle(Slider::LinearVertical);
@@ -255,10 +249,10 @@ private:
             gainSlider.setAlwaysOnTop(true);
             addAndMakeVisible(faderAnnoLeft);
             addAndMakeVisible(faderAnnoRight);
+
             outputLevelMeterLabel.setSize(40,10);
             addAndMakeVisible(outputLevelMeterLabel);
-            addAndMakeVisible(outputLevelMeterLeft);
-            addAndMakeVisible(outputLevelMeterRight);
+            addAndMakeVisible(outputLevelMeter);
 
             targetLabel.setSize(40,10);
             addAndMakeVisible(targetLabel);
@@ -309,9 +303,9 @@ private:
 
             targetButton.setBounds(annoAreaOut.removeFromBottom(15));
             auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
+
             inputLevelMeterLabel.setBounds(leftMeterArea.removeFromTop(15));
-            inputLevelMeterRight.setBounds(leftMeterArea.removeFromRight(leftMeterArea.getWidth()/2));
-            inputLevelMeterLeft.setBounds(leftMeterArea);
+            inputLevelMeter.setBounds(leftMeterArea);
 
             auto sliderArea = r.removeFromLeft(r.getWidth()/2);
             sliderArea.removeFromBottom(5); 
@@ -325,8 +319,7 @@ private:
 
             auto rightMeterArea = r;
             outputLevelMeterLabel.setBounds(rightMeterArea.removeFromTop(15));
-            outputLevelMeterLeft.setBounds(rightMeterArea.removeFromLeft(rightMeterArea.getWidth()/2));            
-            outputLevelMeterRight.setBounds(rightMeterArea);
+            outputLevelMeter.setBounds(rightMeterArea);
 
             lastUIWidth = getWidth();
             lastUIHeight = getHeight();
@@ -335,10 +328,20 @@ private:
         
         void timerCallback() override
         {
-            inputLevelMeterLeft.repaint();
-            inputLevelMeterRight.repaint();
-            outputLevelMeterLeft.repaint();
-            outputLevelMeterRight.repaint();
+            inputLevelMeter.repaint();
+            outputLevelMeter.repaint();
+        }
+
+        template <typename FloatType>
+        void captureInputMeter(AudioBuffer<FloatType> amps)
+        {
+            inputLevelMeter.capture(amps);
+        }
+
+        template <typename FloatType>
+        void captureOutputMeter(AudioBuffer<FloatType> amps)
+        {
+            outputLevelMeter.capture(amps);
         }
 
         void sliderValueChanged(Slider* sliderThatHasChanged) override
@@ -354,10 +357,9 @@ private:
         Label targetLabel{ {}, "Target"};
         TextButton targetButton{ {}, "0 db"};
 
-        LevelMeter inputLevelMeterLeft;
-        LevelMeter inputLevelMeterRight;
-        LevelMeter outputLevelMeterLeft;
-        LevelMeter outputLevelMeterRight;
+        StereoLevelMeter inputLevelMeter;
+        StereoLevelMeter outputLevelMeter;
+
         dbAnnoComponent dbAnnoOut;
         dbAnnoComponent faderAnnoLeft;
         dbAnnoComponent faderAnnoRight;

@@ -612,10 +612,10 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\Source\MeterBuffer.cpp">
+    <ClCompile Include="..\..\Source\MaximumAmp.cpp">
       <Filter>GainPlugin\Source</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\Source\LevelMeter.cpp">
+    <ClCompile Include="..\..\Source\StereoLevelMeter.cpp">
       <Filter>GainPlugin\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\dbAnnoComponent.cpp">
@@ -2933,10 +2933,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\Source\MeterBuffer.h">
+    <ClInclude Include="..\..\Source\MaximumAmp.h">
       <Filter>GainPlugin\Source</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\Source\LevelMeter.h">
+    <ClInclude Include="..\..\Source\StereoLevelMeter.h">
       <Filter>GainPlugin\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\dbAnnoComponent.h">
