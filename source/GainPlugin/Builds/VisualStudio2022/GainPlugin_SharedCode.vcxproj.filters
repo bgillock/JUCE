@@ -612,6 +612,9 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\Source\MeterBuffer.cpp">
+      <Filter>GainPlugin\Source</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\Source\LevelMeter.cpp">
       <Filter>GainPlugin\Source</Filter>
     </ClCompile>
@@ -2930,6 +2933,9 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\Source\MeterBuffer.h">
+      <Filter>GainPlugin\Source</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\Source\LevelMeter.h">
       <Filter>GainPlugin\Source</Filter>
     </ClInclude>
