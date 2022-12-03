@@ -9,8 +9,10 @@
     <GROUP id="{B2707595-8FA8-FCE2-3855-A3603F812C34}" name="Source">
       <FILE id="IQlnkm" name="MaximumAmp.cpp" compile="1" resource="0" file="Source/MaximumAmp.cpp"/>
       <FILE id="OBu8u7" name="MaximumAmp.h" compile="0" resource="0" file="Source/MaximumAmp.h"/>
-      <FILE id="H8OmiA" name="LevelMeter.cpp" compile="1" resource="0" file="Source/LevelMeter.cpp"/>
-      <FILE id="jDjggT" name="LevelMeter.h" compile="0" resource="0" file="Source/LevelMeter.h"/>
+      <FILE id="ozxLzW" name="StereoLevelMeter.cpp" compile="1" resource="0"
+            file="Source/StereoLevelMeter.cpp"/>
+      <FILE id="v2E2Ig" name="StereoLevelMeter.h" compile="0" resource="0"
+            file="Source/StereoLevelMeter.h"/>
       <FILE id="HT3WeQ" name="dbAnnoComponent.cpp" compile="1" resource="0"
             file="Source/dbAnnoComponent.cpp"/>
       <FILE id="J2sv7R" name="dbAnnoComponent.h" compile="0" resource="0"

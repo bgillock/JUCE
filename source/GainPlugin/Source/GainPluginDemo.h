@@ -228,10 +228,12 @@ private:
     public:
         GainAudioProcessorEditor(GainProcessor& owner)
             : AudioProcessorEditor(owner),
+            inputLevelMeter(),
+            outputLevelMeter(),
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
-            dbAnnoOut(-54,0,6,30,25,Justification::left),
-            faderAnnoLeft(-25, 25, 5, 6,22,Justification::left),
-            faderAnnoRight(-25, 25, 5,6,22, Justification::right),
+            dbAnnoOut(-54, 0, 6, 30, 25, Justification::left),
+            faderAnnoLeft(-25, 25, 5, 6, 22, Justification::left),
+            faderAnnoRight(-25, 25, 5, 6, 22, Justification::right),
             gainAttachment(owner.state, "gain", gainSlider),
             targetAttachment(owner.state, "targetmin", "targetmax", targetSlider)
         {

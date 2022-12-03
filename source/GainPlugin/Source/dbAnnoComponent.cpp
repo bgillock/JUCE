@@ -28,8 +28,8 @@ dbAnnoComponent::dbAnnoComponent(int min, int max, int inc, int marginminy, int 
 
 void dbAnnoComponent::paint(Graphics& g) 
 {
-    //g.setColour(Colours::red);
-    //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
+    g.setColour(Colours::red);
+    g.drawRect(0,0,getBounds().getWidth(),getBounds().getHeight(), 1.0);
     int width = getBounds().getWidth();
     float textWidth = width;
     float textHeight = 10.0;

@@ -1,7 +1,7 @@
 /*
   ==============================================================================
 
-    LevelMeter.h
+    StereoLevelMeter.h
     Created: 24 Nov 2022 9:45:47am
     Author:  bgill
 
@@ -17,15 +17,15 @@
 class LevelMeter : public juce::Component
 {
 public:
-    LevelMeter() {};
+    LevelMeter();
     void paint(juce::Graphics&) override;
+    void resized() override;
     void capture(AudioBuffer<float> amps, int channel);
     void capture(AudioBuffer<double> amps, int channel);
     void init();
 private:
     MaximumAmp maxAmp;
     const int peakholdTimes = 10; // number of times to leave peak 
-
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter);
 };
 
@@ -40,6 +40,7 @@ public:
     void init();
     void StereoLevelMeter::timerCallback() override;
 private:
+
     LevelMeter leftLevelMeter;
     LevelMeter rightLevelMeter;
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(StereoLevelMeter);
