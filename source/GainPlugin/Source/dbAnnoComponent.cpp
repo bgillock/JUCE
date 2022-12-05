@@ -13,16 +13,17 @@
 
 //==============================================================================
 
-dbAnnoComponent::dbAnnoComponent(int min, int max, int inc, int marginminy, int marginmaxy, Justification s) :
-    mminY(marginminy),
-    mmaxY(marginmaxy),
-    minY(0),
-    maxY(0),
-    style(s)
+dbAnnoComponent::dbAnnoComponent(int minAmp, int maxAmp, int incAmp, int marginTop, int marginBottom, float annoWidth, Justification style) :
+    _style(style)
 {
-    dbmin = min;
-    dbmax = max;
-    dbinc = inc;
+    _minAmp = minAmp;
+    _maxAmp = maxAmp;
+    _incAmp = incAmp;
+    _marginTop = marginTop;
+    _marginBottom = marginBottom;
+    _annoWidth = annoWidth;
+    _minY = 0; // init in resized
+    _maxY = 0; // init in resized
 };
 
 
@@ -34,16 +35,16 @@ void dbAnnoComponent::paint(Graphics& g)
     float textWidth = width;
     float textHeight = 10.0;
     g.setColour(Colours::white);
-    StringPairArray dbAnnoPos = get_db_pairs(dbmin, dbmax, dbinc, maxY, minY);
+    StringPairArray dbAnnoPos = get_db_pairs(_minAmp, _maxAmp, _incAmp, _minY, _maxY);
     g.setFont(Font("Lucinda Sans Typewriter", "Regular", 11.0));
     auto font = g.getCurrentFont();
     for (auto& key : dbAnnoPos.getAllKeys())
     {
         if (dbAnnoPos[key] != "")
         {
-            g.drawText(dbAnnoPos[key], 0.0, key.getFloatValue() - (textHeight / 2.0), textWidth, textHeight, style);
+            g.drawText(dbAnnoPos[key], 0.0, key.getFloatValue() - (textHeight / 2.0), textWidth, textHeight, _style);
             int strWidth = font.getStringWidth(dbAnnoPos[key]);
-            if (style == Justification::left)
+            if (_style == Justification::left)
             {
                 g.drawRect((float)strWidth, key.getFloatValue(), (float)width - strWidth, 1.0, 1.0);
             }
@@ -59,8 +60,8 @@ void dbAnnoComponent::paint(Graphics& g)
 
 void dbAnnoComponent::resized() 
 {
-    maxY = mmaxY;
-    minY = getBounds().getHeight() - mminY;
+    _maxY = _marginTop;
+    _minY = getBounds().getHeight() - _marginBottom;
 }
 
 
@@ -79,28 +80,28 @@ void dbAnnoComponent::addPair(StringPairArray& pairs, String format, float v, fl
     pairs.set(pixelString, annoString);
 };
 
-int dbAnnoComponent::getYFromDb(double db)
+float dbAnnoComponent::getYFromDb(double db)
 {
-    if (dbmax != dbmin) return minY + (int)((db - dbmin) * ((double)(maxY - minY) / (dbmax - dbmin)));
-    return minY;
+    if (db <= _minAmp) return _minY;
+    if (db >= _maxAmp) return _maxY;
+    if (_maxAmp != _minAmp) return _minY + (int)((db - _minAmp) * ((double)(_maxY - _minY) / (_maxAmp - _minAmp)));
+    return _minY;
 }
 
-StringPairArray dbAnnoComponent::get_db_pairs(int minVal, int maxVal, int increment, double minPixel, double maxPixel)
+StringPairArray dbAnnoComponent::get_db_pairs(int minAmp, int maxAmp, int incAmp, int minPixel, int maxPixel)
 {
-    
-
     StringPairArray pairs;
 
-    for (int v = minVal; v <= maxVal; v++)
+    for (int v = minAmp; v <= maxAmp; v++)
     {
 
-        if (v % increment == 0)
+        if (v % incAmp == 0)
         {
-            addPair(pairs, "%-2.0f", (float)v, (float)getYFromDb(v));
+            addPair(pairs, "%-2.0f", (float)v, getYFromDb(v));
         }
         else
         {
-            addPair(pairs, "", (float)v, (float)getYFromDb(v));
+            addPair(pairs, "", (float)v, getYFromDb(v));
         }
     }
 

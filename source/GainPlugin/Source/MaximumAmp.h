@@ -21,17 +21,21 @@ public:
     float* getLevels();
     double getMinAmp() { return _minAmp; }
     double getMaxAmp() { return _maxAmp; }
+    bool clipped();
+    bool signal();
     int getNLevels() { return _nLevels; }
     void setNLevels(int n);
 private:
     double _minAmp;
     double _maxAmp;
-    double peakAmp;
+    double _peakAmp;
     int _nLevels;
     juce::SpinLock mutex;
     float* _levels;
     int _peakHoldTimes;  
-    int lastlight = 0;
-    double peakhold = 0.0;
-    int peakTimes = 0;
+    int _lastlight = 0;
+    double _peakhold = 0.0;
+    int _peakTimes = 0;
+    bool _signal;
+    bool _clipped;
 };

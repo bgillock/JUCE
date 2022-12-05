@@ -228,12 +228,11 @@ private:
     public:
         GainAudioProcessorEditor(GainProcessor& owner)
             : AudioProcessorEditor(owner),
-            inputLevelMeter(),
-            outputLevelMeter(),
+            inputLevelMeter(-144, 0, 6, 12, 22, 0.0, 0.0),
+            outputLevelMeter(-144, 0, 6, 12, 22, 0.0, 40.0), // 40.0 is width of target component also
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
-            dbAnnoOut(-54, 0, 6, 30, 25, Justification::left),
-            faderAnnoLeft(-25, 25, 5, 6, 22, Justification::left),
-            faderAnnoRight(-25, 25, 5, 6, 22, Justification::right),
+            faderAnnoLeft(-25, 25, 5, 19, 15, 20.0, Justification::left),
+            faderAnnoRight(-25, 25, 5, 19, 15, 20.0, Justification::right),
             gainAttachment(owner.state, "gain", gainSlider),
             targetAttachment(owner.state, "targetmin", "targetmax", targetSlider)
         {
@@ -258,8 +257,6 @@ private:
 
             targetLabel.setSize(40,10);
             addAndMakeVisible(targetLabel);
-            addAndMakeVisible(dbAnnoOut);
-
             addAndMakeVisible(targetSlider);
 
             targetSlider.setColour(Slider::ColourIds::backgroundColourId, Colour::fromRGBA(0,0,0,0));
@@ -298,34 +295,31 @@ private:
             // This lays out our child components...
 
             auto r = getLocalBounds().reduced(4);
-            auto annoAreaOut = r.removeFromRight(40);
-            targetLabel.setBounds(annoAreaOut.removeFromTop(15));
-            targetSlider.setBounds(annoAreaOut);
-            dbAnnoOut.setBounds(annoAreaOut);
-
-            targetButton.setBounds(annoAreaOut.removeFromBottom(15));
-            auto leftMeterArea = r.removeFromLeft(r.getWidth()/3);
-
+          
+            auto leftMeterArea = r.removeFromLeft(45);
             inputLevelMeterLabel.setBounds(leftMeterArea.removeFromTop(15));
             inputLevelMeter.setBounds(leftMeterArea);
 
-            auto sliderArea = r.removeFromLeft(r.getWidth()/2);
-            sliderArea.removeFromBottom(5); 
+            auto sliderArea = r.removeFromLeft(64);
+            sliderArea.removeFromBottom(10).removeFromTop(14); 
             gainSlider.setBounds(sliderArea);
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, sliderArea.getWidth(), 30);
-
-            sliderArea.removeFromBottom(8);
+       
             sliderArea.removeFromTop(20);
             faderAnnoLeft.setBounds(sliderArea.removeFromLeft(20));
             faderAnnoRight.setBounds(sliderArea.removeFromRight(20));
 
-            auto rightMeterArea = r;
-            outputLevelMeterLabel.setBounds(rightMeterArea.removeFromTop(15));
+            auto rightMeterArea = r.removeFromLeft(85);
+            auto rightMeterLabelArea = rightMeterArea.removeFromTop(15);
+            outputLevelMeterLabel.setBounds(rightMeterLabelArea.removeFromLeft(45));
+            targetLabel.setBounds(rightMeterLabelArea);
             outputLevelMeter.setBounds(rightMeterArea);
+
+            auto targetArea = rightMeterArea.removeFromRight(40);
+            targetSlider.setBounds(targetArea); // calibrate with underlying anno!
 
             lastUIWidth = getWidth();
             lastUIHeight = getHeight();
-
         }
         
         void timerCallback() override
@@ -357,12 +351,11 @@ private:
         Label inputLevelMeterLabel{ {}, "Input"};
         Label outputLevelMeterLabel{{}, "Output"};
         Label targetLabel{ {}, "Target"};
-        TextButton targetButton{ {}, "0 db"};
 
         StereoLevelMeter inputLevelMeter;
         StereoLevelMeter outputLevelMeter;
 
-        dbAnnoComponent dbAnnoOut;
+        //dbAnnoComponent dbAnnoOut;
         dbAnnoComponent faderAnnoLeft;
         dbAnnoComponent faderAnnoRight;
         FaderSlider gainSlider;

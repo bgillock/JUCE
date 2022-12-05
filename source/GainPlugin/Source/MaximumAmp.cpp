@@ -17,7 +17,9 @@ MaximumAmp::MaximumAmp(double min, double max, int nLevels, int peakHoldTimes)
     _maxAmp = max;
     _peakHoldTimes = peakHoldTimes;
     _levels = new float[_nLevels];
-    peakAmp = -144.0; 
+    _signal = false;
+    _clipped = false;
+    _peakAmp = -144.0; 
 };
 void MaximumAmp::setNLevels(int n)
 {
@@ -31,7 +33,9 @@ void MaximumAmp::capture(AudioBuffer<float> amps, int channel)
     if (lock.isLocked())
     {
         float db = Decibels::gainToDecibels(amps.getRMSLevel(channel, 0, amps.getNumSamples()));
-        if (db > peakAmp) peakAmp = db;
+        if (db > _peakAmp) _peakAmp = db;
+        _clipped = _clipped || (db > _maxAmp);
+        _signal = _signal || (amps.getMagnitude(channel, 0, amps.getNumSamples()) > 0.0);
     }
 }
 void MaximumAmp::capture(AudioBuffer<double> amps, int channel)
@@ -40,26 +44,28 @@ void MaximumAmp::capture(AudioBuffer<double> amps, int channel)
     if (lock.isLocked())
     {
         float db = Decibels::gainToDecibels(amps.getRMSLevel(channel, 0, amps.getNumSamples()));
-        if (db > peakAmp) peakAmp = db;
+        if (db > _peakAmp) _peakAmp = db;
+        _clipped = _clipped || (db > _maxAmp);
+        _signal = _signal || (amps.getMagnitude(channel, 0, amps.getNumSamples()) > 0.0);
     }
 }
 float* MaximumAmp::getLevels()
 {
     const juce::SpinLock::ScopedTryLockType lock(mutex);
-    if (++peakTimes > _peakHoldTimes)
+    if (++_peakTimes > _peakHoldTimes)
     {
-        peakTimes = 0;
-        peakhold = -144.0;
+        _peakTimes = 0;
+        _peakhold = -144.0;
     }
 
-    if (peakAmp > peakhold)
+    if (_peakAmp > _peakhold)
     {
-        peakhold = peakAmp;
-        peakTimes = 0;
+        _peakhold = _peakAmp;
+        _peakTimes = 0;
     }
 
-    int l = (int)((float)(peakAmp - _minAmp) / (_maxAmp - _minAmp) * (float)_nLevels);
-    int h = (int)((float)(peakhold - _minAmp) / (_maxAmp - _minAmp) * (float)_nLevels);
+    int l = (int)((float)(_peakAmp - _minAmp) / (_maxAmp - _minAmp) * (float)_nLevels);
+    int h = (int)((float)(_peakhold - _minAmp) / (_maxAmp - _minAmp) * (float)_nLevels);
     for (int i = 0; i < _nLevels; i++) {
         _levels[i] = 0.0;
         if (i == h) _levels[i] = 1.0;
@@ -67,12 +73,23 @@ float* MaximumAmp::getLevels()
     }
     return _levels;
 }
-
+bool MaximumAmp::clipped()
+{
+    const juce::SpinLock::ScopedTryLockType lock(mutex);
+    return _clipped;
+}
+bool MaximumAmp::signal()
+{
+    const juce::SpinLock::ScopedTryLockType lock(mutex);
+    return _signal;
+}
 void MaximumAmp::clear()
 {
     const juce::SpinLock::ScopedTryLockType lock(mutex);
     if (lock.isLocked())
     {
-        peakAmp = -144.0;
+        _peakAmp = -144.0;
+        _signal = false;
+        _clipped = false;
     }
 }
