@@ -63,7 +63,7 @@ float* MaximumAmp::getLevels()
         _peakhold = _peakAmp;
         _peakTimes = 0;
     }
-
+    
     int l = (int)((float)(_peakAmp - _minAmp) / (_maxAmp - _minAmp) * (float)_nLevels);
     int h = (int)((float)(_peakhold - _minAmp) / (_maxAmp - _minAmp) * (float)_nLevels);
     for (int i = 0; i < _nLevels; i++) {

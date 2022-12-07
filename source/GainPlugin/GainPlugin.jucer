@@ -27,8 +27,12 @@
       <FILE id="PgRwbY" name="GainPluginDemo.h" compile="0" resource="0"
             file="Source/GainPluginDemo.h"/>
     </GROUP>
-    <FILE id="QwbeFi" name="output-onlinepngtools.png" compile="0" resource="1"
-          file="Source/output-onlinepngtools.png"/>
+    <FILE id="tf2zxE" name="greenleathercrop.png" compile="0" resource="1"
+          file="Source/greenleathercrop.png"/>
+    <FILE id="I0RJ2Z" name="APIBack.PNG" compile="0" resource="1" file="Source/APIBack.PNG"/>
+    <FILE id="VXGSao" name="APILights.png" compile="0" resource="1" file="Source/APILights.png"/>
+    <FILE id="jiOkmR" name="faderalphanonflat.png" compile="0" resource="1"
+          file="Source/faderalphanonflat.png"/>
   </MAINGROUP>
   <MODULES>
     <MODULE id="juce_audio_basics" showAllCode="1" useLocalCopy="0" useGlobalPath="1"/>
@@ -73,7 +77,8 @@
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
         <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="GainPlugin"/>
-        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="GainPlugin"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="GainPlugin"
+                       postbuildCommand="if exist $(OutDir)\GainPlugin.vst3 (copy $(OutDir)\GainPlugin.vst3 C:\Users\bgill\Desktop\Sound\VSTPlugins)"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path=""/>

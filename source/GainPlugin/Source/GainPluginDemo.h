@@ -228,11 +228,11 @@ private:
     public:
         GainAudioProcessorEditor(GainProcessor& owner)
             : AudioProcessorEditor(owner),
-            inputLevelMeter(-144, 0, 6, 12, 22, 0.0, 0.0),
-            outputLevelMeter(-144, 0, 6, 12, 22, 0.0, 40.0), // 40.0 is width of target component also
+            inputLevelMeter(-60, 0, 6, 15, 19, 0.0, 0.0),
+            outputLevelMeter(-60, 0, 6, 15, 19, 0.0, 40.0), // 40.0 is width of target component also
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
-            faderAnnoLeft(-25, 25, 5, 19, 15, 20.0, Justification::left),
-            faderAnnoRight(-25, 25, 5, 19, 15, 20.0, Justification::right),
+            faderAnnoLeft(-25, 25, 5, 29, 25, 20.0, Justification::left),
+            faderAnnoRight(-25, 25, 5, 29, 25, 20.0, Justification::right),
             gainAttachment(owner.state, "gain", gainSlider),
             targetAttachment(owner.state, "targetmin", "targetmax", targetSlider)
         {
@@ -264,7 +264,7 @@ private:
             targetSlider.setColour(Slider::ColourIds::trackColourId, Colour::fromRGBA(255, 0, 0, 100));
             targetSlider.addListener(this);
 
-            // Image myImage = ImageFileFormat::loadFrom(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
+            backgroundImage = ImageFileFormat::loadFrom(BinaryData::greenleathercrop_png, BinaryData::greenleathercrop_pngSize);
             //addAndMakeVisible(outVUMeter);
 
             setResizeLimits(200, 400, 200, 1000);
@@ -284,12 +284,11 @@ private:
         }
 
         ~GainAudioProcessorEditor() override {}
-
-        //==============================================================================
         void paint(Graphics& g) override
         {
+            //g.fillAll(Colour::fromRGB(30, 30, 30));
+            g.drawImage(backgroundImage, 0, 0, getBounds().getWidth(), getBounds().getHeight(), 0, 0, backgroundImage.getWidth(), backgroundImage.getHeight());
         }
-
         void resized() override
         {
             // This lays out our child components...
@@ -363,6 +362,7 @@ private:
         TwoValueSlider targetSlider;
         punch::TwoValueSliderAttachment targetAttachment;
         Colour backgroundColour;
+        Image backgroundImage;
 
         // these are used to persist the UI's size - the values are stored along with the
         // filter's other parameters, and the UI component will update them when it gets

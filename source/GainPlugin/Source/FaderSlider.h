@@ -24,6 +24,7 @@ public:
         float sliderPos, float minSliderPos, float maxSliderPos,
         const Slider::SliderStyle, Slider&) override;
     void drawLabel(Graphics& g, Label& label);
+    int getSliderThumbRadius(Slider& slider) override;
 
 
 private:

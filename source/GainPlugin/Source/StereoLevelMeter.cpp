@@ -44,10 +44,12 @@ void StereoLevelMeter::resized()
     rightLevelMeter.setBounds(r);
     if (_leftAnnoWidth > 0.0)
     {
+        la.setHeight(leftLevelMeter.getActualHeight());
         leftAnno.setBounds(la);
     }
     if (_rightAnnoWidth > 0.0)
     {
+        ra.setHeight(rightLevelMeter.getActualHeight());
         rightAnno.setBounds(ra);
     }
 };
@@ -63,15 +65,15 @@ void StereoLevelMeter::capture(AudioBuffer<double> amps)
     rightLevelMeter.capture(amps, 1);
 }
 
-LevelMeter::LevelMeter(int marginTop, int marginBottom ) :
+DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom ) :
     _mTop(marginTop),
     _mBottom(marginBottom),
-    maxAmp(-54.0, 0.0, 20, _peakholdTimes) 
+    maxAmp(-54.0, 0.0, 20, 10) 
 {
 
 };
 
-void LevelMeter::resized()
+void DrawnLEDLevelMeter::resized()
 {
     auto area = getBounds();
     int topy = _mTop;
@@ -82,7 +84,7 @@ void LevelMeter::resized()
 
     if (_lightColors != nullptr) delete _lightColors;
     _lightColors = new Colour[_nLights];
-    int orangelight = (int)((float)_nLights * 0.4f);
+    int orangelight = (int)((float)_nLights * 0.66f);
     for (int l = 0; l < _nLights; l++)
     {
         Colour thiscolor = Colour::fromRGB(0, 0, 0);
@@ -93,40 +95,45 @@ void LevelMeter::resized()
     }
 }
 
-void LevelMeter::drawLight(Graphics& g, int x, int y, int width, int height, float *levels, int l)
+int DrawnLEDLevelMeter::getActualHeight()
+{
+    return _mTop + (_nLights * (_lightheight + _spacing)) + _mBottom;
+}
+void DrawnLEDLevelMeter::drawLight(Graphics& g, int x, int y, int width, int height, float *levels, int l)
 {
     g.setColour(Colours::black); // off color
     if (levels[l] == 1.0) g.setColour(_lightColors[l]);
     g.fillRect(x, y, (int)_lightwidth, (int)_lightheight);
 
-    g.setColour(Colours::white); // border color
+    g.setColour(Colours::grey); // border color
     g.drawRect(x, y, (int)_lightwidth, (int)_lightheight, (int)_lightborder);
 }
 
-void LevelMeter::drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped)
+void DrawnLEDLevelMeter::drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped)
 {
     g.setColour(Colours::black); // off color
     if (clipped) g.setColour(Colours::red);
     g.fillRect(x,y, width, height);
 
-    g.setColour(Colours::white); // border color
+    g.setColour(Colours::grey); // border color
     g.drawRect(x, y, width, height, (int)_lightborder);
 }
 
-void LevelMeter::drawSignal(Graphics& g, int x, int y, int width, int height, bool signal)
+void DrawnLEDLevelMeter::drawSignal(Graphics& g, int x, int y, int width, int height, bool signal)
 {
     g.setColour(Colours::black); // off color
-    if (signal) g.setColour(Colours::green);
+    if (signal) g.setColour(Colour::fromRGB(0,255,0));
     g.fillRect(x, y, width, height);
 
-    g.setColour(Colours::white); // border color
+    g.setColour(Colours::grey); // border color
     g.drawRect(x, y, width, height, (int)_lightborder);
 }
 
-void LevelMeter::paint(Graphics& g)
+void DrawnLEDLevelMeter::paint(Graphics& g)
 {
-    g.setColour(Colours::red);
-    g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
+
+    //g.setColour(Colours::red);
+    //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
 
     auto levels = maxAmp.getLevels();
     int nlights = maxAmp.getNLevels();
@@ -150,11 +157,11 @@ void LevelMeter::paint(Graphics& g)
     return;
 };
 
-void LevelMeter::capture(AudioBuffer<float> amps, int channel)
+void DrawnLEDLevelMeter::capture(AudioBuffer<float> amps, int channel)
 {
     maxAmp.capture(amps, channel);
 }
-void LevelMeter::capture(AudioBuffer<double> amps, int channel)
+void DrawnLEDLevelMeter::capture(AudioBuffer<double> amps, int channel)
 {
     maxAmp.capture(amps, channel);
 }

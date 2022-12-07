@@ -147,6 +147,9 @@
     <Lib>
       <AdditionalDependencies>GainPlugin.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
+    <PostBuildEvent>
+      <Command>if exist $(OutDir)\GainPlugin.vst3 (copy $(OutDir)\GainPlugin.vst3 C:\Users\bgill\Desktop\Sound\VSTPlugins)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\..\modules\juce_audio_plugin_client\Standalone\juce_StandaloneFilterApp.cpp">

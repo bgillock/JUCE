@@ -5933,7 +5933,16 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Source\output-onlinepngtools.png">
+    <None Include="..\..\Source\greenleathercrop.png">
+      <Filter>GainPlugin</Filter>
+    </None>
+    <None Include="..\..\Source\APIBack.PNG">
+      <Filter>GainPlugin</Filter>
+    </None>
+    <None Include="..\..\Source\APILights.png">
+      <Filter>GainPlugin</Filter>
+    </None>
+    <None Include="..\..\Source\faderalphanonflat.png">
       <Filter>GainPlugin</Filter>
     </None>
     <None Include="..\..\..\..\modules\juce_audio_devices\native\oboe\CMakeLists.txt">

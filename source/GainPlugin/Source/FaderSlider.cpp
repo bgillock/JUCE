@@ -16,7 +16,8 @@ FaderSliderLookAndFeel::FaderSliderLookAndFeel() : LookAndFeel_V4()
 {
     // In your constructor, you should add any child components, and
     // initialise any special settings that your component needs.
-    thumbImage = ImageCache::getFromMemory(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
+    //thumbImage = ImageCache::getFromMemory(BinaryData::outputonlinepngtools_png, BinaryData::outputonlinepngtools_pngSize);
+    thumbImage = ImageCache::getFromMemory(BinaryData::faderalphanonflat_png, BinaryData::faderalphanonflat_pngSize);
 }
 
 FaderSliderLookAndFeel::~FaderSliderLookAndFeel()
@@ -29,7 +30,7 @@ void FaderSliderLookAndFeel::drawLinearSliderBackground(Graphics& g, int x, int 
 {
     //g.setColour(Colours::red);
     //g.drawRect(x, y, width, height, 1.0);
-    const float sliderRadius = (float)(getSliderThumbRadius(slider) - 2);
+    const float sliderRadius = (float)getSliderThumbRadius(slider) * 0.5; // smaller track than v2
 
     const Colour trackColour(slider.findColour(Slider::trackColourId));
     const Colour gradCol1(trackColour.overlaidWith(Colour(slider.isEnabled() ? 0x13000000 : 0x09000000)));
@@ -86,7 +87,10 @@ void FaderSliderLookAndFeel::drawLinearSlider(Graphics& g, int x, int y, int wid
         g.drawFittedText(String("No Image"), text_bounds.getSmallestIntegerContainer(), Justification::horizontallyCentred | Justification::centred, 1);
     }
 }
-
+int FaderSliderLookAndFeel::getSliderThumbRadius(Slider& slider)
+{
+    return 21;
+}
 void FaderSliderLookAndFeel::drawLabel(Graphics& g, Label& label)
 {
     g.setColour(Colour(uint8(0), 0, 0, 1.0f));

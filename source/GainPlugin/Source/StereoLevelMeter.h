@@ -18,12 +18,23 @@
 class LevelMeter : public juce::Component
 {
 public:
-    LevelMeter(int marginTop, int marginBottom);
+    LevelMeter() {};
+    virtual void paint(juce::Graphics&) override = 0;
+    virtual void resized() override = 0;
+    virtual void capture(AudioBuffer<float> amps, int channel) = 0;
+    virtual void capture(AudioBuffer<double> amps, int channel) = 0;
+    virtual int getActualHeight() = 0;
+};
+
+class DrawnLEDLevelMeter : public LevelMeter
+{
+public:
+    DrawnLEDLevelMeter(int marginTop, int marginBottom);
     void paint(juce::Graphics&) override;
     void resized() override;
     void capture(AudioBuffer<float> amps, int channel);
     void capture(AudioBuffer<double> amps, int channel);
-    void init();
+    int getActualHeight();
 private:
     void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
     void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal);
@@ -32,18 +43,18 @@ private:
     int _mTop;
     int _mBottom;
     const int _peakholdTimes = 10; // number of times to leave peak 
-    const float _lightheight = 15;
-    const float _lightwidth = 7;
+    const float _lightheight = 9;
+    const float _lightwidth = 17;
     const float _spacing = 1;
     const float _clippedheight = 10;
     const float _signalheight = 10;
     const Colour _peakColor = Colour::fromRGB(255, 0, 0);
-    const Colour _ltColor = Colour::fromRGB(0, 255, 0);
-    const float _lightborder = 1;
+    const Colour _signalColor = Colour::fromRGB(0, 255, 0);
+    const float _lightborder = 1.5;
     int _nLights;
     Colour* _lightColors = nullptr;
 
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LevelMeter);
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DrawnLEDLevelMeter);
 };
 
 class StereoLevelMeter : public juce::Component,
@@ -58,8 +69,8 @@ public:
     void StereoLevelMeter::timerCallback() override;
 private:
 
-    LevelMeter leftLevelMeter;
-    LevelMeter rightLevelMeter;
+    DrawnLEDLevelMeter leftLevelMeter;
+    DrawnLEDLevelMeter rightLevelMeter;
     dbAnnoComponent leftAnno;
     dbAnnoComponent rightAnno;
     float _leftAnnoWidth;

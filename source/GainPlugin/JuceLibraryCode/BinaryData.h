@@ -8,11 +8,20 @@
 
 namespace BinaryData
 {
-    extern const char*   outputonlinepngtools_png;
-    const int            outputonlinepngtools_pngSize = 63289;
+    extern const char*   greenleathercrop_png;
+    const int            greenleathercrop_pngSize = 537361;
+
+    extern const char*   APIBack_PNG;
+    const int            APIBack_PNGSize = 44421;
+
+    extern const char*   APILights_png;
+    const int            APILights_pngSize = 20173;
+
+    extern const char*   faderalphanonflat_png;
+    const int            faderalphanonflat_pngSize = 16064;
 
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 1;
+    const int namedResourceListSize = 4;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];

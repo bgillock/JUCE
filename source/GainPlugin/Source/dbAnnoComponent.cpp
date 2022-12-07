@@ -29,12 +29,14 @@ dbAnnoComponent::dbAnnoComponent(int minAmp, int maxAmp, int incAmp, int marginT
 
 void dbAnnoComponent::paint(Graphics& g) 
 {
-    g.setColour(Colours::red);
-    g.drawRect(0,0,getBounds().getWidth(),getBounds().getHeight(), 1.0);
+
+   // g.setColour(Colours::red);
+   // g.drawRect(0,0,getBounds().getWidth(),getBounds().getHeight(), 1.0);
+
     int width = getBounds().getWidth();
     float textWidth = width;
     float textHeight = 10.0;
-    g.setColour(Colours::white);
+
     StringPairArray dbAnnoPos = get_db_pairs(_minAmp, _maxAmp, _incAmp, _minY, _maxY);
     g.setFont(Font("Lucinda Sans Typewriter", "Regular", 11.0));
     auto font = g.getCurrentFont();
@@ -42,6 +44,7 @@ void dbAnnoComponent::paint(Graphics& g)
     {
         if (dbAnnoPos[key] != "")
         {
+            g.setColour(Colours::white);
             g.drawText(dbAnnoPos[key], 0.0, key.getFloatValue() - (textHeight / 2.0), textWidth, textHeight, _style);
             int strWidth = font.getStringWidth(dbAnnoPos[key]);
             if (_style == Justification::left)
@@ -54,7 +57,10 @@ void dbAnnoComponent::paint(Graphics& g)
             }
         }
         else
-            g.drawRect( 0.0, key.getFloatValue(), (float)width,0.5,0.5);
+        {
+            g.setColour(Colours::grey);
+            g.drawRect(0.0, key.getFloatValue(), (float)width, 0.5, 0.5);
+        }
     }
 }
 

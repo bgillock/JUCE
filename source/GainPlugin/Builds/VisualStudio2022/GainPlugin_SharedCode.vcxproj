@@ -137,6 +137,9 @@
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <OutputFile>$(IntDir)\GainPlugin.bsc</OutputFile>
     </Bscmake>
+    <PostBuildEvent>
+      <Command>if exist $(OutDir)\GainPlugin.vst3 (copy $(OutDir)\GainPlugin.vst3 C:\Users\bgill\Desktop\Sound\VSTPlugins)</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\..\Source\MaximumAmp.cpp"/>
@@ -3374,7 +3377,10 @@
     <ClInclude Include="..\..\JuceLibraryCode\JucePluginDefines.h"/>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\Source\output-onlinepngtools.png"/>
+    <None Include="..\..\Source\greenleathercrop.png"/>
+    <None Include="..\..\Source\APIBack.PNG"/>
+    <None Include="..\..\Source\APILights.png"/>
+    <None Include="..\..\Source\faderalphanonflat.png"/>
     <None Include="..\..\..\..\modules\juce_audio_devices\native\oboe\CMakeLists.txt"/>
     <None Include="..\..\..\..\modules\juce_audio_devices\native\oboe\README.md"/>
     <None Include="..\..\..\..\modules\juce_audio_formats\codecs\flac\Flac Licence.txt"/>
