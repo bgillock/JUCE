@@ -305,8 +305,8 @@ private:
             gainSlider.setTextBoxStyle(Slider::TextBoxAbove, false, sliderArea.getWidth(), 30);
        
             sliderArea.removeFromTop(20);
-            faderAnnoLeft.setBounds(sliderArea.removeFromLeft(20));
-            faderAnnoRight.setBounds(sliderArea.removeFromRight(20));
+            faderAnnoLeft.setBounds(sliderArea.removeFromLeft(26));
+            faderAnnoRight.setBounds(sliderArea.removeFromRight(26));
 
             auto rightMeterArea = r.removeFromLeft(85);
             auto rightMeterLabelArea = rightMeterArea.removeFromTop(15);

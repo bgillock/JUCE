@@ -74,6 +74,8 @@ void FaderSliderLookAndFeel::drawLinearSlider(Graphics& g, int x, int y, int wid
         int imgHeight = thumbImage.getHeight();
 
         const float centerX = width * 0.5f;
+        auto alpha = thumbImage.hasAlphaChannel();
+        auto ARGB = thumbImage.isARGB();
 
         g.drawImage(thumbImage, centerX - (float)(imgWidth / 2.0), sliderPos - (float)(imgHeight / 2.0), imgWidth, imgHeight, 0, 0, imgWidth, imgHeight);
     }
