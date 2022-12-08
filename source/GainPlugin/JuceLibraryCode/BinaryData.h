@@ -15,7 +15,7 @@ namespace BinaryData
     const int            APIBack_PNGSize = 44421;
 
     extern const char*   APILights_png;
-    const int            APILights_pngSize = 20173;
+    const int            APILights_pngSize = 20615;
 
     extern const char*   faderalphanonflat_png;
     const int            faderalphanonflat_pngSize = 16064;

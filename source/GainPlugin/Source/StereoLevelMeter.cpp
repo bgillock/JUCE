@@ -65,10 +65,102 @@ void StereoLevelMeter::capture(AudioBuffer<double> amps)
     rightLevelMeter.capture(amps, 1);
 }
 
-DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom ) :
+UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom ) :
     _mTop(marginTop),
     _mBottom(marginBottom),
     maxAmp(-54.0, 0.0, 20, 10) 
+{
+    _lightImages = ImageFileFormat::loadFrom(BinaryData::APILights_png, BinaryData::APILights_pngSize);
+};
+
+void UADLevelMeter::resized()
+{
+    auto area = getBounds();
+    int topy = _mTop;
+    int bottomy = area.getHeight() - _mBottom;
+
+    _nLights = (int)((float)(bottomy - topy + 1) / (_lightheight + _spacing));
+    maxAmp.setNLevels(_nLights);
+
+    if (_lightImageIndexes != nullptr) delete _lightImageIndexes;
+    _lightImageIndexes = new int[_nLights];
+    int orangelight = (int)((float)_nLights * 0.66f);
+    for (int l = 0; l < _nLights; l++)
+    {
+        int thisImage = 2; // default to off, on = +3
+        if (l == _nLights - 1) thisImage = 0;
+        else if (l >= orangelight) thisImage = 1;
+        _lightImageIndexes[l] = thisImage;
+    }
+}
+
+int UADLevelMeter::getActualHeight()
+{
+    return _mTop + (_nLights * (_lightheight + _spacing)) + _mBottom;
+}
+void UADLevelMeter::drawLight(Graphics& g, int x, int y, int width, int height, float *levels, int l)
+{
+    int index = _lightImageIndexes[l];
+    if (levels[l] == 1.0) index+=3;
+
+    g.drawImage(_lightImages, x, y, (int)_lightwidth, (int)_lightheight, 0, index * ((int)_lightheight + (int)_spacing), (int)_lightwidth, (int)_lightheight );
+}
+
+void UADLevelMeter::drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped)
+{
+    int index = 0;
+    if (clipped) index = 3;
+    g.drawImage(_lightImages, x, y, (int)_lightwidth, (int)_lightheight, 0, index * ((int)_lightheight + (int)_spacing), (int)_lightwidth, (int)_lightheight);
+}
+
+void UADLevelMeter::drawSignal(Graphics& g, int x, int y, int width, int height, bool signal)
+{
+    int index = 2;
+    if (signal) index = 5;
+    g.drawImage(_lightImages, x, y, (int)_lightwidth, (int)_lightheight, 0, index * ((int)_lightheight + (int)_spacing), (int)_lightwidth, (int)_lightheight);
+}
+
+void UADLevelMeter::paint(Graphics& g)
+{
+
+    //g.setColour(Colours::red);
+    //g.drawRect(0, 0, getBounds().getWidth(), getBounds().getHeight(), 1.0);
+
+    auto levels = maxAmp.getLevels();
+    int nlights = maxAmp.getNLevels();
+
+    int y = _mTop;
+    int centerx = getBounds().getWidth() / 2;
+
+    int tx = centerx - _lightwidth / 2;
+    
+    drawClipped(g, tx, (int)(_mTop - _spacing - _clippedheight), (int)_lightwidth, (int)_clippedheight, maxAmp.clipped());
+
+    for (int l = _nLights - 1; l >= 0; l--)
+    {
+        drawLight(g, tx, y, _lightwidth, _lightheight, levels, l);
+        y += _lightheight + _spacing;
+    }
+ 
+    drawSignal(g, tx, _mTop + (_nLights * (int)(_lightheight + _spacing)), (int)_lightwidth, (int)_signalheight, maxAmp.signal());
+
+    maxAmp.clear();
+    return;
+};
+
+void UADLevelMeter::capture(AudioBuffer<float> amps, int channel)
+{
+    maxAmp.capture(amps, channel);
+}
+void UADLevelMeter::capture(AudioBuffer<double> amps, int channel)
+{
+    maxAmp.capture(amps, channel);
+}
+
+DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom) :
+    _mTop(marginTop),
+    _mBottom(marginBottom),
+    maxAmp(-54.0, 0.0, 20, 10)
 {
 
 };
@@ -99,7 +191,7 @@ int DrawnLEDLevelMeter::getActualHeight()
 {
     return _mTop + (_nLights * (_lightheight + _spacing)) + _mBottom;
 }
-void DrawnLEDLevelMeter::drawLight(Graphics& g, int x, int y, int width, int height, float *levels, int l)
+void DrawnLEDLevelMeter::drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l)
 {
     g.setColour(Colours::black); // off color
     if (levels[l] == 1.0) g.setColour(_lightColors[l]);
@@ -113,7 +205,7 @@ void DrawnLEDLevelMeter::drawClipped(Graphics& g, int x, int y, int width, int h
 {
     g.setColour(Colours::black); // off color
     if (clipped) g.setColour(Colours::red);
-    g.fillRect(x,y, width, height);
+    g.fillRect(x, y, width, height);
 
     g.setColour(Colours::grey); // border color
     g.drawRect(x, y, width, height, (int)_lightborder);
@@ -122,7 +214,7 @@ void DrawnLEDLevelMeter::drawClipped(Graphics& g, int x, int y, int width, int h
 void DrawnLEDLevelMeter::drawSignal(Graphics& g, int x, int y, int width, int height, bool signal)
 {
     g.setColour(Colours::black); // off color
-    if (signal) g.setColour(Colour::fromRGB(0,255,0));
+    if (signal) g.setColour(Colour::fromRGB(0, 255, 0));
     g.fillRect(x, y, width, height);
 
     g.setColour(Colours::grey); // border color
@@ -142,7 +234,7 @@ void DrawnLEDLevelMeter::paint(Graphics& g)
     int centerx = getBounds().getWidth() / 2;
 
     int tx = centerx - _lightwidth / 2;
-    
+
     drawClipped(g, tx, (int)(_mTop - _spacing - _clippedheight), (int)_lightwidth, (int)_clippedheight, maxAmp.clipped());
 
     for (int l = _nLights - 1; l >= 0; l--)
@@ -150,7 +242,7 @@ void DrawnLEDLevelMeter::paint(Graphics& g)
         drawLight(g, tx, y, _lightwidth, _lightheight, levels, l);
         y += _lightheight + _spacing;
     }
- 
+
     drawSignal(g, tx, _mTop + (_nLights * (int)(_lightheight + _spacing)), (int)_lightwidth, (int)_signalheight, maxAmp.signal());
 
     maxAmp.clear();
@@ -165,3 +257,4 @@ void DrawnLEDLevelMeter::capture(AudioBuffer<double> amps, int channel)
 {
     maxAmp.capture(amps, channel);
 }
+

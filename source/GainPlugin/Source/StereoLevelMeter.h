@@ -57,6 +57,38 @@ private:
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(DrawnLEDLevelMeter);
 };
 
+class UADLevelMeter : public LevelMeter
+{
+public:
+    UADLevelMeter(int marginTop, int marginBottom);
+    void paint(juce::Graphics&) override;
+    void resized() override;
+    void capture(AudioBuffer<float> amps, int channel);
+    void capture(AudioBuffer<double> amps, int channel);
+    int getActualHeight();
+private:
+    void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
+    void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal);
+    void drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped);
+    MaximumAmp maxAmp;
+    int _mTop;
+    int _mBottom;
+    const int _peakholdTimes = 10; // number of times to leave peak 
+    const float _lightheight = 16;
+    const float _lightwidth = 16;
+    const float _spacing = 2;
+    const float _clippedheight = 10;
+    const float _signalheight = 16;
+    const int _clippedImageOn = 3;
+    const int _clippedImageOff = 0; 
+    const int _signalImageOn = 5;
+    const int _signalImageOff = 2;
+    int _nLights;
+    int* _lightImageIndexes = nullptr;
+    Image _lightImages;
+
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(UADLevelMeter);
+};
 class StereoLevelMeter : public juce::Component,
     public Timer
 {
@@ -69,8 +101,8 @@ public:
     void StereoLevelMeter::timerCallback() override;
 private:
 
-    DrawnLEDLevelMeter leftLevelMeter;
-    DrawnLEDLevelMeter rightLevelMeter;
+    UADLevelMeter leftLevelMeter;
+    UADLevelMeter rightLevelMeter;
     dbAnnoComponent leftAnno;
     dbAnnoComponent rightAnno;
     float _leftAnnoWidth;

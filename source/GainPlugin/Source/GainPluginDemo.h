@@ -263,18 +263,18 @@ private:
             targetSlider.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(255, 127, 39, 100));
             targetSlider.setColour(Slider::ColourIds::trackColourId, Colour::fromRGBA(255, 0, 0, 100));
             targetSlider.addListener(this);
-
-            backgroundImage = ImageFileFormat::loadFrom(BinaryData::greenleathercrop_png, BinaryData::greenleathercrop_pngSize);
+         
+            backgroundImage = ImageFileFormat::loadFrom(BinaryData::APIBack_PNG, BinaryData::APIBack_PNGSize);
             //addAndMakeVisible(outVUMeter);
 
-            setResizeLimits(200, 400, 200, 1000);
-            setResizable(true, owner.wrapperType != wrapperType_AudioUnitv3);
+            setResizeLimits(200, 400, 200, 400);
+            setResizable(false, owner.wrapperType != wrapperType_AudioUnitv3);
 
             lastUIWidth.referTo(owner.state.state.getChildWithName("uiState").getPropertyAsValue("width", nullptr));
             lastUIHeight.referTo(owner.state.state.getChildWithName("uiState").getPropertyAsValue("height", nullptr));
 
             // set our component's initial size to be the last one that was stored in the filter's settings
-            setSize(lastUIWidth.getValue(), lastUIHeight.getValue());
+            //setSize(lastUIWidth.getValue(), lastUIHeight.getValue());
 
             lastUIWidth.addListener(this);
             lastUIHeight.addListener(this);
