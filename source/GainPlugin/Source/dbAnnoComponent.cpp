@@ -78,10 +78,10 @@ void dbAnnoComponent::addPair(StringPairArray& pairs, String format, float v, fl
     String annoString = "";
     if (format != "")
     {
-        int n = sprintf(buffer, format.getCharPointer(), (float)v);
+        sprintf(buffer, format.getCharPointer(), (float)v);
         annoString = buffer;
     }
-    int n = sprintf(buffer, "%f", pixel);
+    sprintf(buffer, "%f", pixel);
     String pixelString = buffer;
     pairs.set(pixelString, annoString);
 };
