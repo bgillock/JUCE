@@ -53,17 +53,21 @@ void StereoLevelMeter::resized()
         rightAnno.setBounds(ra);
     }
 };
-
+void StereoLevelMeter::clearClipped()
+{
+    leftLevelMeter.clearClipped();
+    rightLevelMeter.clearClipped();
+};
 void StereoLevelMeter::capture(AudioBuffer<float> amps)
 {
     leftLevelMeter.capture(amps, 0);
     rightLevelMeter.capture(amps, 1);
-}
+};
 void StereoLevelMeter::capture(AudioBuffer<double> amps)
 {
     leftLevelMeter.capture(amps, 0);
     rightLevelMeter.capture(amps, 1);
-}
+};
 
 UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom ) :
     _mTop(marginTop),
@@ -97,6 +101,11 @@ void UADLevelMeter::resized()
 int UADLevelMeter::getActualHeight()
 {
     return _mTop + (_nLights * (_lightheight + _spacing)) + _mBottom;
+}
+
+void UADLevelMeter::clearClipped()
+{
+    maxAmp.setClipped(false);
 }
 void UADLevelMeter::drawLight(Graphics& g, int x, int y, int width, int height, float *levels, int l)
 {
@@ -191,6 +200,12 @@ int DrawnLEDLevelMeter::getActualHeight()
 {
     return _mTop + (_nLights * (_lightheight + _spacing)) + _mBottom;
 }
+
+void DrawnLEDLevelMeter::clearClipped()
+{
+    maxAmp.setClipped(false);
+}
+
 void DrawnLEDLevelMeter::drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l)
 {
     g.setColour(Colours::black); // off color
@@ -258,3 +273,70 @@ void DrawnLEDLevelMeter::capture(AudioBuffer<double> amps, int channel)
     maxAmp.capture(amps, channel);
 }
 
+class VUHistogram
+{
+public:
+    VUHistogram(int nBins, int nBuffs, double minBin, double maxBin)
+    {
+        _nBins = nBins;
+        _nBuffs = nBuffs;
+        _minBin = minBin;
+        _maxBin = maxBin;
+        int** x = new int* [_nBuffs];
+        for (int i = 0; i < _nBuffs; i++)
+        {
+            _hist[i] = new int[_nBins + 2]; // for min/max
+            clearBuff(_hist[i]);
+        }
+        _currentBuff = 0;
+    }
+    void addAmps(AudioBuffer<float>& amps, int channel)
+    {
+        const juce::SpinLock::ScopedTryLockType lock(mutex);
+        if (lock.isLocked())
+        {
+            clearBuff(_hist[_currentBuff]);
+            auto channelData = amps.getReadPointer(channel);
+            for (int a = 0; a < amps.getNumSamples(); a++)
+            {
+                _hist[_currentBuff][getBin(channelData[a], _minBin, _maxBin, _nBins)]++;
+            }
+        }
+    }
+    void getHistTotal(int* tot)
+    {
+        const juce::SpinLock::ScopedLockType lock(mutex);
+        for (int i = 0; i <= _nBins + 1; i++)
+        {
+            tot[i] = 0;
+            for (int b = 0; b < _nBuffs; b++)
+            {
+                tot[i] += _hist[b][i];
+            }
+        }
+        return;
+    }
+
+private:
+    void clearBuff(int* buff)
+    {
+        for (int i = 0; i < _nBins + 2; i++)
+        {
+            buff[i] = 0;
+        }
+        return;
+    }
+    int getBin(double amp, double min, double max, int nBins)
+    {
+        if (amp < min) return 0;
+        if (amp > max) return nBins + 1;
+        return (int)(((amp - min) / (max - min)) * (double)nBins);
+    }
+    juce::SpinLock mutex;
+    int _nBins;
+    int _nBuffs;
+    double _minBin;
+    double _maxBin;
+    int** _hist;
+    int _currentBuff;
+};

@@ -12,7 +12,7 @@ namespace BinaryData
     const int            greenleathercrop_pngSize = 537361;
 
     extern const char*   APIBack_PNG;
-    const int            APIBack_PNGSize = 44421;
+    const int            APIBack_PNGSize = 54763;
 
     extern const char*   APILights_png;
     const int            APILights_pngSize = 20615;

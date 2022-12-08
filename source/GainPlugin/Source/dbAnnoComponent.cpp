@@ -103,7 +103,7 @@ StringPairArray dbAnnoComponent::get_db_pairs(int minAmp, int maxAmp, int incAmp
 
         if (v % incAmp == 0)
         {
-            addPair(pairs, "%-2.0f", (float)v, getYFromDb(v));
+            addPair(pairs, "%+2.0f", (float)v, getYFromDb(v));
         }
         else
         {

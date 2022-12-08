@@ -78,6 +78,14 @@ bool MaximumAmp::clipped()
     const juce::SpinLock::ScopedTryLockType lock(mutex);
     return _clipped;
 }
+void MaximumAmp::setClipped(bool clip)
+{
+    const juce::SpinLock::ScopedTryLockType lock(mutex);
+    if (lock.isLocked())
+    {
+        _clipped = false;
+    }
+}
 bool MaximumAmp::signal()
 {
     const juce::SpinLock::ScopedTryLockType lock(mutex);
@@ -90,6 +98,5 @@ void MaximumAmp::clear()
     {
         _peakAmp = -144.0;
         _signal = false;
-        _clipped = false;
     }
 }

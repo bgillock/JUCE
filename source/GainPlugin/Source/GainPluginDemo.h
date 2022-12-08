@@ -54,73 +54,7 @@
 #include "StereoLevelMeter.h"
 #include "punch/punch.h"
 
-class VUHistogram
-{
-public:
-    VUHistogram(int nBins, int nBuffs, double minBin, double maxBin)
-    {
-        _nBins = nBins;
-        _nBuffs = nBuffs;
-        _minBin = minBin;
-        _maxBin = maxBin;
-        int** x = new int* [_nBuffs];
-        for (int i = 0; i < _nBuffs; i++)
-        {
-            _hist[i] = new int[_nBins + 2]; // for min/max
-            clearBuff(_hist[i]);
-        }
-        _currentBuff = 0;
-    }
-    void addAmps(AudioBuffer<float>& amps, int channel)
-    {
-        const juce::SpinLock::ScopedTryLockType lock(mutex);
-        if (lock.isLocked())
-        {
-            clearBuff(_hist[_currentBuff]);
-            auto channelData = amps.getReadPointer(channel);
-            for (int a = 0; a < amps.getNumSamples(); a++)
-            {
-                _hist[_currentBuff][getBin(channelData[a], _minBin, _maxBin, _nBins)]++;
-            }
-        }
-    }
-    void getHistTotal(int* tot)
-    {
-        const juce::SpinLock::ScopedLockType lock(mutex);
-        for (int i = 0; i <= _nBins + 1; i++)
-        {
-            tot[i] = 0;
-            for (int b = 0; b < _nBuffs; b++)
-            {
-                tot[i] += _hist[b][i];
-            }
-        }
-        return;
-    }
 
-private:
-    void clearBuff(int* buff)
-    {
-        for (int i = 0; i < _nBins + 2; i++)
-        {
-            buff[i] = 0;
-        }
-        return;
-    }
-    int getBin(double amp, double min, double max, int nBins)
-    {
-        if (amp < min) return 0;
-        if (amp > max) return nBins + 1;
-        return (int)(((amp - min) / (max - min)) * (double)nBins);
-    }
-    juce::SpinLock mutex;
-    int _nBins;
-    int _nBuffs;
-    double _minBin;
-    double _maxBin;
-    int** _hist;
-    int _currentBuff;
-};
 
 //==============================================================================
 class GainProcessor  : public AudioProcessor
@@ -228,8 +162,8 @@ private:
     public:
         GainAudioProcessorEditor(GainProcessor& owner)
             : AudioProcessorEditor(owner),
-            inputLevelMeter(-60, 0, 6, 15, 19, 0.0, 0.0),
-            outputLevelMeter(-60, 0, 6, 15, 19, 0.0, 40.0), // 40.0 is width of target component also
+            inputLevelMeter(-60, 0, 6, 19, 19, 0.0, 0.0),
+            outputLevelMeter(-60, 0, 6, 19, 19, 0.0, 40.0), // 40.0 is width of target component also
             targetSlider(Slider::TwoValueVertical,Slider::NoTextBox),
             faderAnnoLeft(-25, 25, 5, 29, 25, 20.0, Justification::left),
             faderAnnoRight(-25, 25, 5, 29, 25, 20.0, Justification::right),
@@ -268,7 +202,7 @@ private:
             //addAndMakeVisible(outVUMeter);
 
             setResizeLimits(200, 400, 200, 400);
-            setResizable(false, owner.wrapperType != wrapperType_AudioUnitv3);
+            setResizable(false, false);
 
             lastUIWidth.referTo(owner.state.state.getChildWithName("uiState").getPropertyAsValue("width", nullptr));
             lastUIHeight.referTo(owner.state.state.getChildWithName("uiState").getPropertyAsValue("height", nullptr));
@@ -341,6 +275,11 @@ private:
 
         void sliderValueChanged(Slider* sliderThatHasChanged) override
         {
+            if (sliderThatHasChanged == &gainSlider)
+            {
+                inputLevelMeter.clearClipped();
+                outputLevelMeter.clearClipped();
+            }
         }
 
     private:

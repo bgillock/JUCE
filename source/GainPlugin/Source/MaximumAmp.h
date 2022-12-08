@@ -22,6 +22,7 @@ public:
     double getMinAmp() { return _minAmp; }
     double getMaxAmp() { return _maxAmp; }
     bool clipped();
+    void setClipped(bool);
     bool signal();
     int getNLevels() { return _nLevels; }
     void setNLevels(int n);

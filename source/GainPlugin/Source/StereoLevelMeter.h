@@ -35,6 +35,7 @@ public:
     void capture(AudioBuffer<float> amps, int channel);
     void capture(AudioBuffer<double> amps, int channel);
     int getActualHeight();
+    void clearClipped();
 private:
     void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
     void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal);
@@ -66,6 +67,7 @@ public:
     void capture(AudioBuffer<float> amps, int channel);
     void capture(AudioBuffer<double> amps, int channel);
     int getActualHeight();
+    void clearClipped();
 private:
     void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
     void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal);
@@ -77,7 +79,7 @@ private:
     const float _lightheight = 16;
     const float _lightwidth = 16;
     const float _spacing = 2;
-    const float _clippedheight = 10;
+    const float _clippedheight = 16;
     const float _signalheight = 16;
     const int _clippedImageOn = 3;
     const int _clippedImageOff = 0; 
@@ -98,6 +100,7 @@ public:
     void capture(AudioBuffer<float> amps);
     void capture(AudioBuffer<double> amps);
     void init();
+    void clearClipped();
     void StereoLevelMeter::timerCallback() override;
 private:
 
