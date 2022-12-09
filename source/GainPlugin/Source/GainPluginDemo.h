@@ -69,9 +69,9 @@ public:
             { std::make_unique<AudioParameterFloat>(ParameterID { "gain",  1 }, "Gain",     
                                                     NormalisableRange<float>(-25.0f, +25.0f), 0.0f),
               std::make_unique<AudioParameterFloat>(ParameterID { "targetmin",  1 }, "targetmin",
-                                                    NormalisableRange<float>(-54.0f, 0.0f), -15.0f),
+                                                    NormalisableRange<float>(-60.0f, 0.0f), -15.0f),
               std::make_unique<AudioParameterFloat>(ParameterID { "targetmax",  1 }, "targetmax",
-                                                    NormalisableRange<float>(-54.0f, 0.0f), -9.0f) })
+                                                    NormalisableRange<float>(-60.0f, 0.0f), -9.0f) })
     {
         state.state.addChild({ "uiState", { { "width",  200 }, { "height", 400 } }, {} }, -1, nullptr);
     }
@@ -194,7 +194,7 @@ private:
             addAndMakeVisible(targetSlider);
 
             targetSlider.setColour(Slider::ColourIds::backgroundColourId, Colour::fromRGBA(0,0,0,0));
-            targetSlider.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(255, 127, 39, 100));
+            targetSlider.setColour(Slider::ColourIds::thumbColourId, Colour::fromRGBA(132,121,1, 100));
             targetSlider.setColour(Slider::ColourIds::trackColourId, Colour::fromRGBA(255, 0, 0, 100));
             targetSlider.addListener(this);
          
@@ -247,7 +247,9 @@ private:
             outputLevelMeterLabel.setBounds(rightMeterLabelArea.removeFromLeft(45));
             targetLabel.setBounds(rightMeterLabelArea);
             outputLevelMeter.setBounds(rightMeterArea);
-
+            rightMeterArea.removeFromTop(12);
+            rightMeterArea.removeFromBottom(12);
+            rightMeterArea.setHeight(outputLevelMeter.getActualHeight());
             auto targetArea = rightMeterArea.removeFromRight(40);
             targetSlider.setBounds(targetArea); // calibrate with underlying anno!
 
@@ -279,6 +281,13 @@ private:
             {
                 inputLevelMeter.clearClipped();
                 outputLevelMeter.clearClipped();
+            }
+            if (sliderThatHasChanged == &targetSlider)
+            {
+                inputLevelMeter.setRange(Range<double>((double)targetSlider.getMinValue(),(double)targetSlider.getMaxValue()));
+                inputLevelMeter.resized();
+                outputLevelMeter.setRange(Range<double>((double)targetSlider.getMinValue(), (double)targetSlider.getMaxValue()));
+                outputLevelMeter.resized();
             }
         }
 

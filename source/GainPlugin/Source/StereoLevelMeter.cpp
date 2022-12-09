@@ -41,7 +41,11 @@ void StereoLevelMeter::resized()
     auto ra = _rightAnnoWidth > 1.0 ? r.removeFromRight((int)_rightAnnoWidth) : r.removeFromRight((int)(r.getWidth() * _rightAnnoWidth));
 
     leftLevelMeter.setBounds(r.removeFromLeft(r.getWidth() / 2));
-    rightLevelMeter.setBounds(r);
+    rightLevelMeter.setBounds(r); 
+    
+    leftLevelMeter.resized();
+    rightLevelMeter.resized();
+    
     if (_leftAnnoWidth > 0.0)
     {
         la.setHeight(leftLevelMeter.getActualHeight());
@@ -53,11 +57,30 @@ void StereoLevelMeter::resized()
         rightAnno.setBounds(ra);
     }
 };
+
+int StereoLevelMeter::getActualHeight()
+{
+    return jmax(leftLevelMeter.getActualHeight(), rightLevelMeter.getActualHeight());
+}
+
 void StereoLevelMeter::clearClipped()
 {
     leftLevelMeter.clearClipped();
     rightLevelMeter.clearClipped();
 };
+void StereoLevelMeter::setRange(Range<double> r)
+{
+    if (leftLevelMeter.canSetRange()) 
+    {
+        leftLevelMeter.setOrangeLevel(r.getStart());
+        leftLevelMeter.setRedLevel(r.getEnd());
+    }
+    if (rightLevelMeter.canSetRange())
+    {
+        rightLevelMeter.setOrangeLevel(r.getStart());
+        rightLevelMeter.setRedLevel(r.getEnd());
+    }
+}
 void StereoLevelMeter::capture(AudioBuffer<float> amps)
 {
     leftLevelMeter.capture(amps, 0);
@@ -84,7 +107,7 @@ void LevelMeter::paint(Graphics& g)
 
     int tx = centerx - _lightwidth / 2;
 
-    drawClipped(g, tx, (int)(_mTop - _spacing - _clippedheight), (int)_lightwidth, (int)_clippedheight, maxAmp.clipped());
+    drawClipped(g, tx, _mTop - _spacing - _clippedheight, _lightwidth, _clippedheight, maxAmp.clipped());
 
     for (int l = _nLights - 1; l >= 0; l--)
     {
@@ -92,7 +115,7 @@ void LevelMeter::paint(Graphics& g)
         y += _lightheight + _spacing;
     }
 
-    drawSignal(g, tx, _mTop + (_nLights * (int)(_lightheight + _spacing)), (int)_lightwidth, (int)_signalheight, maxAmp.signal());
+    drawSignal(g, tx, _mTop + (_nLights * (_lightheight + _spacing)), _lightwidth, _signalheight, maxAmp.signal());
 
     maxAmp.clear();
     return;
@@ -111,6 +134,8 @@ void LevelMeter::capture(AudioBuffer<double> amps, int channel)
 UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom) :
     LevelMeter(marginTop,marginBottom)
 {
+    _orangeLevel = -18.0;
+    _redLevel = -3.0;
     _peakholdTimes = 10; // number of times to leave peak 
     _lightheight = 16;
     _lightwidth = 16;
@@ -128,15 +153,19 @@ void UADLevelMeter::resized()
 
     _nLights = (int)((float)(bottomy - topy + 1) / (_lightheight + _spacing));
     maxAmp.setNLevels(_nLights);
+    auto mindb = maxAmp.getMinAmp();
+    auto maxdb = maxAmp.getMaxAmp();
+    float dbPerLight = ((maxdb - mindb) / (float)_nLights);
 
     if (_lightImageIndexes != nullptr) delete _lightImageIndexes;
     _lightImageIndexes = new int[_nLights];
-    int orangelight = (int)((float)_nLights * 0.66f);
+
     for (int l = 0; l < _nLights; l++)
     {
         int thisImage = 2; // default to off, on = +3
-        if (l == _nLights - 1) thisImage = 0;
-        else if (l >= orangelight) thisImage = 1;
+        float thisdb = mindb + ((float)l * dbPerLight);
+        if (thisdb > _redLevel) thisImage = 0;
+        else if (thisdb > _orangeLevel) thisImage = 1;
         _lightImageIndexes[l] = thisImage;
     }
 }
@@ -146,6 +175,14 @@ int UADLevelMeter::getActualHeight()
     return _mTop + (_nLights * (_lightheight + _spacing)) + _mBottom;
 }
 
+void UADLevelMeter::setRedLevel(float level)
+{
+    _redLevel = level;
+}
+void UADLevelMeter::setOrangeLevel(float level)
+{
+    _orangeLevel = level;
+}
 void UADLevelMeter::clearClipped()
 {
     maxAmp.setClipped(false);

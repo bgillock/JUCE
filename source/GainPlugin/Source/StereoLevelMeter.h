@@ -30,6 +30,7 @@ public:
     virtual void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal) = 0;
     virtual void drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped) = 0;
     virtual int getActualHeight() = 0;
+    virtual bool canSetRange() = 0;
     MaximumAmp maxAmp;
     int _mTop;
     int _mBottom;
@@ -52,6 +53,7 @@ public:
     void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
     void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal);
     void drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped);
+    bool canSetRange() { return false; }
 private:
     const Colour _peakColor = Colour::fromRGB(255, 0, 0);
     const Colour _signalColor = Colour::fromRGB(0, 255, 0);
@@ -71,11 +73,16 @@ public:
     void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
     void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal);
     void drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped);
+    bool canSetRange() { return true; }
+    void setRedLevel(float level);
+    void setOrangeLevel(float level);
 private:
     const int _clippedImageOn = 3;
     const int _clippedImageOff = 0; 
     const int _signalImageOn = 5;
     const int _signalImageOff = 2;
+    float _redLevel = -3.0;
+    float _orangeLevel = -18.0;
     int* _lightImageIndexes = nullptr;
     Image _lightImages;
 
@@ -91,6 +98,8 @@ public:
     void capture(AudioBuffer<double> amps);
     void init();
     void clearClipped();
+    void setRange(Range<double> r);
+    int getActualHeight();
     void StereoLevelMeter::timerCallback() override;
 private:
 
