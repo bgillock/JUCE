@@ -13,7 +13,7 @@
 #include "StereoLevelMeter.h"
 
 //----------------------------------------------------------------------------------------------------------------------
-StereoLevelMeter::StereoLevelMeter(int minAmp, int maxAmp, int incAmp, int marginTop, int marginBottom, float leftAnnoWidth, float rightAnnoWidth) :
+StereoLevelMeter::StereoLevelMeter(float minAmp, float maxAmp, float incAmp, int marginTop, int marginBottom, float leftAnnoWidth, float rightAnnoWidth) :
     leftLevelMeter(marginTop, marginBottom, minAmp, maxAmp, incAmp),
     rightLevelMeter(marginTop, marginBottom, minAmp, maxAmp, incAmp),
     leftAnno(minAmp, maxAmp, incAmp, marginTop, marginBottom, leftAnnoWidth, Justification::left),
@@ -83,14 +83,14 @@ void StereoLevelMeter::setRange(Range<double> r)
 {
     if (leftLevelMeter.canSetRange()) 
     {
-        leftLevelMeter.setOrangeLevel(r.getStart());
-        leftLevelMeter.setRedLevel(r.getEnd());
+        leftLevelMeter.setOrangeLevel((float)r.getStart());
+        leftLevelMeter.setRedLevel((float)r.getEnd());
         leftLevelMeter.setHeight(getBounds().getHeight());
     }
     if (rightLevelMeter.canSetRange())
     {
-        rightLevelMeter.setOrangeLevel(r.getStart());
-        rightLevelMeter.setRedLevel(r.getEnd());
+        rightLevelMeter.setOrangeLevel((float)r.getStart());
+        rightLevelMeter.setRedLevel((float)r.getEnd());
         rightLevelMeter.setHeight(getBounds().getHeight());
 
     }
@@ -145,7 +145,7 @@ void LevelMeter::capture(AudioBuffer<double> amps, int channel)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp ) :
+UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom, float minAmp, float maxAmp, float incAmp ) :
     LevelMeter(marginTop,marginBottom,minAmp,maxAmp,incAmp )
 {
     _orangeLevel = -18.0;
@@ -166,8 +166,8 @@ void UADLevelMeter::setHeight(int height)
 
     _nLights = (int)((float)(bottomy - topy + 1) / (_lightheight + _spacing));
     maxAmp.setNLevels(_nLights);
-    auto mindb = maxAmp.getMinAmp();
-    auto maxdb = maxAmp.getMaxAmp();
+    auto mindb = (float)maxAmp.getMinAmp();
+    auto maxdb = (float)maxAmp.getMaxAmp();
     float dbPerLight = ((maxdb - mindb) / (float)_nLights);
 
     if (_lightImageIndexes != nullptr) delete _lightImageIndexes;
@@ -228,7 +228,7 @@ void UADLevelMeter::drawSignal(Graphics& g, int x, int y, int width, int height,
 }
 
 //---------------------------------------------------------------------------------------------------
-DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp) :
+DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom, float minAmp, float maxAmp, float incAmp) :
     LevelMeter(marginTop,marginBottom,minAmp,maxAmp,incAmp )
 {
     _peakholdTimes = 10; // number of times to leave peak 

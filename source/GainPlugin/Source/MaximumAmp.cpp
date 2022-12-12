@@ -43,7 +43,7 @@ void MaximumAmp::capture(AudioBuffer<double> amps, int channel)
     const juce::SpinLock::ScopedTryLockType lock(mutex);
     if (lock.isLocked())
     {
-        float db = Decibels::gainToDecibels(amps.getRMSLevel(channel, 0, amps.getNumSamples()));
+        double db = Decibels::gainToDecibels(amps.getRMSLevel(channel, 0, amps.getNumSamples()));
         if (db > _peakAmp) _peakAmp = db;
         _clipped = _clipped || (db > _maxAmp);
         _signal = _signal || (amps.getMagnitude(channel, 0, amps.getNumSamples()) > 0.0);
@@ -83,7 +83,7 @@ void MaximumAmp::setClipped(bool clip)
     const juce::SpinLock::ScopedTryLockType lock(mutex);
     if (lock.isLocked())
     {
-        _clipped = false;
+        _clipped = clip;
     }
 }
 bool MaximumAmp::signal()

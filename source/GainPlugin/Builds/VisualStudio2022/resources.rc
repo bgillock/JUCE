@@ -16,9 +16,9 @@ BEGIN
     BLOCK "040904E4"
     BEGIN
       VALUE "CompanyName",  "JUCE\0"
-      VALUE "FileDescription",  "GainPlugin\0"
+      VALUE "FileDescription",  "amplitude\0"
       VALUE "FileVersion",  "1.0.0\0"
-      VALUE "ProductName",  "GainPlugin\0"
+      VALUE "ProductName",  "amplitude\0"
       VALUE "ProductVersion",  "1.0.0\0"
     END
   END

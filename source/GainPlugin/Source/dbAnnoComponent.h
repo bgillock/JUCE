@@ -18,7 +18,7 @@
 class dbAnnoComponent : public Component
 {
 public:
-    dbAnnoComponent(int minAmp, int maxAmp, int incAmp, int marginTop, int marginBottom, float annoWidth, Justification style);
+    dbAnnoComponent(float minAmp, float maxAmp, float incAmp, int marginTop, int marginBottom, float annoWidth, Justification style);
     void paint(Graphics& g) override;
     void resized() override;
 
@@ -37,6 +37,6 @@ private:
     float getYFromDb(double db);
     void addPair(StringPairArray& pairs, String format, float v, float pixel);
 
-    StringPairArray get_db_pairs(int minAmp, int maxAmp, int incAmp, int minPixel, int maxPixel);
+    StringPairArray get_db_pairs(float minAmp, float maxAmp, float incAmp);
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(dbAnnoComponent)
 };

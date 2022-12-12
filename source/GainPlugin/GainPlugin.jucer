@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT name="GainPlugin" companyName="JUCE" version="1.0.0" userNotes="Gain audio plugin."
+<JUCERPROJECT name="amplitude" companyName="JUCE" version="1.0.0" userNotes="Adjust amplitude to user selectable target range."
               companyWebsite="http://juce.com" displaySplashScreen="1" defines="PIP_JUCE_EXAMPLES_DIRECTORY=RDpcQXVkaW9cUmVwb3NcSlVDRVxleGFtcGxlcw=="
               projectType="audioplug" pluginAUIsSandboxSafe="1" pluginManufacturer="JUCE"
               pluginFormats="buildVST3,buildAU,buildStandalone" useAppConfig="0"
-              addUsingNamespaceToJuceHeader="1" id="aZQp2F" jucerFormatVersion="1">
-  <MAINGROUP id="mz03RV" name="GainPlugin">
+              addUsingNamespaceToJuceHeader="1" id="aZQp2F" jucerFormatVersion="1"
+              pluginVST3Category="Stereo,Tools">
+  <MAINGROUP id="mz03RV" name="amplitude">
     <GROUP id="{B2707595-8FA8-FCE2-3855-A3603F812C34}" name="Source">
       <FILE id="IQlnkm" name="MaximumAmp.cpp" compile="1" resource="0" file="Source/MaximumAmp.cpp"/>
       <FILE id="OBu8u7" name="MaximumAmp.h" compile="0" resource="0" file="Source/MaximumAmp.h"/>
@@ -76,9 +77,9 @@
     </XCODE_MAC>
     <VS2022 targetFolder="Builds/VisualStudio2022">
       <CONFIGURATIONS>
-        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="GainPlugin"/>
-        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="GainPlugin"
-                       postbuildCommand="if exist $(OutDir)\GainPlugin.vst3 (copy $(OutDir)\GainPlugin.vst3 C:\Users\bgill\Desktop\Sound\VSTPlugins)"/>
+        <CONFIGURATION name="Debug" isDebug="1" optimisation="1" targetName="amplitude"/>
+        <CONFIGURATION name="Release" isDebug="0" optimisation="3" targetName="amplitude"
+                       postbuildCommand="if exist $(OutDir)\$(TargetName).vst3 (copy $(OutDir)\$(TargetName).vst3 C:\Users\bgill\Desktop\Sound\VSTPlugins)"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
         <MODULEPATH id="juce_audio_basics" path=""/>

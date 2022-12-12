@@ -25,12 +25,12 @@ FaderSliderLookAndFeel::~FaderSliderLookAndFeel()
 }
 
 void FaderSliderLookAndFeel::drawLinearSliderBackground(Graphics& g, int x, int y, int width, int height,
-    float sliderPos, float minSliderPos, float maxSliderPos,
+    float, float, float,
     const Slider::SliderStyle, Slider& slider)
 {
     //g.setColour(Colours::red);
     //g.drawRect(x, y, width, height, 1.0);
-    const float sliderRadius = (float)getSliderThumbRadius(slider) * 0.5; // smaller track than v2
+    const float sliderRadius = (float)getSliderThumbRadius(slider) * 0.5f; // smaller track than v2
 
     const Colour trackColour(slider.findColour(Slider::trackColourId));
     const Colour gradCol1(trackColour.overlaidWith(Colour(slider.isEnabled() ? 0x13000000 : 0x09000000)));
@@ -74,10 +74,8 @@ void FaderSliderLookAndFeel::drawLinearSlider(Graphics& g, int x, int y, int wid
         int imgHeight = thumbImage.getHeight();
 
         const float centerX = width * 0.5f;
-        auto alpha = thumbImage.hasAlphaChannel();
-        auto ARGB = thumbImage.isARGB();
 
-        g.drawImage(thumbImage, centerX - (float)(imgWidth / 2.0), sliderPos - (float)(imgHeight / 2.0), imgWidth, imgHeight, 0, 0, imgWidth, imgHeight);
+        g.drawImage(thumbImage, (int)centerX - (imgWidth / 2), (int)sliderPos - (imgHeight / 2), imgWidth, imgHeight, 0, 0, imgWidth, imgHeight);
     }
     else
     {
@@ -89,7 +87,7 @@ void FaderSliderLookAndFeel::drawLinearSlider(Graphics& g, int x, int y, int wid
         g.drawFittedText(String("No Image"), text_bounds.getSmallestIntegerContainer(), Justification::horizontallyCentred | Justification::centred, 1);
     }
 }
-int FaderSliderLookAndFeel::getSliderThumbRadius(Slider& slider)
+int FaderSliderLookAndFeel::getSliderThumbRadius(Slider&)
 {
     return 21;
 }
@@ -101,7 +99,6 @@ void FaderSliderLookAndFeel::drawLabel(Graphics& g, Label& label)
 
     if (!label.isBeingEdited())
     {
-        auto alpha = label.isEnabled() ? 1.0f : 0.5f;
         const Font font(getLabelFont(label));
 
         g.setColour(Colour(uint8(255), 255, 255, 1.0f));
@@ -125,7 +122,7 @@ void FaderSliderLookAndFeel::drawLabel(Graphics& g, Label& label)
     //g.fillRoundedRectangle(label.getLocalBounds().toFloat(), 3.0f);
 }
 //==============================================================================
-FaderSlider::FaderSlider() : punch::SmoothSlider(0.8,0.05)
+FaderSlider::FaderSlider() : punch::SmoothSlider(0.8f,0.05f)
 {
     setLookAndFeel(&faderSliderLookAndFeel);
 }

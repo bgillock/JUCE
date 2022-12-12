@@ -8,11 +8,11 @@
     <key>CFBundleIconFile</key>
     <string></string>
     <key>CFBundleIdentifier</key>
-    <string>com.JUCE.GainPlugin</string>
+    <string>com.JUCE.amplitude</string>
     <key>CFBundleName</key>
-    <string>GainPlugin</string>
+    <string>amplitude</string>
     <key>CFBundleDisplayName</key>
-    <string>GainPlugin</string>
+    <string>amplitude</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>

@@ -18,7 +18,7 @@
 class LevelMeter : public juce::Component
 {
 public:
-    LevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp) :
+    LevelMeter(int marginTop, int marginBottom, float minAmp, float maxAmp, float) :
         _mTop(marginTop),
         _mBottom(marginBottom),
         maxAmp(minAmp, maxAmp, 20, 10) {};
@@ -47,7 +47,7 @@ public:
 class DrawnLEDLevelMeter : public LevelMeter
 {
 public:
-    DrawnLEDLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp);
+    DrawnLEDLevelMeter(int marginTop, int marginBottom, float minAmp, float maxAmp, float incAmp);
     void resized() override;
     void setHeight(int height);
     int getActualHeight();
@@ -68,7 +68,7 @@ private:
 class UADLevelMeter : public LevelMeter
 {
 public:
-    UADLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp);
+    UADLevelMeter(int marginTop, int marginBottom, float minAmp, float maxAmp, float incAmp);
     void resized() override;
     void setHeight(int height);
     int getActualHeight();
@@ -95,7 +95,7 @@ class StereoLevelMeter : public juce::Component,
     public Timer
 {
 public:
-    StereoLevelMeter(int minAmp, int maxAmp, int incAmp, int marginTop, int marginBottom, float leftAnnoWidth, float rightAnnoWidth);
+    StereoLevelMeter(float minAmp, float maxAmp, float incAmp, int marginTop, int marginBottom, float leftAnnoWidth, float rightAnnoWidth);
     void resized() override;
     void capture(AudioBuffer<float> amps);
     void capture(AudioBuffer<double> amps);

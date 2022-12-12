@@ -26,20 +26,6 @@ namespace LookAndFeelHelpers
 
         return baseColour;
     }
-
-    static TextLayout layoutTooltipText(const String& text, Colour colour) noexcept
-    {
-        const float tooltipFontSize = 13.0f;
-        const int maxToolTipWidth = 400;
-
-        AttributedString s;
-        s.setJustification(Justification::centred);
-        s.append(text, Font(tooltipFontSize, Font::bold), colour);
-
-        TextLayout tl;
-        tl.createLayoutWithBalancedLineLengths(s, (float)maxToolTipWidth);
-        return tl;
-    }
 }
 
 //==============================================================================
@@ -54,11 +40,12 @@ TwoValueSliderLookAndFeel::~TwoValueSliderLookAndFeel()
 {
 }
 
-void TwoValueSliderLookAndFeel::drawLinearSliderThumb(Graphics& g, int x, int y, int width, int height,
-    float sliderPos, float minSliderPos, float maxSliderPos,
+void TwoValueSliderLookAndFeel::drawLinearSliderThumb(Graphics& g, int, int, int width, int,
+    float, float minSliderPos, float maxSliderPos,
     const Slider::SliderStyle style, Slider& slider)
 {
     jassert(style == Slider::TwoValueVertical);
+    if (style != Slider::TwoValueVertical) return;
 
     auto sliderRadius = (float)(getSliderThumbRadius(slider) - 2);
 
@@ -71,14 +58,14 @@ void TwoValueSliderLookAndFeel::drawLinearSliderThumb(Graphics& g, int x, int y,
 
     auto sr = jmin(sliderRadius, (float)width * 0.4f);
     drawShinyButtonShape(g, 0, minSliderPos - sr,
-        width, sliderRadius * 2.0,
+        (float)width, sliderRadius * 2.0f,
         sliderRadius, knobColour, outlineThickness, false, false, false, false);
 
     g.setColour(knobColour);
-    g.fillRect(sliderRadius, maxSliderPos + sr, width - (sr * 2.0), jmax(0.0,minSliderPos - maxSliderPos - (sr * 2.0)));
+    g.fillRect(sliderRadius, maxSliderPos + sr, width - (sr * 2.0f), jmax(0.0f,minSliderPos - maxSliderPos - (sr * 2.0f)));
 
     drawShinyButtonShape(g, 0, maxSliderPos - sr,
-        width, sliderRadius * 2.0,
+        (float)width, sliderRadius * 2.0f,
         sliderRadius, knobColour, outlineThickness, false, false, false, false);
 }
 void TwoValueSliderLookAndFeel::drawShinyButtonShape(Graphics& g, float x, float y, float w, float h,
@@ -110,11 +97,11 @@ void TwoValueSliderLookAndFeel::drawShinyButtonShape(Graphics& g, float x, float
     g.setColour(Colour(0x80000000));
     g.strokePath(outline, PathStrokeType(strokeWidth));
 }
-void TwoValueSliderLookAndFeel::drawLinearSliderBackground(Graphics& g, int x, int y, int width, int height,
-    float /*sliderPos*/,
-    float /*minSliderPos*/,
-    float /*maxSliderPos*/,
-    const Slider::SliderStyle /*style*/, Slider& slider)
+void TwoValueSliderLookAndFeel::drawLinearSliderBackground(Graphics&, int, int, int, int,
+    float,
+    float,
+    float,
+    const Slider::SliderStyle, Slider&)
 {
     /*
     auto sliderRadius = (float)(getSliderThumbRadius(slider) - 2);
