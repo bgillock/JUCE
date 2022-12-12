@@ -30,6 +30,7 @@ public:
     virtual void drawSignal(Graphics& g, int x, int y, int width, int height, bool signal) = 0;
     virtual void drawClipped(Graphics& g, int x, int y, int width, int height, bool clipped) = 0;
     virtual int getActualHeight() = 0;
+    virtual void setHeight(int height) = 0;
     virtual bool canSetRange() = 0;
     MaximumAmp maxAmp;
     int _mTop;
@@ -48,6 +49,7 @@ class DrawnLEDLevelMeter : public LevelMeter
 public:
     DrawnLEDLevelMeter(int marginTop, int marginBottom);
     void resized() override;
+    void setHeight(int height);
     int getActualHeight();
     void clearClipped();
     void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
@@ -68,6 +70,7 @@ class UADLevelMeter : public LevelMeter
 public:
     UADLevelMeter(int marginTop, int marginBottom);
     void resized() override;
+    void setHeight(int height);
     int getActualHeight();
     void clearClipped();
     void drawLight(Graphics& g, int x, int y, int width, int height, float* levels, int l);
@@ -98,8 +101,10 @@ public:
     void capture(AudioBuffer<double> amps);
     void init();
     void clearClipped();
+    bool canSetRange();
     void setRange(Range<double> r);
     int getActualHeight();
+    void setHeight(int height);
     void StereoLevelMeter::timerCallback() override;
 private:
 

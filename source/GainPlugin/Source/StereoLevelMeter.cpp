@@ -28,6 +28,11 @@ StereoLevelMeter::StereoLevelMeter(int minAmp, int maxAmp, int incAmp, int margi
     if (rightAnnoWidth > 0.0) addAndMakeVisible(rightAnno);
 };
 
+bool StereoLevelMeter::canSetRange()
+{
+    return leftLevelMeter.canSetRange() || rightLevelMeter.canSetRange();
+};
+
 void StereoLevelMeter::timerCallback() 
 {
     repaint();
@@ -58,6 +63,12 @@ void StereoLevelMeter::resized()
     }
 };
 
+void StereoLevelMeter::setHeight(int height)
+{
+    leftLevelMeter.setHeight(height);
+    rightLevelMeter.setHeight(height);
+}
+
 int StereoLevelMeter::getActualHeight()
 {
     return jmax(leftLevelMeter.getActualHeight(), rightLevelMeter.getActualHeight());
@@ -74,11 +85,14 @@ void StereoLevelMeter::setRange(Range<double> r)
     {
         leftLevelMeter.setOrangeLevel(r.getStart());
         leftLevelMeter.setRedLevel(r.getEnd());
+        leftLevelMeter.setHeight(getBounds().getHeight());
     }
     if (rightLevelMeter.canSetRange())
     {
         rightLevelMeter.setOrangeLevel(r.getStart());
         rightLevelMeter.setRedLevel(r.getEnd());
+        rightLevelMeter.setHeight(getBounds().getHeight());
+
     }
 }
 void StereoLevelMeter::capture(AudioBuffer<float> amps)
@@ -145,11 +159,10 @@ UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom) :
     _lightImages = ImageFileFormat::loadFrom(BinaryData::APILights_png, BinaryData::APILights_pngSize);
 };
 
-void UADLevelMeter::resized()
+void UADLevelMeter::setHeight(int height)
 {
-    auto area = getBounds();
     int topy = _mTop;
-    int bottomy = area.getHeight() - _mBottom;
+    int bottomy = height - _mBottom;
 
     _nLights = (int)((float)(bottomy - topy + 1) / (_lightheight + _spacing));
     maxAmp.setNLevels(_nLights);
@@ -168,6 +181,11 @@ void UADLevelMeter::resized()
         else if (thisdb > _orangeLevel) thisImage = 1;
         _lightImageIndexes[l] = thisImage;
     }
+}
+void UADLevelMeter::resized()
+{
+    auto area = getBounds();
+    setHeight(area.getHeight());
 }
 
 int UADLevelMeter::getActualHeight()
@@ -222,11 +240,11 @@ DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom) :
     _nLights = 10;
 };
 
-void DrawnLEDLevelMeter::resized()
+void DrawnLEDLevelMeter::setHeight(int height)
 {
-    auto area = getBounds();
+
     int topy = _mTop;
-    int bottomy = area.getHeight() - _mBottom;
+    int bottomy = height - _mBottom;
 
     _nLights = (int)((float)(bottomy - topy + 1) / (_lightheight + _spacing));
     maxAmp.setNLevels(_nLights);
@@ -242,6 +260,12 @@ void DrawnLEDLevelMeter::resized()
         else thiscolor = Colour::fromRGB(0, 255, 0);
         _lightColors[l] = thiscolor;
     }
+}
+
+void DrawnLEDLevelMeter::resized()
+{
+    auto area = getBounds();
+    setHeight(area.getHeight());
 }
 
 int DrawnLEDLevelMeter::getActualHeight()

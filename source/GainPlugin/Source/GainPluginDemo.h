@@ -174,7 +174,7 @@ private:
             inputLevelMeterLabel.setSize(40,10);
             addAndMakeVisible(inputLevelMeterLabel);
             addAndMakeVisible(inputLevelMeter);
-
+            
             addAndMakeVisible(gainSlider);  
             gainSlider.setSliderStyle(Slider::LinearVertical);
 
@@ -232,6 +232,9 @@ private:
             auto leftMeterArea = r.removeFromLeft(45);
             inputLevelMeterLabel.setBounds(leftMeterArea.removeFromTop(15));
             inputLevelMeter.setBounds(leftMeterArea);
+            inputLevelMeter.setHeight(leftMeterArea.getHeight());
+            if (inputLevelMeter.canSetRange())
+                inputLevelMeter.setRange(Range<double>((double)targetSlider.getMinValue(), (double)targetSlider.getMaxValue()));
 
             auto sliderArea = r.removeFromLeft(64);
             sliderArea.removeFromBottom(10).removeFromTop(14); 
@@ -247,6 +250,10 @@ private:
             outputLevelMeterLabel.setBounds(rightMeterLabelArea.removeFromLeft(45));
             targetLabel.setBounds(rightMeterLabelArea);
             outputLevelMeter.setBounds(rightMeterArea);
+            outputLevelMeter.setHeight(rightMeterArea.getHeight());
+            if (outputLevelMeter.canSetRange()) 
+                outputLevelMeter.setRange(Range<double>((double)targetSlider.getMinValue(), (double)targetSlider.getMaxValue()));
+
             rightMeterArea.removeFromTop(12);
             rightMeterArea.removeFromBottom(12);
             rightMeterArea.setHeight(outputLevelMeter.getActualHeight());
