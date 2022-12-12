@@ -18,10 +18,10 @@
 class LevelMeter : public juce::Component
 {
 public:
-    LevelMeter(int marginTop, int marginBottom) :
+    LevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp) :
         _mTop(marginTop),
         _mBottom(marginBottom),
-        maxAmp(-54.0, 0.0, 20, 10) {};
+        maxAmp(minAmp, maxAmp, 20, 10) {};
     void paint(juce::Graphics&);
     virtual void resized() override = 0;
     void capture(AudioBuffer<float> amps, int channel);
@@ -47,7 +47,7 @@ public:
 class DrawnLEDLevelMeter : public LevelMeter
 {
 public:
-    DrawnLEDLevelMeter(int marginTop, int marginBottom);
+    DrawnLEDLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp);
     void resized() override;
     void setHeight(int height);
     int getActualHeight();
@@ -68,7 +68,7 @@ private:
 class UADLevelMeter : public LevelMeter
 {
 public:
-    UADLevelMeter(int marginTop, int marginBottom);
+    UADLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp);
     void resized() override;
     void setHeight(int height);
     int getActualHeight();

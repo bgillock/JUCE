@@ -254,9 +254,11 @@ private:
             if (outputLevelMeter.canSetRange()) 
                 outputLevelMeter.setRange(Range<double>((double)targetSlider.getMinValue(), (double)targetSlider.getMaxValue()));
 
-            rightMeterArea.removeFromTop(12);
-            rightMeterArea.removeFromBottom(12);
-            rightMeterArea.setHeight(outputLevelMeter.getActualHeight());
+            auto h = outputLevelMeter.getActualHeight();
+            rightMeterArea.setHeight(h);
+            rightMeterArea.removeFromTop(10);
+            rightMeterArea.removeFromBottom(9);
+
             auto targetArea = rightMeterArea.removeFromRight(40);
             targetSlider.setBounds(targetArea); // calibrate with underlying anno!
 

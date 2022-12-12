@@ -14,8 +14,8 @@
 
 //----------------------------------------------------------------------------------------------------------------------
 StereoLevelMeter::StereoLevelMeter(int minAmp, int maxAmp, int incAmp, int marginTop, int marginBottom, float leftAnnoWidth, float rightAnnoWidth) :
-    leftLevelMeter(marginTop, marginBottom),
-    rightLevelMeter(marginTop, marginBottom),
+    leftLevelMeter(marginTop, marginBottom, minAmp, maxAmp, incAmp),
+    rightLevelMeter(marginTop, marginBottom, minAmp, maxAmp, incAmp),
     leftAnno(minAmp, maxAmp, incAmp, marginTop, marginBottom, leftAnnoWidth, Justification::left),
     rightAnno(minAmp, maxAmp, incAmp, marginTop, marginBottom, rightAnnoWidth, Justification::right)
 {
@@ -145,8 +145,8 @@ void LevelMeter::capture(AudioBuffer<double> amps, int channel)
 }
 
 //---------------------------------------------------------------------------------------------------------------------
-UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom) :
-    LevelMeter(marginTop,marginBottom)
+UADLevelMeter::UADLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp ) :
+    LevelMeter(marginTop,marginBottom,minAmp,maxAmp,incAmp )
 {
     _orangeLevel = -18.0;
     _redLevel = -3.0;
@@ -177,8 +177,8 @@ void UADLevelMeter::setHeight(int height)
     {
         int thisImage = 2; // default to off, on = +3
         float thisdb = mindb + ((float)l * dbPerLight);
-        if (thisdb > _redLevel) thisImage = 0;
-        else if (thisdb > _orangeLevel) thisImage = 1;
+        if (thisdb > _redLevel - (dbPerLight * 0.5)) thisImage = 0;
+        else if (thisdb > _orangeLevel - (dbPerLight * 0.5)) thisImage = 1;
         _lightImageIndexes[l] = thisImage;
     }
 }
@@ -228,8 +228,8 @@ void UADLevelMeter::drawSignal(Graphics& g, int x, int y, int width, int height,
 }
 
 //---------------------------------------------------------------------------------------------------
-DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom) :
-    LevelMeter(marginTop,marginBottom)
+DrawnLEDLevelMeter::DrawnLEDLevelMeter(int marginTop, int marginBottom, int minAmp, int maxAmp, int incAmp) :
+    LevelMeter(marginTop,marginBottom,minAmp,maxAmp,incAmp )
 {
     _peakholdTimes = 10; // number of times to leave peak 
     _lightheight = 9;
