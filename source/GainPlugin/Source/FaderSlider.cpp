@@ -94,7 +94,8 @@ int FaderSliderLookAndFeel::getSliderThumbRadius(Slider&)
 void FaderSliderLookAndFeel::drawLabel(Graphics& g, Label& label)
 {
     g.setColour(Colour(uint8(0), 0, 0, 1.0f));
-    g.fillRoundedRectangle(label.getLocalBounds().removeFromTop(18).toFloat(), 3.0f);
+    auto area = label.getLocalBounds();
+    g.fillRoundedRectangle(label.getLocalBounds().removeFromBottom(18).toFloat(), 3.0f);
 
 
     if (!label.isBeingEdited())
@@ -104,7 +105,7 @@ void FaderSliderLookAndFeel::drawLabel(Graphics& g, Label& label)
         g.setColour(Colour(uint8(255), 255, 255, 1.0f));
         g.setFont(font);
 
-        auto textArea = getLabelBorderSize(label).subtractedFrom(label.getLocalBounds()).removeFromTop(15);
+        auto textArea = getLabelBorderSize(label).subtractedFrom(label.getLocalBounds()).removeFromBottom(15);
 
         auto textValue = label.getTextValue();
         auto text = String((double)textValue.getValue(), 2);
