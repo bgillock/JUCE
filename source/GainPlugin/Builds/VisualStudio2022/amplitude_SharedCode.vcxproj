@@ -146,7 +146,6 @@
     <ClCompile Include="..\..\Source\StereoLevelMeter.cpp"/>
     <ClCompile Include="..\..\Source\dbAnnoComponent.cpp"/>
     <ClCompile Include="..\..\Source\TwoValueSlider.cpp"/>
-    <ClCompile Include="..\..\Source\FaderSlider.cpp"/>
     <ClCompile Include="..\..\Source\Main.cpp"/>
     <ClCompile Include="..\..\..\..\modules\juce_audio_basics\buffers\juce_AudioChannelSet.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
@@ -2386,6 +2385,9 @@
     <ClCompile Include="..\..\..\..\modules\juce_gui_extra\juce_gui_extra.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\user_modules\punch\Fader\FaderSlider.cpp">
+      <ExcludedFromBuild>true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\user_modules\punch\Slider\SmoothSlider.cpp">
       <ExcludedFromBuild>true</ExcludedFromBuild>
     </ClCompile>
@@ -2423,7 +2425,6 @@
     <ClInclude Include="..\..\Source\StereoLevelMeter.h"/>
     <ClInclude Include="..\..\Source\dbAnnoComponent.h"/>
     <ClInclude Include="..\..\Source\TwoValueSlider.h"/>
-    <ClInclude Include="..\..\Source\FaderSlider.h"/>
     <ClInclude Include="..\..\Source\GainPluginDemo.h"/>
     <ClInclude Include="..\..\..\..\modules\juce_audio_basics\audio_play_head\juce_AudioPlayHead.h"/>
     <ClInclude Include="..\..\..\..\modules\juce_audio_basics\buffers\juce_AudioChannelSet.h"/>
@@ -3369,6 +3370,7 @@
     <ClInclude Include="..\..\..\..\modules\juce_gui_extra\misc\juce_WebBrowserComponent.h"/>
     <ClInclude Include="..\..\..\..\modules\juce_gui_extra\native\juce_mac_NSViewFrameWatcher.h"/>
     <ClInclude Include="..\..\..\..\modules\juce_gui_extra\juce_gui_extra.h"/>
+    <ClInclude Include="..\..\..\..\user_modules\punch\Fader\FaderSlider.h"/>
     <ClInclude Include="..\..\..\..\user_modules\punch\Slider\SmoothSlider.h"/>
     <ClInclude Include="..\..\..\..\user_modules\punch\TwoValueAttachment\TwoValueAttachment.h"/>
     <ClInclude Include="..\..\..\..\user_modules\punch\punch.h"/>

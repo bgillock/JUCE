@@ -314,7 +314,7 @@ private:
         //dbAnnoComponent dbAnnoOut;
         dbAnnoComponent faderAnnoLeft;
         dbAnnoComponent faderAnnoRight;
-        FaderSlider gainSlider;
+        punch::FaderSlider gainSlider;
         AudioProcessorValueTreeState::SliderAttachment gainAttachment;
         TwoValueSlider targetSlider;
         punch::TwoValueSliderAttachment targetAttachment;

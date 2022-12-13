@@ -45,7 +45,6 @@
 		601C29B796C8D8D371B54465 /* include_juce_audio_processors_ara.cpp */ = {isa = PBXBuildFile; fileRef = FE936E6195B8A0812E8F1D50; };
 		66CEBB03E1B86C395887864A /* include_juce_audio_plugin_client_utils.cpp */ = {isa = PBXBuildFile; fileRef = C3501AD56D7096BA88CFAC1C; };
 		69AD9C0D431DCD0C8ADF6F33 /* include_juce_events.mm */ = {isa = PBXBuildFile; fileRef = 2CE2C63AE00C2178F79D4744; };
-		72B08F44837E6264111EC0E1 /* FaderSlider.cpp */ = {isa = PBXBuildFile; fileRef = D840FCA25B244A61C58F7028; };
 		7D249F38BB9E36DC75D8A9D6 /* dbAnnoComponent.cpp */ = {isa = PBXBuildFile; fileRef = FA3B42C592492A938FA72F3D; };
 		803EDB60FA78746A61A1C2B3 /* RecentFilesMenuTemplate.nib */ = {isa = PBXBuildFile; fileRef = 5143EE1A4C8F4CCB8D13699A; };
 		80DDBC42521196BE6E2F2469 /* include_juce_audio_formats.mm */ = {isa = PBXBuildFile; fileRef = 20C9D25D8E7DE6B4A939E0C6; };
@@ -74,7 +73,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		001DB8A03D323C73A0AD666B /* FaderSlider.h */ /* FaderSlider.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = FaderSlider.h; path = ../../Source/FaderSlider.h; sourceTree = SOURCE_ROOT; };
 		05AB1EED3BB3542BCE04B0D7 /* BinaryData.h */ /* BinaryData.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = BinaryData.h; path = ../../JuceLibraryCode/BinaryData.h; sourceTree = SOURCE_ROOT; };
 		079A94D4E1D65FAD79C65578 /* juce_audio_utils */ /* juce_audio_utils */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_utils; path = "~/Documents/source/JUCE/modules/juce_audio_utils"; sourceTree = "<absolute>"; };
 		080D922C4752037F8EB01763 /* juce_data_structures */ /* juce_data_structures */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_data_structures; path = "~/Documents/source/JUCE/modules/juce_data_structures"; sourceTree = "<absolute>"; };
@@ -136,7 +134,6 @@
 		D302D87BFD3C1D5D45EF5470 /* juce_audio_processors */ /* juce_audio_processors */ = {isa = PBXFileReference; lastKnownFileType = folder; name = juce_audio_processors; path = "~/Documents/source/JUCE/modules/juce_audio_processors"; sourceTree = "<absolute>"; };
 		D64023C53E82EBC614D8BD6D /* include_juce_audio_plugin_client_AU_2.mm */ /* include_juce_audio_plugin_client_AU_2.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_plugin_client_AU_2.mm; path = ../../JuceLibraryCode/include_juce_audio_plugin_client_AU_2.mm; sourceTree = SOURCE_ROOT; };
 		D72E3BEB13C2690958438373 /* Foundation.framework */ /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
-		D840FCA25B244A61C58F7028 /* FaderSlider.cpp */ /* FaderSlider.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = FaderSlider.cpp; path = ../../Source/FaderSlider.cpp; sourceTree = SOURCE_ROOT; };
 		D98415879F3AED972C1B1FF5 /* MaximumAmp.cpp */ /* MaximumAmp.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = MaximumAmp.cpp; path = ../../Source/MaximumAmp.cpp; sourceTree = SOURCE_ROOT; };
 		DDDC9FC05C6890A517DECCA1 /* include_juce_audio_processors.mm */ /* include_juce_audio_processors.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; name = include_juce_audio_processors.mm; path = ../../JuceLibraryCode/include_juce_audio_processors.mm; sourceTree = SOURCE_ROOT; };
 		DF568FD7D1074D0B49273D28 /* AU */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = GainPlugin.component; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -286,8 +283,6 @@
 				A70BA0273EA4C127932382AB,
 				B9619F09FB70A09A4D1AAF39,
 				217DE0F56F085F7EFE2BE61B,
-				D840FCA25B244A61C58F7028,
-				001DB8A03D323C73A0AD666B,
 				28F24AB3245E47992FD6AA3D,
 				1A2046A3F25A6B5C65EF26C5,
 			);
@@ -636,7 +631,6 @@
 				578161ABCD1AB745E67E5721,
 				7D249F38BB9E36DC75D8A9D6,
 				B7A2F7123AAFE3AEF9F03158,
-				72B08F44837E6264111EC0E1,
 				172122559054115B7891DFDE,
 				B090C09F12ADADAD3241C6EB,
 				38457380637A0965DE5B0C50,

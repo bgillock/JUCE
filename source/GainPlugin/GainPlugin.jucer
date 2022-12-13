@@ -22,8 +22,6 @@
             file="Source/TwoValueSlider.cpp"/>
       <FILE id="qyPI3G" name="TwoValueSlider.h" compile="0" resource="0"
             file="Source/TwoValueSlider.h"/>
-      <FILE id="zuOt7N" name="FaderSlider.cpp" compile="1" resource="0" file="Source/FaderSlider.cpp"/>
-      <FILE id="OWXi6j" name="FaderSlider.h" compile="0" resource="0" file="Source/FaderSlider.h"/>
       <FILE id="M0ZzZr" name="Main.cpp" compile="1" resource="0" file="Source/Main.cpp"/>
       <FILE id="PgRwbY" name="GainPluginDemo.h" compile="0" resource="0"
             file="Source/GainPluginDemo.h"/>

@@ -596,6 +596,9 @@
     <Filter Include="JUCE Modules\juce_gui_extra">
       <UniqueIdentifier>{A4D76113-9EDC-DA60-D89B-5BACF7F1C426}</UniqueIdentifier>
     </Filter>
+    <Filter Include="JUCE Modules\punch\Fader">
+      <UniqueIdentifier>{E9226C86-60EE-2476-83C9-9D37511F1748}</UniqueIdentifier>
+    </Filter>
     <Filter Include="JUCE Modules\punch\Slider">
       <UniqueIdentifier>{25A43D5F-BE4D-CB13-CC9B-CB40CB95CB2E}</UniqueIdentifier>
     </Filter>
@@ -623,9 +626,6 @@
       <Filter>amplitude\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\TwoValueSlider.cpp">
-      <Filter>amplitude\Source</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\Source\FaderSlider.cpp">
       <Filter>amplitude\Source</Filter>
     </ClCompile>
     <ClCompile Include="..\..\Source\Main.cpp">
@@ -2998,6 +2998,9 @@
     <ClCompile Include="..\..\..\..\modules\juce_gui_extra\juce_gui_extra.mm">
       <Filter>JUCE Modules\juce_gui_extra</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\user_modules\punch\Fader\FaderSlider.cpp">
+      <Filter>JUCE Modules\punch\Fader</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\..\user_modules\punch\Slider\SmoothSlider.cpp">
       <Filter>JUCE Modules\punch\Slider</Filter>
     </ClCompile>
@@ -3073,9 +3076,6 @@
       <Filter>amplitude\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\TwoValueSlider.h">
-      <Filter>amplitude\Source</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\Source\FaderSlider.h">
       <Filter>amplitude\Source</Filter>
     </ClInclude>
     <ClInclude Include="..\..\Source\GainPluginDemo.h">
@@ -5912,6 +5912,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\..\modules\juce_gui_extra\juce_gui_extra.h">
       <Filter>JUCE Modules\juce_gui_extra</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\..\user_modules\punch\Fader\FaderSlider.h">
+      <Filter>JUCE Modules\punch\Fader</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\..\user_modules\punch\Slider\SmoothSlider.h">
       <Filter>JUCE Modules\punch\Slider</Filter>
