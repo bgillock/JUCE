@@ -17,11 +17,8 @@ namespace BinaryData
     extern const char*   APILights_png;
     const int            APILights_pngSize = 20615;
 
-    extern const char*   faderalphanonflat_png;
-    const int            faderalphanonflat_pngSize = 20692;
-
     // Number of elements in the namedResourceList and originalFileNames arrays.
-    const int namedResourceListSize = 4;
+    const int namedResourceListSize = 3;
 
     // Points to the start of a list of resource names.
     extern const char* namedResourceList[];
